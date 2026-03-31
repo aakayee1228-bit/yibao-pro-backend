@@ -315,7 +315,92 @@
 
 ---
 
-## 十一、开发优先级
+## 十一、会员体系设计
+
+### 会员等级配色
+
+**免费版**：
+- 主色：`bg-gray-500` / `text-gray-500` - #6b7280
+- 标签：`bg-gray-100 text-gray-700`
+
+**月度会员**：
+- 主色：`bg-blue-500` / `text-blue-500` - #3b82f6
+- 标签：`bg-blue-50 text-blue-700`
+
+**年度会员**：
+- 主色：`bg-amber-500` / `text-amber-500` - #f59e0b
+- 标签：`bg-amber-50 text-amber-700`
+
+### 会员卡片样式
+
+```tsx
+// 免费版卡片
+<View className="border border-gray-200 rounded-xl p-4">
+  <Badge variant="secondary">免费版</Badge>
+  <Text className="text-2xl font-bold text-gray-700 mt-2">¥0</Text>
+  <Text className="text-xs text-gray-500">永久免费</Text>
+</View>
+
+// 月度会员卡片（推荐）
+<View className="border-2 border-blue-500 rounded-xl p-4 relative">
+  <View className="absolute -top-2 left-4 bg-blue-500 px-2 py-0.5 rounded">
+    <Text className="text-xs text-white">推荐</Text>
+  </View>
+  <Badge>月度会员</Badge>
+  <Text className="text-2xl font-bold text-blue-600 mt-2">¥29.9</Text>
+  <Text className="text-xs text-gray-500">/月</Text>
+</View>
+
+// 年度会员卡片（最优惠）
+<View className="border-2 border-amber-500 rounded-xl p-4 relative bg-gradient-to-br from-amber-50 to-white">
+  <View className="absolute -top-2 left-4 bg-amber-500 px-2 py-0.5 rounded">
+    <Text className="text-xs text-white">省¥159</Text>
+  </View>
+  <Badge className="bg-amber-500">年度会员</Badge>
+  <View className="flex items-baseline gap-2 mt-2">
+    <Text className="text-2xl font-bold text-amber-600">¥199</Text>
+    <Text className="text-sm text-gray-400 line-through">¥358.8</Text>
+  </View>
+  <Text className="text-xs text-gray-500">/年（相当于¥16.6/月）</Text>
+</View>
+```
+
+### 功能权限提示样式
+
+```tsx
+// 功能限制提示
+<View className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2">
+  <AlertCircle size={16} color="#f59e0b" />
+  <Text className="text-sm text-amber-700">商品数量已达上限（50/50），升级会员解锁无限商品</Text>
+</View>
+
+// 付费功能锁定
+<View className="relative">
+  <View className="opacity-50">{/* 功能内容 */}</View>
+  <View className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg">
+    <View className="text-center">
+      <Lock size={24} color="#6b7280" className="mx-auto mb-1" />
+      <Text className="text-xs text-gray-500">升级会员解锁</Text>
+    </View>
+  </View>
+</View>
+```
+
+### 广告样式
+
+```tsx
+// 底部横幅广告
+<View className="fixed bottom-16 left-0 right-0 bg-gray-100 border-t border-gray-200 p-3">
+  <View className="flex items-center justify-between">
+    <Text className="text-xs text-gray-500">升级会员，去除广告</Text>
+    <Button size="sm" variant="outline">立即升级</Button>
+  </View>
+</View>
+```
+
+---
+
+## 十二、开发优先级
 
 ### P0 - 核心功能（MVP）
 1. 商品库（CRUD）
@@ -327,14 +412,18 @@
 5. 商家信息设置
 6. 报价单列表
 7. 分享报价单（图片）
+8. **会员体系**（订阅、权限控制）
 
 ### P2 - 增强功能
-8. 行业模板预设
-9. 单位换算
-10. 折扣管理
-11. 导出 PDF
+9. 行业模板预设
+10. 单位换算
+11. 折扣管理
+12. 导出 PDF
+13. **支付集成**（微信支付）
 
 ### P3 - 优化功能
-12. 数据统计
-13. 客户标签
-14. 报价单模板自定义
+14. 数据统计
+15. 客户标签
+16. 报价单模板自定义
+17. **高级模板**
+18. **广告系统**

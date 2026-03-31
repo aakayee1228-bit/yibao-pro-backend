@@ -146,6 +146,112 @@ export const merchantInfo = pgTable(
   }
 )
 
+// ==================== 会员订阅系统 ====================
+
+// 会员等级
+export const membershipTiers = pgTable(
+  'membership_tiers',
+  {
+    id: varchar('id', { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
+    name: varchar('name', { length: 50 }).notNull(), // 'free', 'monthly', 'yearly'
+    display_name: varchar('display_name', { length: 100 }).notNull(), // '免费版', '月度会员', '年度会员'
+    price: numeric('price', { precision: 10, scale: 2 }).notNull(), // 价格（0表示免费）
+    original_price: numeric('original_price', { precision: 10, scale: 2 }), // 原价（用于显示折扣）
+    duration_days: integer('duration_days'), // 订阅天数（null表示永久）
+    description: text('description'), // 描述
+    features: jsonb('features').$type<string[]>().notNull().default(sql`'[]'::jsonb`), // 功能列表
+    limits: jsonb('limits').$type<{
+      max_products: number // 最大商品数（-1表示无限）
+      max_customers: number // 最大客户数（-1表示无限）
+      max_quotes: number // 最大报价单数（-1表示无限）
+      max_templates: number // 最大模板数（-1表示无限）
+      has_advanced_templates: boolean // 高级模板
+      has_ad: boolean // 是否有广告
+      has_export_pdf: boolean // 导出PDF
+      has_data_statistics: boolean // 数据统计
+    }>().notNull(),
+    is_active: boolean('is_active').notNull().default(true),
+    sort_order: integer('sort_order').notNull().default(0),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updated_at: timestamp('updated_at', { withTimezone: true }),
+  },
+  (table) => [index('membership_tiers_sort_order_idx').on(table.sort_order)]
+)
+
+// 用户订阅
+export const userSubscriptions = pgTable(
+  'user_subscriptions',
+  {
+    id: varchar('id', { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
+    user_id: varchar('user_id', { length: 100 }).notNull(), // 微信 openid
+    tier_id: varchar('tier_id', { length: 36 }).notNull().references(() => membershipTiers.id),
+    status: varchar('status', { length: 20 }).notNull().default('active'), // 'active', 'expired', 'cancelled'
+    start_at: timestamp('start_at', { withTimezone: true }).notNull(),
+    expire_at: timestamp('expire_at', { withTimezone: true }), // 过期时间（null表示永久）
+    auto_renew: boolean('auto_renew').notNull().default(false), // 自动续费
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updated_at: timestamp('updated_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('user_subscriptions_user_id_idx').on(table.user_id),
+    index('user_subscriptions_status_idx').on(table.status),
+    index('user_subscriptions_expire_at_idx').on(table.expire_at),
+  ]
+)
+
+// 支付记录
+export const paymentRecords = pgTable(
+  'payment_records',
+  {
+    id: varchar('id', { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
+    user_id: varchar('user_id', { length: 100 }).notNull(),
+    subscription_id: varchar('subscription_id', { length: 36 }).references(() => userSubscriptions.id),
+    tier_id: varchar('tier_id', { length: 36 }).notNull().references(() => membershipTiers.id),
+    out_trade_no: varchar('out_trade_no', { length: 64 }).notNull().unique(), // 商户订单号
+    transaction_id: varchar('transaction_id', { length: 64 }), // 微信支付订单号
+    amount: numeric('amount', { precision: 10, scale: 2 }).notNull(), // 支付金额
+    status: varchar('status', { length: 20 }).notNull().default('pending'), // 'pending', 'success', 'failed', 'refunded'
+    payment_method: varchar('payment_method', { length: 20 }).notNull().default('wechat'), // 支付方式
+    paid_at: timestamp('paid_at', { withTimezone: true }), // 支付时间
+    refunded_at: timestamp('refunded_at', { withTimezone: true }), // 退款时间
+    extra: jsonb('extra').$type<Record<string, unknown>>(), // 额外信息
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updated_at: timestamp('updated_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('payment_records_user_id_idx').on(table.user_id),
+    index('payment_records_status_idx').on(table.status),
+    index('payment_records_out_trade_no_idx').on(table.out_trade_no),
+    index('payment_records_transaction_id_idx').on(table.transaction_id),
+  ]
+)
+
+// 报价单模板（高级模板）
+export const quoteTemplates = pgTable(
+  'quote_templates',
+  {
+    id: varchar('id', { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
+    name: varchar('name', { length: 100 }).notNull(),
+    preview_image: varchar('preview_image', { length: 500 }), // 预览图
+    template_data: jsonb('template_data').$type<{
+      header_style: Record<string, unknown>
+      body_style: Record<string, unknown>
+      footer_style: Record<string, unknown>
+      colors: Record<string, string>
+      fonts: Record<string, string>
+    }>().notNull(),
+    is_premium: boolean('is_premium').notNull().default(false), // 是否付费模板
+    is_active: boolean('is_active').notNull().default(true),
+    sort_order: integer('sort_order').notNull().default(0),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updated_at: timestamp('updated_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('quote_templates_is_premium_idx').on(table.is_premium),
+    index('quote_templates_sort_order_idx').on(table.sort_order),
+  ]
+)
+
 // Zod schemas for validation
 const { createInsertSchema: createCoercedInsertSchema } = createSchemaFactory({ coerce: { date: true } })
 
@@ -211,6 +317,49 @@ export const insertMerchantInfoSchema = createCoercedInsertSchema(merchantInfo).
   quote_template: true,
 })
 
+export const insertMembershipTierSchema = createCoercedInsertSchema(membershipTiers).pick({
+  name: true,
+  display_name: true,
+  price: true,
+  original_price: true,
+  duration_days: true,
+  description: true,
+  features: true,
+  limits: true,
+  sort_order: true,
+})
+
+export const insertUserSubscriptionSchema = createCoercedInsertSchema(userSubscriptions).pick({
+  user_id: true,
+  tier_id: true,
+  status: true,
+  start_at: true,
+  expire_at: true,
+  auto_renew: true,
+})
+
+export const insertPaymentRecordSchema = createCoercedInsertSchema(paymentRecords).pick({
+  user_id: true,
+  subscription_id: true,
+  tier_id: true,
+  out_trade_no: true,
+  transaction_id: true,
+  amount: true,
+  status: true,
+  payment_method: true,
+  paid_at: true,
+  refunded_at: true,
+  extra: true,
+})
+
+export const insertQuoteTemplateSchema = createCoercedInsertSchema(quoteTemplates).pick({
+  name: true,
+  preview_image: true,
+  template_data: true,
+  is_premium: true,
+  sort_order: true,
+})
+
 // Type exports
 export type Industry = typeof industries.$inferSelect
 export type Product = typeof products.$inferSelect
@@ -218,3 +367,7 @@ export type Customer = typeof customers.$inferSelect
 export type Quote = typeof quotes.$inferSelect
 export type QuoteItem = typeof quoteItems.$inferSelect
 export type MerchantInfo = typeof merchantInfo.$inferSelect
+export type MembershipTier = typeof membershipTiers.$inferSelect
+export type UserSubscription = typeof userSubscriptions.$inferSelect
+export type PaymentRecord = typeof paymentRecords.$inferSelect
+export type QuoteTemplate = typeof quoteTemplates.$inferSelect
