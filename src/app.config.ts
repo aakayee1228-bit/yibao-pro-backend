@@ -5,6 +5,9 @@ export default defineAppConfig({
     'pages/quotes/index',
     'pages/profile/index',
     'pages/membership/index',
+    'pages/login/index',
+    'pages/quotes/create/index',
+    'pages/customers/index',
   ],
   window: {
     backgroundTextStyle: 'light',

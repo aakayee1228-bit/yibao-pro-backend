@@ -4,7 +4,23 @@ import { sql } from "drizzle-orm"
 // 为 gen_random_uuid 提供一个兼容函数（使用 Postgres 内置函数）
 const gen_random_uuid = () => sql`gen_random_uuid()`
 
-
+export const users = pgTable("users", {
+	id: varchar({ length: 36 }).default(gen_random_uuid()).primaryKey().notNull(),
+	openid: varchar({ length: 100 }).notNull(),
+	unionid: varchar({ length: 100 }),
+	nickname: varchar({ length: 100 }),
+	avatar: varchar({ length: 500 }),
+	phone: varchar({ length: 20 }),
+	isActive: boolean("is_active").default(true).notNull(),
+	lastLoginAt: timestamp("last_login_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	pgPolicy("users_允许公开删除", { as: "permissive", for: "delete", to: ["public"], using: sql`true` }),
+	pgPolicy("users_允许公开更新", { as: "permissive", for: "update", to: ["public"] }),
+	pgPolicy("users_允许公开写入", { as: "permissive", for: "insert", to: ["public"] }),
+	pgPolicy("users_允许公开读取", { as: "permissive", for: "select", to: ["public"] }),
+]);
 
 export const healthCheck = pgTable("health_check", {
 	id: serial().notNull(),

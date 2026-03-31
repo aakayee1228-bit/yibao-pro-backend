@@ -2,10 +2,11 @@ import { View, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 import type { FC } from 'react'
-import { Plus, Package, Users, FileText, TrendingUp, DollarSign } from 'lucide-react-taro'
+import { Plus, Package, Users, FileText, TrendingUp, DollarSign, LogIn } from 'lucide-react-taro'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Network } from '@/network'
+import { useUserStore } from '@/stores/user'
 import './index.css'
 
 interface Quote {
@@ -25,6 +26,7 @@ interface Stats {
 }
 
 const HomePage: FC = () => {
+  const { user, isLoggedIn } = useUserStore()
   const [recentQuotes, setRecentQuotes] = useState<Quote[]>([])
   const [stats, setStats] = useState<Stats>({
     total_quotes: 0,
@@ -37,6 +39,10 @@ const HomePage: FC = () => {
     fetchRecentQuotes()
     fetchStats()
   })
+
+  const handleLogin = () => {
+    Taro.navigateTo({ url: '/pages/login/index' })
+  }
 
   const fetchRecentQuotes = async () => {
     try {
@@ -114,8 +120,23 @@ const HomePage: FC = () => {
     <View className="flex flex-col min-h-screen bg-gray-50">
       {/* 顶部区域 */}
       <View className="bg-gradient-to-br from-blue-500 to-blue-600 px-4 pt-12 pb-8">
-        <Text className="block text-2xl font-bold text-white">智能报价助手</Text>
-        <Text className="block text-sm text-blue-100 mt-1">快速生成专业报价单</Text>
+        <View className="flex items-center justify-between">
+          <View>
+            <Text className="block text-2xl font-bold text-white">
+              {isLoggedIn && user ? `你好，${user.nickname}` : '智能报价助手'}
+            </Text>
+            <Text className="block text-sm text-blue-100 mt-1">快速生成专业报价单</Text>
+          </View>
+          {!isLoggedIn && (
+            <View
+              className="bg-white bg-opacity-20 rounded-full px-4 py-2 flex items-center gap-1"
+              onClick={handleLogin}
+            >
+              <LogIn size={16} color="#ffffff" />
+              <Text className="text-sm text-white">登录</Text>
+            </View>
+          )}
+        </View>
       </View>
 
       {/* 快捷入口 */}
