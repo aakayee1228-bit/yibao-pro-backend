@@ -4,6 +4,7 @@ export default defineAppConfig({
     'pages/products/index',
     'pages/quotes/index',
     'pages/profile/index',
+    'pages/membership/index',
   ],
   window: {
     backgroundTextStyle: 'light',

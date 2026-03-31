@@ -32,7 +32,6 @@ const HomePage: FC = () => {
     month_quotes: 0,
     month_amount: 0,
   })
-  const [loading, setLoading] = useState(false)
 
   useDidShow(() => {
     fetchRecentQuotes()
@@ -41,19 +40,17 @@ const HomePage: FC = () => {
 
   const fetchRecentQuotes = async () => {
     try {
-      const { data, error } = await Network.request({
+      const res = await Network.request({
         url: '/api/quotes',
         method: 'GET',
         data: { limit: 5 },
       })
 
-      if (error) {
-        console.error('获取最近报价失败:', error)
-        return
+      console.log('获取最近报价:', res.data)
+      if (res.statusCode === 200 && res.data) {
+        const responseData = res.data as { data?: Quote[]; msg?: string }
+        setRecentQuotes(responseData.data || [])
       }
-
-      console.log('获取最近报价:', data)
-      setRecentQuotes(data?.data || [])
     } catch (err) {
       console.error('获取最近报价异常:', err)
     }
@@ -61,18 +58,16 @@ const HomePage: FC = () => {
 
   const fetchStats = async () => {
     try {
-      const { data, error } = await Network.request({
+      const res = await Network.request({
         url: '/api/quotes/stats',
         method: 'GET',
       })
 
-      if (error) {
-        console.error('获取统计数据失败:', error)
-        return
+      console.log('获取统计数据:', res.data)
+      if (res.statusCode === 200 && res.data) {
+        const responseData = res.data as { data?: Stats; msg?: string }
+        setStats(responseData.data || stats)
       }
-
-      console.log('获取统计数据:', data)
-      setStats(data?.data || stats)
     } catch (err) {
       console.error('获取统计数据异常:', err)
     }
@@ -194,7 +189,7 @@ const HomePage: FC = () => {
             {recentQuotes.length === 0 ? (
               <View className="py-8 text-center">
                 <Text className="text-sm text-gray-400">暂无报价单</Text>
-                <Text className="text-xs text-gray-400 mt-1">点击"新建报价"开始创建</Text>
+                <Text className="text-xs text-gray-400 mt-1">点击「新建报价」开始创建</Text>
               </View>
             ) : (
               <View className="flex flex-col gap-3">
