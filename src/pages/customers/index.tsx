@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Network } from '@/network'
-import { useUserStore } from '@/stores/user'
 import './index.css'
 
 interface Customer {
@@ -23,7 +22,6 @@ interface Customer {
 }
 
 const CustomersPage: FC = () => {
-  const { user } = useUserStore()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [search, setSearch] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
@@ -113,7 +111,6 @@ const CustomersPage: FC = () => {
         url,
         method,
         data: formData,
-        header: user?.id ? { 'x-user-id': user.id } : {},
       })
 
       if (res.statusCode === 200 || res.statusCode === 201) {

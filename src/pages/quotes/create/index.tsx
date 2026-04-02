@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Network } from '@/network'
-import { useUserStore } from '@/stores/user'
 import './index.css'
 
 interface Customer {
@@ -39,7 +38,6 @@ interface QuoteItem {
 }
 
 const CreateQuotePage: FC = () => {
-  const { user } = useUserStore()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
@@ -150,7 +148,6 @@ const CreateQuotePage: FC = () => {
           remark,
           valid_days: validDays,
         },
-        header: user?.id ? { 'x-user-id': user.id } : {},
       })
 
       if (res.statusCode === 200 || res.statusCode === 201) {

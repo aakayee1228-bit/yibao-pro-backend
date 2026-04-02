@@ -1,11 +1,10 @@
 import { View, Text } from '@tarojs/components'
-import Taro, { useDidShow } from '@tarojs/taro'
+import { useDidShow, showToast, showModal } from '@tarojs/taro'
 import { useState } from 'react'
 import type { FC } from 'react'
 import { Check, Crown, Sparkles } from 'lucide-react-taro'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Network } from '@/network'
 import './index.css'
@@ -39,7 +38,6 @@ interface UserSubscription {
 const MembershipPage: FC = () => {
   const [tiers, setTiers] = useState<MembershipTier[]>([])
   const [currentSubscription, setCurrentSubscription] = useState<UserSubscription | null>(null)
-  const [loading, setLoading] = useState(false)
 
   useDidShow(() => {
     fetchTiers()
@@ -80,60 +78,22 @@ const MembershipPage: FC = () => {
     }
   }
 
-  const handleUpgrade = async (tierId: string) => {
+  const handleUpgrade = (tierId: string) => {
     const tier = tiers.find((t) => t.id === tierId)
     if (!tier) return
 
-    // 免费版不需要支付
+    // 免费版
     if (tier.name === 'free') {
-      Taro.showToast({ title: '当前已是免费版', icon: 'none' })
+      showToast({ title: '当前已是免费版', icon: 'none' })
       return
     }
 
-    setLoading(true)
-    try {
-      // 创建支付订单
-      const res = await Network.request({
-        url: '/api/payment/create',
-        method: 'POST',
-        data: { tier_id: tierId },
-      })
-
-      console.log('支付订单:', res.data)
-
-      // 调起微信支付
-      const paymentData = res.data as {
-        timeStamp?: string
-        nonceStr?: string
-        package?: string
-        signType?: string
-        paySign?: string
-      }
-      if (paymentData && paymentData.timeStamp) {
-        await Taro.requestPayment({
-          timeStamp: paymentData.timeStamp,
-          nonceStr: paymentData.nonceStr || '',
-          package: paymentData.package || '',
-          signType: (paymentData.signType as 'MD5' | 'RSA') || 'RSA',
-          paySign: paymentData.paySign || '',
-        })
-
-        Taro.showToast({ title: '支付成功', icon: 'success' })
-        // 刷新订阅状态
-        setTimeout(() => {
-          fetchCurrentSubscription()
-        }, 1000)
-      }
-    } catch (err: any) {
-      console.error('支付失败:', err)
-      if (err.errMsg?.includes('cancel')) {
-        Taro.showToast({ title: '已取消支付', icon: 'none' })
-      } else {
-        Taro.showToast({ title: '支付失败', icon: 'none' })
-      }
-    } finally {
-      setLoading(false)
-    }
+    // 付费会员暂未开放
+    showModal({
+      title: '敬请期待',
+      content: '付费会员功能即将上线，敬请期待！',
+      showCancel: false,
+    })
   }
 
   const getTierStyle = (tierName: string) => {
@@ -236,15 +196,16 @@ const MembershipPage: FC = () => {
                 </Text>
 
                 {/* 升级按钮 */}
-                <Button
-                  size="sm"
-                  className="w-full mt-3"
-                  variant={isCurrent ? 'outline' : 'default'}
-                  disabled={isCurrent || loading}
+                <View
+                  className={`w-full mt-3 py-2 rounded-lg text-center ${
+                    isCurrent ? 'bg-gray-100' : 'bg-blue-500'
+                  }`}
                   onClick={() => handleUpgrade(tier.id)}
                 >
-                  {isCurrent ? '当前等级' : '立即升级'}
-                </Button>
+                  <Text className={`text-sm ${isCurrent ? 'text-gray-500' : 'text-white'}`}>
+                    {isCurrent ? '当前等级' : '立即升级'}
+                  </Text>
+                </View>
               </View>
             )
           })}

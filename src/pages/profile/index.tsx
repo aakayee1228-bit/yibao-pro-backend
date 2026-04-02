@@ -1,4 +1,4 @@
-import { View, Text, Image } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 import type { FC } from 'react'
@@ -11,13 +11,11 @@ import {
   CircleAlert,
   Info,
   ChevronRight,
-  LogOut,
 } from 'lucide-react-taro'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Network } from '@/network'
-import { useUserStore } from '@/stores/user'
 import './index.css'
 
 interface UserSubscription {
@@ -34,7 +32,6 @@ interface MembershipTier {
 }
 
 const ProfilePage: FC = () => {
-  const { user, isLoggedIn, logout } = useUserStore()
   const [subscription, setSubscription] = useState<UserSubscription | null>(null)
   const [currentTier, setCurrentTier] = useState<MembershipTier | null>(null)
 
@@ -71,19 +68,6 @@ const ProfilePage: FC = () => {
     } catch (err) {
       console.error('获取订阅信息异常:', err)
     }
-  }
-
-  const handleLogout = () => {
-    Taro.showModal({
-      title: '提示',
-      content: '确定要退出登录吗？',
-      success: (res) => {
-        if (res.confirm) {
-          logout()
-          Taro.showToast({ title: '已退出', icon: 'success' })
-        }
-      },
-    })
   }
 
   const formatDate = (dateStr: string) => {
@@ -136,28 +120,12 @@ const ProfilePage: FC = () => {
       <View className="bg-gradient-to-br from-blue-500 to-blue-600 px-4 pt-12 pb-8">
         <View className="flex items-center gap-4">
           <View className="w-16 h-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
-            {user?.avatar ? (
-              <Image src={user.avatar} className="w-16 h-16 rounded-full" mode="aspectFill" />
-            ) : (
-              <Text className="text-2xl text-white">👤</Text>
-            )}
+            <Text className="text-2xl text-white">👤</Text>
           </View>
           <View className="flex-1">
-            <Text className="block text-xl font-bold text-white">
-              {isLoggedIn && user ? user.nickname : '点击登录'}
-            </Text>
-            <Text className="block text-sm text-blue-100 mt-1">
-              {isLoggedIn && user ? '专业报价工具' : '登录解锁更多功能'}
-            </Text>
+            <Text className="block text-xl font-bold text-white">智能报价助手</Text>
+            <Text className="block text-sm text-blue-100 mt-1">专业报价工具</Text>
           </View>
-          {isLoggedIn && (
-            <View
-              className="bg-white bg-opacity-20 rounded-full p-2"
-              onClick={handleLogout}
-            >
-              <LogOut size={20} color="#ffffff" />
-            </View>
-          )}
         </View>
       </View>
 
@@ -192,7 +160,7 @@ const ProfilePage: FC = () => {
                     <>
                       <Text className="text-sm font-medium text-gray-900">免费版</Text>
                       <Text className="text-xs text-gray-500 mt-1">
-                        商品上限 50 个 · 点击升级会员
+                        商品上限 50 个 · 点击查看会员权益
                       </Text>
                     </>
                   )}
