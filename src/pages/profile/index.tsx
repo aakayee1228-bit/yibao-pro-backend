@@ -1,156 +1,135 @@
 import { View, Text } from '@tarojs/components'
-import Taro, { useDidShow } from '@tarojs/taro'
+import Taro from '@tarojs/taro'
+import { useState, useEffect } from 'react'
 import type { FC } from 'react'
 import {
-  Settings,
+  Building2,
   FileText,
   Users,
-  Calculator,
-  CircleAlert,
-  Info,
   ChevronRight,
+  LogOut,
 } from 'lucide-react-taro'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import './index.css'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Network } from '@/network'
+
+interface MerchantInfo {
+  id: string
+  name: string
+  phone: string
+  industry?: string
+}
 
 const ProfilePage: FC = () => {
-  useDidShow(() => {
-    // 可以在这里加载一些数据
-  })
+  const [merchantInfo, setMerchantInfo] = useState<MerchantInfo | null>(null)
+
+  useEffect(() => {
+    loadMerchantInfo()
+  }, [])
+
+  const loadMerchantInfo = async () => {
+    try {
+      const res = await Network.request({
+        url: '/api/merchants/info',
+        method: 'GET',
+      })
+      console.log('[商家信息] 响应:', res.data)
+      if (res.data?.code === 200 && res.data?.data) {
+        setMerchantInfo(res.data.data)
+      }
+    } catch (error) {
+      console.error('[商家信息] 加载失败:', error)
+    }
+  }
+
+  const handleLogout = () => {
+    Taro.showModal({
+      title: '确认退出',
+      content: '确定要退出登录吗？',
+      success: (res) => {
+        if (res.confirm) {
+          Taro.removeStorageSync('token')
+          Taro.reLaunch({ url: '/pages/home/index' })
+        }
+      },
+    })
+  }
 
   const menuItems = [
     {
-      title: '客户管理',
       icon: Users,
-      color: '#3b82f6',
-      onClick: () => Taro.navigateTo({ url: '/pages/customers/index' }),
+      title: '客户管理',
+      desc: '管理客户信息',
+      path: '/pages/customers/index',
     },
     {
-      title: '商家设置',
-      icon: Settings,
-      color: '#6b7280',
-      onClick: () => Taro.navigateTo({ url: '/pages/merchant/settings' }),
-    },
-    {
-      title: '报价单模板',
       icon: FileText,
-      color: '#8b5cf6',
-      onClick: () => Taro.navigateTo({ url: '/pages/templates/index' }),
-    },
-    {
-      title: '单位换算',
-      icon: Calculator,
-      color: '#10b981',
-      onClick: () => Taro.navigateTo({ url: '/pages/unit-converter/index' }),
-    },
-  ]
-
-  const otherItems = [
-    {
-      title: '帮助文档',
-      icon: CircleAlert,
-      onClick: () => Taro.navigateTo({ url: '/pages/help/index' }),
-    },
-    {
-      title: '关于我们',
-      icon: Info,
-      onClick: () => Taro.navigateTo({ url: '/pages/about/index' }),
+      title: '报价单模板',
+      desc: '选择报价单样式',
+      path: '/pages/templates/index',
     },
   ]
 
   return (
     <View className="flex flex-col min-h-screen bg-gray-50">
-      {/* 顶部用户信息 */}
-      <View className="bg-gradient-to-br from-blue-500 to-blue-600 px-4 pt-12 pb-8">
-        <View className="flex items-center gap-4">
-          <View className="w-16 h-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
-            <Text className="text-2xl text-white">👤</Text>
+      {/* 商家信息卡片 */}
+      <View className="bg-gradient-to-br from-blue-500 to-blue-600 px-4 pt-12 pb-6">
+        <View className="flex items-center gap-3">
+          <View className="w-14 h-14 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+            <Building2 size={28} color="#fff" />
           </View>
           <View className="flex-1">
-            <Text className="block text-xl font-bold text-white">易报价Pro</Text>
-            <Text className="block text-sm text-blue-100 mt-1">专业报价工具</Text>
+            <Text className="block text-lg font-bold text-white">
+              {merchantInfo?.name || '商家名称'}
+            </Text>
+            <Text className="block text-sm text-blue-100 mt-1">
+              {merchantInfo?.phone || '未绑定手机号'}
+            </Text>
           </View>
         </View>
       </View>
 
-      {/* 使用提示 */}
-      <View className="px-4 -mt-4">
-        <Card>
-          <CardContent className="p-4">
-            <View className="flex items-center justify-between">
-              <View className="flex items-center gap-3">
-                <View className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                  <Text className="text-lg">📦</Text>
-                </View>
-                <View>
-                  <Text className="text-sm font-medium text-gray-900">免费版</Text>
-                  <Text className="text-xs text-gray-500 mt-1">
-                    商品上限 20 个 · 客户上限 10 个
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </CardContent>
-        </Card>
-      </View>
-
       {/* 功能列表 */}
-      <View className="px-4 mt-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">功能中心</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <View className="flex flex-col">
-              {menuItems.map((item, index) => (
-                <View key={index}>
-                  <View
-                    className="flex items-center justify-between py-3 cursor-pointer"
-                    onClick={item.onClick}
-                  >
-                    <View className="flex items-center gap-3">
-                      <item.icon size={20} color={item.color} />
-                      <Text className="text-sm text-gray-700">{item.title}</Text>
-                    </View>
-                    <ChevronRight size={18} color="#d1d5db" />
-                  </View>
-                  {index < menuItems.length - 1 && <Separator />}
-                </View>
-              ))}
-            </View>
-          </CardContent>
-        </Card>
-      </View>
-
-      {/* 其他功能 */}
-      <View className="px-4 mt-4">
-        <Card>
+      <View className="flex-1 p-4">
+        <Card className="mb-4">
           <CardContent className="p-0">
-            <View className="flex flex-col">
-              {otherItems.map((item, index) => (
-                <View key={index}>
-                  <View
-                    className="flex items-center justify-between p-4 cursor-pointer"
-                    onClick={item.onClick}
-                  >
-                    <View className="flex items-center gap-3">
-                      <item.icon size={18} color="#6b7280" />
-                      <Text className="text-sm text-gray-700">{item.title}</Text>
-                    </View>
-                    <ChevronRight size={18} color="#d1d5db" />
+            {menuItems.map((item, index) => (
+              <View
+                key={item.path}
+                className={`flex items-center justify-between p-4 ${
+                  index !== menuItems.length - 1 ? 'border-b border-gray-100' : ''
+                }`}
+                onClick={() => Taro.navigateTo({ url: item.path })}
+              >
+                <View className="flex items-center gap-3">
+                  <item.icon size={20} color="#2563eb" />
+                  <View>
+                    <Text className="block text-sm font-medium text-gray-900">{item.title}</Text>
+                    <Text className="block text-xs text-gray-500 mt-1">{item.desc}</Text>
                   </View>
-                  {index < otherItems.length - 1 && <Separator />}
                 </View>
-              ))}
-            </View>
+                <ChevronRight size={16} color="#9ca3af" />
+              </View>
+            ))}
           </CardContent>
         </Card>
+
+        {/* 退出登录按钮 */}
+        <Button
+          variant="outline"
+          className="w-full border-red-200 text-red-500"
+          onClick={handleLogout}
+        >
+          <LogOut size={16} color="#ef4444" className="mr-2" />
+          退出登录
+        </Button>
       </View>
 
-      {/* 底部版本信息 */}
-      <View className="flex-1 flex items-end justify-center pb-8">
-        <Text className="text-xs text-gray-400">版本 1.0.0</Text>
+      {/* 底部版权信息 */}
+      <View className="p-4">
+        <Text className="block text-xs text-gray-400 text-center">
+          易报价Pro v1.0.0
+        </Text>
       </View>
     </View>
   )

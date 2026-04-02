@@ -54,12 +54,15 @@ export class ProductsController {
     if (!body.retail_price) {
       throw new BadRequestException('零售价不能为空')
     }
-    if (!body.industry_id) {
-      throw new BadRequestException('请选择行业')
+
+    // 如果没有行业ID，使用默认行业
+    let industryId = body.industry_id
+    if (!industryId) {
+      industryId = 'industry-engineering' // 默认工程建材
     }
 
     const product = await this.productsService.create(testUserId, {
-      industry_id: body.industry_id,
+      industry_id: industryId,
       name: body.name.trim(),
       code: body.code?.trim() || undefined,
       unit: body.unit?.trim() || '个',
