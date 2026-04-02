@@ -2,13 +2,15 @@ import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 import type { FC } from 'react'
-import { Plus, Phone, MapPin, Pencil, Trash2, Search, X } from 'lucide-react-taro'
+import { Plus, Phone, MapPin, Pencil, Trash2, Search, X, CircleAlert } from 'lucide-react-taro'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Network } from '@/network'
 import './index.css'
+
+const MAX_CUSTOMERS = 10
 
 interface Customer {
   id: string
@@ -56,6 +58,16 @@ const CustomersPage: FC = () => {
   }
 
   const handleAddCustomer = () => {
+    // 检查客户数量限制
+    if (customers.length >= MAX_CUSTOMERS) {
+      Taro.showModal({
+        title: '客户数量已达上限',
+        content: `免费版最多添加 ${MAX_CUSTOMERS} 个客户，请删除不需要的客户后再添加`,
+        showCancel: false,
+      })
+      return
+    }
+
     setEditingCustomer(null)
     setFormData({ name: '', phone: '', address: '', company: '', remark: '' })
     setShowAddModal(true)
@@ -141,6 +153,21 @@ const CustomersPage: FC = () => {
             <View onClick={() => { setSearch(''); fetchCustomers() }}>
               <X size={18} color="#9ca3af" />
             </View>
+          )}
+        </View>
+      </View>
+
+      {/* 客户数量提示 */}
+      <View className="px-4 py-2">
+        <View className="bg-amber-50 rounded-lg px-3 py-2 flex items-center gap-2">
+          <CircleAlert size={14} color="#f59e0b" />
+          <Text className="text-xs text-amber-700">
+            已添加 {customers.length}/{MAX_CUSTOMERS} 个客户
+          </Text>
+          {customers.length >= MAX_CUSTOMERS - 3 && (
+            <Text className="text-xs text-gray-400">
+              {customers.length >= MAX_CUSTOMERS ? '已达上限' : '即将达上限'}
+            </Text>
           )}
         </View>
       </View>

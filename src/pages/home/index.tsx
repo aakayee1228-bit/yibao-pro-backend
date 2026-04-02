@@ -114,7 +114,7 @@ const HomePage: FC = () => {
     <View className="flex flex-col min-h-screen bg-gray-50">
       {/* 顶部区域 */}
       <View className="bg-gradient-to-br from-blue-500 to-blue-600 px-4 pt-12 pb-8">
-        <Text className="block text-2xl font-bold text-white">智能报价助手</Text>
+        <Text className="block text-2xl font-bold text-white">易报价Pro</Text>
         <Text className="block text-sm text-blue-100 mt-1">快速生成专业报价单</Text>
       </View>
 
@@ -172,7 +172,7 @@ const HomePage: FC = () => {
       </View>
 
       {/* 最近报价 */}
-      <View className="px-4 mt-4 pb-4">
+      <View className="px-4 mt-4">
         <Card>
           <CardHeader className="pb-2">
             <View className="flex flex-row items-center justify-between">
@@ -224,6 +224,18 @@ const HomePage: FC = () => {
                 })}
               </View>
             )}
+          </CardContent>
+        </Card>
+      </View>
+
+      {/* 广告位 */}
+      <View className="px-4 mt-4 pb-4">
+        <Card className="border-2 border-dashed border-gray-300">
+          <CardContent className="p-4">
+            <View className="flex flex-col items-center justify-center py-6">
+              <Text className="text-sm text-gray-400">广告位</Text>
+              <Text className="text-xs text-gray-300 mt-1">Advertising Space</Text>
+            </View>
           </CardContent>
         </Card>
       </View>

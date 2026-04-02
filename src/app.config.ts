@@ -4,14 +4,13 @@ export default defineAppConfig({
     'pages/products/index',
     'pages/quotes/index',
     'pages/profile/index',
-    'pages/membership/index',
     'pages/quotes/create/index',
     'pages/customers/index',
   ],
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#fff',
-    navigationBarTitleText: '智能报价助手',
+    navigationBarTitleText: '易报价Pro',
     navigationBarTextStyle: 'black',
   },
   tabBar: {

@@ -1,9 +1,7 @@
 import { View, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { useState } from 'react'
 import type { FC } from 'react'
 import {
-  Crown,
   Settings,
   FileText,
   Users,
@@ -13,66 +11,13 @@ import {
   ChevronRight,
 } from 'lucide-react-taro'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Network } from '@/network'
 import './index.css'
 
-interface UserSubscription {
-  id: string
-  tier_id: string
-  status: string
-  expire_at: string | null
-}
-
-interface MembershipTier {
-  id: string
-  name: string
-  display_name: string
-}
-
 const ProfilePage: FC = () => {
-  const [subscription, setSubscription] = useState<UserSubscription | null>(null)
-  const [currentTier, setCurrentTier] = useState<MembershipTier | null>(null)
-
   useDidShow(() => {
-    fetchSubscription()
+    // 可以在这里加载一些数据
   })
-
-  const fetchSubscription = async () => {
-    try {
-      const res = await Network.request({
-        url: '/api/membership/subscription',
-        method: 'GET',
-      })
-
-      console.log('获取订阅信息:', res.data)
-      if (res.statusCode === 200 && res.data) {
-        const responseData = res.data as { data?: UserSubscription }
-        const subData = responseData.data || null
-        setSubscription(subData)
-
-        // 如果有订阅，获取等级信息
-        if (subData?.tier_id) {
-          const tiersRes = await Network.request({
-            url: '/api/membership/tiers',
-            method: 'GET',
-          })
-          if (tiersRes.statusCode === 200 && tiersRes.data) {
-            const tiersData = tiersRes.data as { data?: MembershipTier[] }
-            const tier = tiersData.data?.find((t) => t.id === subData.tier_id)
-            setCurrentTier(tier || null)
-          }
-        }
-      }
-    } catch (err) {
-      console.error('获取订阅信息异常:', err)
-    }
-  }
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('zh-CN')
-  }
 
   const menuItems = [
     {
@@ -123,50 +68,28 @@ const ProfilePage: FC = () => {
             <Text className="text-2xl text-white">👤</Text>
           </View>
           <View className="flex-1">
-            <Text className="block text-xl font-bold text-white">智能报价助手</Text>
+            <Text className="block text-xl font-bold text-white">易报价Pro</Text>
             <Text className="block text-sm text-blue-100 mt-1">专业报价工具</Text>
           </View>
         </View>
       </View>
 
-      {/* 会员卡片 */}
+      {/* 使用提示 */}
       <View className="px-4 -mt-4">
-        <Card
-          className="cursor-pointer"
-          onClick={() => Taro.navigateTo({ url: '/pages/membership/index' })}
-        >
+        <Card>
           <CardContent className="p-4">
             <View className="flex items-center justify-between">
               <View className="flex items-center gap-3">
-                <View className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                  <Crown size={20} color="#f59e0b" />
+                <View className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                  <Text className="text-lg">📦</Text>
                 </View>
                 <View>
-                  {subscription && subscription.status === 'active' ? (
-                    <>
-                      <View className="flex items-center gap-2">
-                        <Text className="text-sm font-medium text-gray-900">会员状态</Text>
-                        <Badge className="bg-amber-500 text-white">
-                          {currentTier?.display_name || '会员'}
-                        </Badge>
-                      </View>
-                      {subscription.expire_at && (
-                        <Text className="text-xs text-gray-500 mt-1">
-                          有效期至 {formatDate(subscription.expire_at)}
-                        </Text>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <Text className="text-sm font-medium text-gray-900">免费版</Text>
-                      <Text className="text-xs text-gray-500 mt-1">
-                        商品上限 50 个 · 点击查看会员权益
-                      </Text>
-                    </>
-                  )}
+                  <Text className="text-sm font-medium text-gray-900">免费版</Text>
+                  <Text className="text-xs text-gray-500 mt-1">
+                    商品上限 20 个 · 客户上限 10 个
+                  </Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9ca3af" />
             </View>
           </CardContent>
         </Card>

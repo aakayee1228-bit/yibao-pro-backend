@@ -33,20 +33,11 @@ interface Industry {
   icon: string | null
 }
 
-interface Limits {
-  max_products: number
-  has_advanced_templates: boolean
-  has_ad: boolean
-}
+const MAX_PRODUCTS = 20
 
 const ProductsPage: FC = () => {
   const [products, setProducts] = useState<Product[]>([])
   const [industries, setIndustries] = useState<Industry[]>([])
-  const [limits, setLimits] = useState<Limits>({
-    max_products: 50,
-    has_advanced_templates: false,
-    has_ad: true,
-  })
   const [currentIndustry, setCurrentIndustry] = useState<string>('all')
   const [searchKeyword, setSearchKeyword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -67,7 +58,6 @@ const ProductsPage: FC = () => {
   useDidShow(() => {
     fetchIndustries()
     fetchProducts()
-    fetchLimits()
   })
 
   const fetchIndustries = async () => {
@@ -105,36 +95,13 @@ const ProductsPage: FC = () => {
     }
   }
 
-  const fetchLimits = async () => {
-    try {
-      const res = await Network.request({
-        url: '/api/membership/limits',
-        method: 'GET',
-      })
-
-      if (res.statusCode === 200 && res.data) {
-        const responseData = res.data as { data?: Limits }
-        if (responseData.data) {
-          setLimits(responseData.data)
-        }
-      }
-    } catch (err) {
-      console.error('获取权限配置异常:', err)
-    }
-  }
-
   const handleAddProduct = () => {
     // 检查商品数量限制
-    if (limits.max_products !== -1 && products.length >= limits.max_products) {
+    if (products.length >= MAX_PRODUCTS) {
       Taro.showModal({
         title: '商品数量已达上限',
-        content: `免费版最多添加 ${limits.max_products} 个商品，升级会员解锁无限商品`,
-        confirmText: '去升级',
-        success: (res) => {
-          if (res.confirm) {
-            Taro.navigateTo({ url: '/pages/membership/index' })
-          }
-        },
+        content: `免费版最多添加 ${MAX_PRODUCTS} 个商品，请删除不需要的商品后再添加`,
+        showCancel: false,
       })
       return
     }
@@ -303,24 +270,19 @@ const ProductsPage: FC = () => {
       )}
 
       {/* 商品数量提示 */}
-      {limits.max_products !== -1 && (
-        <View className="px-4 py-2">
-          <View className="bg-amber-50 rounded-lg px-3 py-2 flex items-center gap-2">
-            <CircleAlert size={14} color="#f59e0b" />
-            <Text className="text-xs text-amber-700">
-              已添加 {products.length}/{limits.max_products} 个商品
+      <View className="px-4 py-2">
+        <View className="bg-amber-50 rounded-lg px-3 py-2 flex items-center gap-2">
+          <CircleAlert size={14} color="#f59e0b" />
+          <Text className="text-xs text-amber-700">
+            已添加 {products.length}/{MAX_PRODUCTS} 个商品
+          </Text>
+          {products.length >= MAX_PRODUCTS - 5 && (
+            <Text className="text-xs text-gray-400">
+              {products.length >= MAX_PRODUCTS ? '已达上限' : '即将达上限'}
             </Text>
-            {products.length >= limits.max_products - 5 && (
-              <Text
-                className="text-xs text-blue-600"
-                onClick={() => Taro.navigateTo({ url: '/pages/membership/index' })}
-              >
-                升级会员
-              </Text>
-            )}
-          </View>
+          )}
         </View>
-      )}
+      </View>
 
       {/* 商品列表 */}
       <View className="flex-1 px-4 py-3 pb-20">
