@@ -2,7 +2,7 @@ import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 import type { FC } from 'react'
-import { Plus, Phone, MapPin, Pencil, Trash2, Search, X, CircleAlert } from 'lucide-react-taro'
+import { Plus, Phone, MapPin, Pencil, Trash2, Search, X } from 'lucide-react-taro'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -190,16 +190,6 @@ const CustomersPage: FC = () => {
               <X size={18} color="#9ca3af" />
             </View>
           )}
-        </View>
-      </View>
-
-      {/* 客户数量提示 */}
-      <View className="px-4 py-2">
-        <View className="bg-amber-50 rounded-lg px-3 py-2 flex items-center gap-2">
-          <CircleAlert size={14} color="#f59e0b" />
-          <Text className="text-xs text-amber-700">
-            已添加 {customers.length} 个客户（每10个需观看广告）
-          </Text>
         </View>
       </View>
 

@@ -2,7 +2,7 @@ import { View, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 import type { FC } from 'react'
-import { Plus, Search, Pencil, Trash2, CircleAlert } from 'lucide-react-taro'
+import { Plus, Search, Pencil, Trash2 } from 'lucide-react-taro'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
@@ -304,16 +304,6 @@ const ProductsPage: FC = () => {
           </Tabs>
         </View>
       )}
-
-      {/* 商品数量提示 */}
-      <View className="px-4 py-2">
-        <View className="bg-amber-50 rounded-lg px-3 py-2 flex items-center gap-2">
-          <CircleAlert size={14} color="#f59e0b" />
-          <Text className="text-xs text-amber-700">
-            已添加 {products.length} 个商品（每10个需观看广告）
-          </Text>
-        </View>
-      </View>
 
       {/* 商品列表 */}
       <View className="flex-1 px-4 py-3 pb-20">
