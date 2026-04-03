@@ -2,7 +2,7 @@ import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 import type { FC } from 'react'
-import { Plus, Trash2, ChevronRight, Package, Video } from 'lucide-react-taro'
+import { Plus, Trash2, ChevronRight, Package } from 'lucide-react-taro'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,7 +48,6 @@ const CreateQuotePage: FC = () => {
   const [loading, setLoading] = useState(false)
   const [showCustomerPicker, setShowCustomerPicker] = useState(false)
   const [showProductPicker, setShowProductPicker] = useState(false)
-  const [showAdModal, setShowAdModal] = useState(false)
 
   useDidShow(() => {
     fetchCustomers()
@@ -128,19 +127,8 @@ const CreateQuotePage: FC = () => {
       return
     }
 
-    // 显示广告提示
-    setShowAdModal(true)
-  }
-
-  const handleWatchAd = () => {
-    // 模拟观看广告
-    setShowAdModal(false)
-    Taro.showLoading({ title: '加载中...' })
-    
-    setTimeout(() => {
-      Taro.hideLoading()
-      submitQuote()
-    }, 1500)
+    // 直接提交报价单
+    submitQuote()
   }
 
   const submitQuote = async () => {
@@ -449,38 +437,6 @@ const CreateQuotePage: FC = () => {
                 ))
               )}
             </ScrollView>
-          </View>
-        </View>
-      )}
-
-      {/* 广告提示弹窗 */}
-      {showAdModal && (
-        <View className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <View className="w-72 bg-white rounded-xl p-6">
-            <View className="flex flex-col items-center">
-              <View className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4">
-                <Video size={32} color="#2563eb" />
-              </View>
-              <Text className="text-base font-medium text-gray-900 mb-2">观看广告后创建</Text>
-              <Text className="text-sm text-gray-500 text-center mb-6">
-                免费版需要观看广告才能创建报价单
-              </Text>
-              <View className="flex gap-3 w-full">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setShowAdModal(false)}
-                >
-                  取消
-                </Button>
-                <Button
-                  className="flex-1 bg-blue-500"
-                  onClick={handleWatchAd}
-                >
-                  观看广告
-                </Button>
-              </View>
-            </View>
           </View>
         </View>
       )}

@@ -33,48 +33,6 @@ interface Industry {
   icon: string | null
 }
 
-// 每10个商品需要观看一次广告
-const AD_INTERVAL = 10
-
-// 模拟观看广告
-const showAdIfNeeded = async (currentCount: number, actionType: 'product' | 'customer'): Promise<boolean> => {
-  // 计算添加后的数量
-  const nextCount = currentCount + 1
-  
-  // 如果不是第10、20、30...个，不需要看广告
-  if (nextCount % AD_INTERVAL !== 0) {
-    return true
-  }
-
-  return new Promise((resolve) => {
-    Taro.showModal({
-      title: '观看广告继续添加',
-      content: `您已添加 ${currentCount} 个${actionType === 'product' ? '商品' : '客户'}，继续添加需要观看广告`,
-      confirmText: '观看广告',
-      cancelText: '取消',
-      success: (res) => {
-        if (res.confirm) {
-          // 模拟观看广告（真实环境需要接入微信广告组件）
-          Taro.showLoading({ title: '加载广告中...', mask: true })
-          
-          setTimeout(() => {
-            Taro.hideLoading()
-            Taro.showToast({
-              title: '广告观看完成',
-              icon: 'success',
-              duration: 1500,
-            })
-            setTimeout(() => resolve(true), 1500)
-          }, 2000)
-        } else {
-          resolve(false)
-        }
-      },
-      fail: () => resolve(false),
-    })
-  })
-}
-
 const ProductsPage: FC = () => {
   const [products, setProducts] = useState<Product[]>([])
   const [industries, setIndustries] = useState<Industry[]>([])
@@ -135,13 +93,7 @@ const ProductsPage: FC = () => {
     }
   }
 
-  const handleAddProduct = async () => {
-    // 检查是否需要观看广告（每10个商品观看一次）
-    const canAdd = await showAdIfNeeded(products.length, 'product')
-    if (!canAdd) {
-      return
-    }
-
+  const handleAddProduct = () => {
     setEditingProduct(null)
     setFormData({
       name: '',

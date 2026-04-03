@@ -1,7 +1,7 @@
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import type { FC } from 'react'
-import { FileText, Check, Lock } from 'lucide-react-taro'
+import { FileText, Check } from 'lucide-react-taro'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -13,41 +13,6 @@ interface Template {
   description: string
   isPremium: boolean
   features: string[]
-}
-
-// 观看广告后使用模板
-const showAdAndUseTemplate = (template: Template): void => {
-  Taro.showModal({
-    title: '观看广告使用模板',
-    content: `观看广告后可使用「${template.name}」模板生成报价单`,
-    confirmText: '观看广告',
-    cancelText: '取消',
-    success: (res) => {
-      if (res.confirm) {
-        // 模拟观看广告（真实环境需要接入微信广告组件）
-        Taro.showLoading({ title: '加载广告中...', mask: true })
-
-        setTimeout(() => {
-          Taro.hideLoading()
-          Taro.showToast({
-            title: '广告观看完成',
-            icon: 'success',
-            duration: 1500,
-          })
-
-          // 延迟跳转，让用户看到提示
-          setTimeout(() => {
-            // TODO: 跳转到报价单创建页面，带上模板ID
-            // Taro.navigateTo({ url: `/pages/quotes/create/index?templateId=${template.id}` })
-            Taro.showToast({
-              title: `已选择${template.name}`,
-              icon: 'success',
-            })
-          }, 1500)
-        }, 2000)
-      }
-    },
-  })
 }
 
 const TemplatesPage: FC = () => {
@@ -78,17 +43,21 @@ const TemplatesPage: FC = () => {
   // 使用模板
   const handleUseTemplate = (template: Template) => {
     if (template.isPremium) {
-      // 高级模板需要观看广告
-      showAdAndUseTemplate(template)
-    } else {
-      // 免费模板直接使用
+      // 高级模板提示即将上线
       Taro.showToast({
-        title: `已选择${template.name}`,
-        icon: 'success',
+        title: '高级模板即将上线',
+        icon: 'none',
       })
-      // TODO: 跳转到报价单创建页面
-      // Taro.navigateTo({ url: `/pages/quotes/create/index?templateId=${template.id}` })
+      return
     }
+
+    // 免费模板直接使用
+    Taro.showToast({
+      title: `已选择${template.name}`,
+      icon: 'success',
+    })
+    // TODO: 跳转到报价单创建页面
+    // Taro.navigateTo({ url: `/pages/quotes/create/index?templateId=${template.id}` })
   }
 
   return (
@@ -107,13 +76,12 @@ const TemplatesPage: FC = () => {
               <CardHeader className="pb-2">
                 <View className="flex items-center justify-between">
                   <View className="flex items-center gap-2">
-                    <FileText size={20} color={template.isPremium ? '#2563eb' : '#2563eb'} />
+                    <FileText size={20} color="#2563eb" />
                     <CardTitle className="text-base">{template.name}</CardTitle>
                   </View>
                   {template.isPremium ? (
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-600">
-                      <Lock size={12} color="#2563eb" className="mr-1" />
-                      高级
+                    <Badge variant="secondary" className="bg-gray-100 text-gray-500">
+                      即将上线
                     </Badge>
                   ) : (
                     <Badge className="bg-green-500 text-white">免费</Badge>
@@ -125,7 +93,7 @@ const TemplatesPage: FC = () => {
                 <View className="flex flex-col gap-2">
                   {template.features.map((feature, index) => (
                     <View key={index} className="flex items-center gap-2">
-                      <Check size={14} color="#10b981" />
+                      <Check size={14} color={template.isPremium ? '#9ca3af' : '#10b981'} />
                       <Text className="text-xs text-gray-600">{feature}</Text>
                     </View>
                   ))}
@@ -135,18 +103,11 @@ const TemplatesPage: FC = () => {
                 <View className="mt-3 pt-3 border-t border-gray-100">
                   <Button
                     size="sm"
-                    className={template.isPremium ? 'w-full bg-blue-500 text-white' : 'w-full border-blue-500 text-blue-500'}
-                    variant={template.isPremium ? 'default' : 'outline'}
+                    className="w-full border-blue-500 text-blue-500"
+                    variant="outline"
                     onClick={() => handleUseTemplate(template)}
                   >
-                    {template.isPremium ? (
-                      <>
-                        <Lock size={14} color="#fff" className="mr-2" />
-                        观看广告使用
-                      </>
-                    ) : (
-                      '使用此模板'
-                    )}
+                    {template.isPremium ? '敬请期待' : '使用此模板'}
                   </Button>
                 </View>
               </CardContent>
@@ -158,7 +119,7 @@ const TemplatesPage: FC = () => {
       {/* 底部提示 */}
       <View className="p-4 bg-white border-t border-gray-100">
         <Text className="block text-xs text-gray-400 text-center">
-          高级模板每次使用需观看广告
+          更多模板持续开发中
         </Text>
       </View>
     </View>

@@ -227,18 +227,6 @@ const HomePage: FC = () => {
           </CardContent>
         </Card>
       </View>
-
-      {/* 广告位 */}
-      <View className="px-4 mt-4 pb-4">
-        <Card className="border-2 border-dashed border-gray-300">
-          <CardContent className="p-4">
-            <View className="flex flex-col items-center justify-center py-6">
-              <Text className="text-sm text-gray-400">广告位</Text>
-              <Text className="text-xs text-gray-300 mt-1">Advertising Space</Text>
-            </View>
-          </CardContent>
-        </Card>
-      </View>
     </View>
   )
 }
