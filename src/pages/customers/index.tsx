@@ -10,7 +10,47 @@ import { Badge } from '@/components/ui/badge'
 import { Network } from '@/network'
 import './index.css'
 
-const MAX_CUSTOMERS = 10
+// 每10个客户需要观看一次广告
+const AD_INTERVAL = 10
+
+// 模拟观看广告
+const showAdIfNeeded = async (currentCount: number, actionType: 'product' | 'customer'): Promise<boolean> => {
+  // 计算添加后的数量
+  const nextCount = currentCount + 1
+  
+  // 如果不是第10、20、30...个，不需要看广告
+  if (nextCount % AD_INTERVAL !== 0) {
+    return true
+  }
+
+  return new Promise((resolve) => {
+    Taro.showModal({
+      title: '观看广告继续添加',
+      content: `您已添加 ${currentCount} 个${actionType === 'product' ? '商品' : '客户'}，继续添加需要观看广告`,
+      confirmText: '观看广告',
+      cancelText: '取消',
+      success: (res) => {
+        if (res.confirm) {
+          // 模拟观看广告（真实环境需要接入微信广告组件）
+          Taro.showLoading({ title: '加载广告中...', mask: true })
+          
+          setTimeout(() => {
+            Taro.hideLoading()
+            Taro.showToast({
+              title: '广告观看完成',
+              icon: 'success',
+              duration: 1500,
+            })
+            setTimeout(() => resolve(true), 1500)
+          }, 2000)
+        } else {
+          resolve(false)
+        }
+      },
+      fail: () => resolve(false),
+    })
+  })
+}
 
 interface Customer {
   id: string
@@ -57,14 +97,10 @@ const CustomersPage: FC = () => {
     }
   }
 
-  const handleAddCustomer = () => {
-    // 检查客户数量限制
-    if (customers.length >= MAX_CUSTOMERS) {
-      Taro.showModal({
-        title: '客户数量已达上限',
-        content: `免费版最多添加 ${MAX_CUSTOMERS} 个客户，请删除不需要的客户后再添加`,
-        showCancel: false,
-      })
+  const handleAddCustomer = async () => {
+    // 检查是否需要观看广告（每10个客户观看一次）
+    const canAdd = await showAdIfNeeded(customers.length, 'customer')
+    if (!canAdd) {
       return
     }
 
@@ -162,13 +198,8 @@ const CustomersPage: FC = () => {
         <View className="bg-amber-50 rounded-lg px-3 py-2 flex items-center gap-2">
           <CircleAlert size={14} color="#f59e0b" />
           <Text className="text-xs text-amber-700">
-            已添加 {customers.length}/{MAX_CUSTOMERS} 个客户
+            已添加 {customers.length} 个客户（每10个需观看广告）
           </Text>
-          {customers.length >= MAX_CUSTOMERS - 3 && (
-            <Text className="text-xs text-gray-400">
-              {customers.length >= MAX_CUSTOMERS ? '已达上限' : '即将达上限'}
-            </Text>
-          )}
         </View>
       </View>
 

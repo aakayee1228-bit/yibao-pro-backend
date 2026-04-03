@@ -128,7 +128,7 @@ const ProfilePage: FC = () => {
       {/* 底部版权信息 */}
       <View className="p-4">
         <Text className="block text-xs text-gray-400 text-center">
-          易报价Pro v1.0.0
+          易表单 v1.0.0
         </Text>
       </View>
     </View>

@@ -114,7 +114,7 @@ const HomePage: FC = () => {
     <View className="flex flex-col min-h-screen bg-gray-50">
       {/* 顶部区域 */}
       <View className="bg-gradient-to-br from-blue-500 to-blue-600 px-4 pt-12 pb-8">
-        <Text className="block text-2xl font-bold text-white">易报价Pro</Text>
+        <Text className="block text-2xl font-bold text-white">易表单</Text>
         <Text className="block text-sm text-blue-100 mt-1">快速生成专业报价单</Text>
       </View>
 

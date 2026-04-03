@@ -1,8 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common'
 import { getSupabaseClient } from '@/storage/database/supabase-client'
 
-const MAX_PRODUCTS = 20
-
 @Injectable()
 export class ProductsService {
   /**
@@ -39,7 +37,7 @@ export class ProductsService {
   }
 
   /**
-   * 创建商品（检查数量限制）
+   * 创建商品（不限制数量）
    */
   async create(userId: string, productData: {
     industry_id: string
@@ -52,9 +50,6 @@ export class ProductsService {
     wholesale_price?: string
   }) {
     const client = getSupabaseClient()
-
-    // 检查商品数量限制
-    await this.checkProductLimit()
 
     // 验证行业是否存在
     const { data: industry, error: industryError } = await client
@@ -137,27 +132,5 @@ export class ProductsService {
     }
 
     return { success: true }
-  }
-
-  /**
-   * 检查商品数量限制
-   */
-  private async checkProductLimit() {
-    const client = getSupabaseClient()
-
-    // 查询当前商品数量
-    const { count, error } = await client
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true)
-
-    if (error) {
-      console.error('查询商品数量失败:', error)
-      throw new BadRequestException('查询商品数量失败')
-    }
-
-    if (count !== null && count >= MAX_PRODUCTS) {
-      throw new BadRequestException(`商品数量已达上限（${MAX_PRODUCTS}个），请删除不需要的商品后再添加`)
-    }
   }
 }

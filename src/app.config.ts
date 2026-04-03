@@ -11,7 +11,7 @@ export default defineAppConfig({
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#fff',
-    navigationBarTitleText: '易报价Pro',
+    navigationBarTitleText: '易表单',
     navigationBarTextStyle: 'black',
   },
   tabBar: {
