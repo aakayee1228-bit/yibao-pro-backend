@@ -11,7 +11,7 @@ export default defineAppConfig({
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#fff',
-    navigationBarTitleText: '易表单',
+    navigationBarTitleText: '易清单',
     navigationBarTextStyle: 'black',
   },
   tabBar: {
@@ -34,7 +34,7 @@ export default defineAppConfig({
       },
       {
         pagePath: 'pages/quotes/index',
-        text: '报价单',
+        text: '清单',
         iconPath: './assets/tabbar/file-text.png',
         selectedIconPath: './assets/tabbar/file-text-active.png',
       },

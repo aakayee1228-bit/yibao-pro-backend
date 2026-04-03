@@ -1,6 +1,6 @@
 export default typeof definePageConfig === 'function'
   ? definePageConfig({
-      navigationBarTitleText: '报价单',
+      navigationBarTitleText: '商品清单',
       enablePullDownRefresh: true,
     })
   : {

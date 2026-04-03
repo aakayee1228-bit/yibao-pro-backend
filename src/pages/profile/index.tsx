@@ -64,8 +64,8 @@ const ProfilePage: FC = () => {
     },
     {
       icon: FileText,
-      title: '报价单模板',
-      desc: '选择报价单样式',
+      title: '清单模板',
+      desc: '选择清单样式',
       path: '/pages/templates/index',
     },
   ]
@@ -128,7 +128,7 @@ const ProfilePage: FC = () => {
       {/* 底部版权信息 */}
       <View className="p-4">
         <Text className="block text-xs text-gray-400 text-center">
-          易表单 v1.0.0
+          易清单 v1.0.0
         </Text>
       </View>
     </View>

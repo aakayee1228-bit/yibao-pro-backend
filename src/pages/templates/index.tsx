@@ -19,21 +19,21 @@ const TemplatesPage: FC = () => {
   const templates: Template[] = [
     {
       id: '1',
-      name: '标准报价单',
+      name: '标准清单',
       description: '适用于大多数场景，简洁清晰',
       isPremium: false,
       features: ['基础信息展示', '商品明细', '合计金额'],
     },
     {
       id: '2',
-      name: '详细报价单',
+      name: '详细清单',
       description: '包含更多细节，适合复杂项目',
       isPremium: true,
       features: ['公司Logo', '商品图片', '备注说明', '条款声明'],
     },
     {
       id: '3',
-      name: '专业报价单',
+      name: '专业清单',
       description: '高端设计，适合正式场合',
       isPremium: true,
       features: ['精美排版', '企业印章', '多语言支持', '自定义字段'],
@@ -56,7 +56,7 @@ const TemplatesPage: FC = () => {
       title: `已选择${template.name}`,
       icon: 'success',
     })
-    // TODO: 跳转到报价单创建页面
+    // TODO: 跳转到清单创建页面
     // Taro.navigateTo({ url: `/pages/quotes/create/index?templateId=${template.id}` })
   }
 
@@ -64,8 +64,8 @@ const TemplatesPage: FC = () => {
     <View className="flex flex-col min-h-screen bg-gray-50">
       {/* 顶部说明 */}
       <View className="bg-gradient-to-br from-blue-500 to-blue-600 px-4 pt-12 pb-6">
-        <Text className="block text-xl font-bold text-white">报价单模板</Text>
-        <Text className="block text-sm text-blue-100 mt-1">选择合适的模板，生成专业报价单</Text>
+        <Text className="block text-xl font-bold text-white">清单模板</Text>
+        <Text className="block text-sm text-blue-100 mt-1">选择合适的模板，生成专业商品清单</Text>
       </View>
 
       {/* 模板列表 */}
