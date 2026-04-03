@@ -85,7 +85,7 @@ const HomePage: FC = () => {
 
   const quickActions = [
     {
-      title: '新建清单',
+      title: '新建表单',
       icon: Plus,
       color: 'bg-blue-500',
       onClick: () => Taro.navigateTo({ url: '/pages/quotes/create/index' }),
@@ -103,7 +103,7 @@ const HomePage: FC = () => {
       onClick: () => Taro.navigateTo({ url: '/pages/customers/index' }),
     },
     {
-      title: '历史清单',
+      title: '历史表单',
       icon: FileText,
       color: 'bg-purple-500',
       onClick: () => Taro.switchTab({ url: '/pages/quotes/index' }),
@@ -114,8 +114,8 @@ const HomePage: FC = () => {
     <View className="flex flex-col min-h-screen bg-gray-50">
       {/* 顶部区域 */}
       <View className="bg-gradient-to-br from-blue-500 to-blue-600 px-4 pt-12 pb-8">
-        <Text className="block text-2xl font-bold text-white">易清单</Text>
-        <Text className="block text-sm text-blue-100 mt-1">快速生成商品清单</Text>
+        <Text className="block text-2xl font-bold text-white">易表单</Text>
+        <Text className="block text-sm text-blue-100 mt-1">快速生成专业表单</Text>
       </View>
 
       {/* 快捷入口 */}
@@ -151,7 +151,7 @@ const HomePage: FC = () => {
               <View className="flex-1 bg-blue-50 rounded-lg p-3">
                 <View className="flex items-center gap-2">
                   <TrendingUp size={16} color="#2563eb" />
-                  <Text className="text-xs text-gray-500">清单数</Text>
+                  <Text className="text-xs text-gray-500">表单数</Text>
                 </View>
                 <Text className="block text-2xl font-bold text-blue-600 mt-1">
                   {stats.month_quotes}
@@ -176,7 +176,7 @@ const HomePage: FC = () => {
         <Card>
           <CardHeader className="pb-2">
             <View className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">最近清单</CardTitle>
+              <CardTitle className="text-base">最近表单</CardTitle>
               <Text
                 className="text-xs text-blue-600"
                 onClick={() => Taro.switchTab({ url: '/pages/quotes/index' })}
@@ -188,8 +188,8 @@ const HomePage: FC = () => {
           <CardContent className="pt-2">
             {recentQuotes.length === 0 ? (
               <View className="py-8 text-center">
-                <Text className="text-sm text-gray-400">暂无清单</Text>
-                <Text className="text-xs text-gray-400 mt-1">点击「新建清单」开始创建</Text>
+                <Text className="text-sm text-gray-400">暂无表单</Text>
+                <Text className="text-xs text-gray-400 mt-1">点击「新建表单」开始创建</Text>
               </View>
             ) : (
               <View className="flex flex-col gap-3">

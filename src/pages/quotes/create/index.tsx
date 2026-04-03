@@ -337,7 +337,7 @@ const CreateQuotePage: FC = () => {
           onClick={handleSubmit}
           disabled={loading}
         >
-          {loading ? '创建中...' : '创建清单'}
+          {loading ? '创建中...' : '创建表单'}
         </Button>
       </View>
 
