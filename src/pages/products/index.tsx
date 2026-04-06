@@ -159,7 +159,7 @@ const ProductsPage: FC = () => {
     setLoading(true)
     try {
       const submitData = {
-        industry_id: industries[0]?.id || '', // 默认第一个行业
+        industry_id: industries[0]?.id || 'industry-engineering', // 默认工程建材行业
         name: formData.name.trim(),
         code: formData.code.trim() || null,
         unit: formData.unit.trim() || '个',
@@ -168,6 +168,8 @@ const ProductsPage: FC = () => {
         retail_price: formData.retail_price.trim(),
         wholesale_price: formData.wholesale_price.trim() || null,
       }
+
+      console.log('提交商品数据:', submitData)
 
       let res
       if (editingProduct) {
@@ -186,7 +188,9 @@ const ProductsPage: FC = () => {
         })
       }
 
-      if (res.statusCode === 200) {
+      console.log('提交商品响应:', res)
+
+      if (res.statusCode === 200 || res.statusCode === 201) {
         Taro.showToast({
           title: editingProduct ? '更新成功' : '添加成功',
           icon: 'success',
@@ -194,9 +198,11 @@ const ProductsPage: FC = () => {
         setDialogOpen(false)
         fetchProducts()
       } else {
-        const errorData = res.data as { msg?: string }
+        const errorData = res.data as { msg?: string; message?: string }
+        const errorMsg = errorData.msg || errorData.message || '操作失败'
+        console.error('提交商品失败:', errorMsg, res)
         Taro.showToast({
-          title: errorData.msg || '操作失败',
+          title: errorMsg,
           icon: 'none',
         })
       }

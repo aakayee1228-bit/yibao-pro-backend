@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Headers, BadRequestException } from '@nestjs/common'
+import { Controller, Get, Post, Put, Delete, Body, Param, Headers, BadRequestException, HttpStatus } from '@nestjs/common'
 import { ProductsService } from './products.service'
 
 @Controller('products')
