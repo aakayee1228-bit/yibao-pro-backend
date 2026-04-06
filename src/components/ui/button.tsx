@@ -1,5 +1,5 @@
 import * as React from "react"
-import { View } from "@tarojs/components"
+import { View, Button as TaroButton } from "@tarojs/components"
 import Taro from "@tarojs/taro"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -53,33 +53,39 @@ const Button = React.forwardRef<React.ElementRef<typeof View>, ButtonProps>(
     const tabIndex = (props as { tabIndex?: number }).tabIndex ?? (disabled ? -1 : 0)
     const isWeapp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP
     
-    // 微信小程序端且有 openType 时，使用原生 button
+    // 微信小程序端且有 openType 时，使用 Taro Button
     if (isWeapp && openType) {
-      // 微信小程序 button 的特殊属性
-      const buttonProps: Record<string, any> = {
-        className: "w-full h-full flex items-center justify-center gap-2 bg-transparent border-0 p-0 m-0",
-        'open-type': openType,
-        disabled,
-        style: { lineHeight: 'normal' },
-      }
-      if (onGetPhoneNumber) buttonProps['bindgetphonenumber'] = onGetPhoneNumber
-      if (onGetUserInfo) buttonProps['bindgetuserinfo'] = onGetUserInfo
-      if (onOpenSetting) buttonProps['bindopensetting'] = onOpenSetting
-      if (onChooseAvatar) buttonProps['bindchooseavatar'] = onChooseAvatar
-      if (onContact) buttonProps['bindcontact'] = onContact
-      
+      return (
+        <TaroButton
+          className={cn(
+            buttonVariants({ variant, size, className }),
+            disabled && "opacity-50 pointer-events-none"
+          )}
+          openType={openType}
+          disabled={disabled}
+          onGetPhoneNumber={onGetPhoneNumber}
+          onGetUserInfo={onGetUserInfo}
+          onOpenSetting={onOpenSetting}
+          onChooseAvatar={onChooseAvatar}
+          onContact={onContact}
+        >
+          {(props as any).children}
+        </TaroButton>
+      )
+    }
+    
+    // H5 端或有 openType 但不是小程序时
+    if (openType && !isWeapp) {
       return (
         <View
           className={cn(
             buttonVariants({ variant, size, className }),
-            disabled && "opacity-50 pointer-events-none",
-            "p-0 border-0 bg-transparent"
+            disabled && "opacity-50 pointer-events-none"
           )}
+          onClick={() => Taro.showToast({ title: '请在微信小程序中使用此功能', icon: 'none' })}
           ref={ref}
         >
-          <button {...buttonProps}>
-            {(props as any).children}
-          </button>
+          {(props as any).children}
         </View>
       )
     }
