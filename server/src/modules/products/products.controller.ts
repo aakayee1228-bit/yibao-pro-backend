@@ -13,7 +13,7 @@ export class ProductsController {
   async getAll(@Headers('x-user-id') userId: string) {
     const testUserId = userId || 'test-user-001'
     const products = await this.productsService.getAll(testUserId)
-    return products
+    return { code: 0, msg: 'success', data: products }
   }
 
   /**
@@ -23,7 +23,7 @@ export class ProductsController {
   @Get(':id')
   async getById(@Param('id') id: string) {
     const product = await this.productsService.getById(id)
-    return product
+    return { code: 0, msg: 'success', data: product }
   }
 
   /**
@@ -72,7 +72,7 @@ export class ProductsController {
       wholesale_price: body.wholesale_price || undefined,
     })
 
-    return product
+    return { code: 0, msg: 'success', data: product }
   }
 
   /**
@@ -110,7 +110,7 @@ export class ProductsController {
       specification: body.specification?.trim(),
     })
 
-    return product
+    return { code: 0, msg: 'success', data: product }
   }
 
   /**
@@ -120,6 +120,6 @@ export class ProductsController {
   @Delete(':id')
   async delete(@Param('id') id: string) {
     const result = await this.productsService.delete(id)
-    return result
+    return { code: 0, msg: 'success', data: result }
   }
 }

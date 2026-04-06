@@ -65,6 +65,8 @@ const ProductsPage: FC = () => {
         method: 'GET',
       })
 
+      console.log('获取行业列表响应:', res.statusCode, res.data)
+
       if (res.statusCode === 200 && res.data) {
         const responseData = res.data as { data?: Industry[] }
         setIndustries(responseData.data || [])
@@ -81,6 +83,8 @@ const ProductsPage: FC = () => {
         url: '/api/products',
         method: 'GET',
       })
+
+      console.log('获取商品列表响应:', res.statusCode, res.data)
 
       if (res.statusCode === 200 && res.data) {
         const responseData = res.data as { data?: Product[] }

@@ -12,6 +12,6 @@ export class IndustriesController {
   @Get()
   async getAll() {
     const industries = await this.industriesService.getAll()
-    return industries
+    return { code: 0, msg: 'success', data: industries }
   }
 }
