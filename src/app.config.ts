@@ -8,6 +8,7 @@ export default defineAppConfig({
     'pages/quotes/detail/index',
     'pages/customers/index',
     'pages/templates/index',
+    'pages/merchant-settings/index',
   ],
   window: {
     backgroundTextStyle: 'light',

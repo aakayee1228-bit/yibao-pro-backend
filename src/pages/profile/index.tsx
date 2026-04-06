@@ -8,6 +8,7 @@ import {
   Users,
   ChevronRight,
   LogOut,
+  Settings,
 } from 'lucide-react-taro'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -15,9 +16,10 @@ import { Network } from '@/network'
 
 interface MerchantInfo {
   id: string
-  name: string
+  shop_name: string
+  contact_name: string
   phone: string
-  industry?: string
+  address: string
 }
 
 const ProfilePage: FC = () => {
@@ -74,18 +76,22 @@ const ProfilePage: FC = () => {
     <View className="flex flex-col min-h-screen bg-gray-50">
       {/* 商家信息卡片 */}
       <View className="bg-gradient-to-br from-blue-500 to-blue-600 px-4 pt-12 pb-6">
-        <View className="flex items-center gap-3">
+        <View 
+          className="flex items-center gap-3"
+          onClick={() => Taro.navigateTo({ url: '/pages/merchant-settings/index' })}
+        >
           <View className="w-14 h-14 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
             <Building2 size={28} color="#fff" />
           </View>
           <View className="flex-1">
             <Text className="block text-lg font-bold text-white">
-              {merchantInfo?.name || '商家名称'}
+              {merchantInfo?.shop_name || '点击设置商家名称'}
             </Text>
             <Text className="block text-sm text-blue-100 mt-1">
               {merchantInfo?.phone || '未绑定手机号'}
             </Text>
           </View>
+          <ChevronRight size={20} color="#fff" />
         </View>
       </View>
 
@@ -111,6 +117,25 @@ const ProfilePage: FC = () => {
                 <ChevronRight size={16} color="#9ca3af" />
               </View>
             ))}
+          </CardContent>
+        </Card>
+
+        {/* 商家设置入口 */}
+        <Card className="mb-4">
+          <CardContent className="p-0">
+            <View
+              className="flex items-center justify-between p-4"
+              onClick={() => Taro.navigateTo({ url: '/pages/merchant-settings/index' })}
+            >
+              <View className="flex items-center gap-3">
+                <Settings size={20} color="#2563eb" />
+                <View>
+                  <Text className="block text-sm font-medium text-gray-900">商家设置</Text>
+                  <Text className="block text-xs text-gray-500 mt-1">设置商家名称、联系方式</Text>
+                </View>
+              </View>
+              <ChevronRight size={16} color="#9ca3af" />
+            </View>
           </CardContent>
         </Card>
 
