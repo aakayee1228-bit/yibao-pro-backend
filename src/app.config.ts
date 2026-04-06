@@ -5,6 +5,7 @@ export default defineAppConfig({
     'pages/quotes/index',
     'pages/profile/index',
     'pages/quotes/create/index',
+    'pages/quotes/edit/index',
     'pages/quotes/detail/index',
     'pages/customers/index',
     'pages/templates/index',
