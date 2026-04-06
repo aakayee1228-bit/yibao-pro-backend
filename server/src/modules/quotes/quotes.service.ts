@@ -30,10 +30,7 @@ export class QuotesService {
     
     let query = client
       .from('quotes')
-      .select(`
-        *,
-        customers(name, phone)
-      `)
+      .select('*')
       .order('created_at', { ascending: false })
 
     if (filters?.status) {
@@ -43,14 +40,30 @@ export class QuotesService {
       query = query.eq('customer_id', filters.customer_id)
     }
 
-    const { data, error } = await query
+    const { data: quotes, error } = await query
 
     if (error) {
       console.error('获取报价单列表失败:', error)
       throw new BadRequestException('获取报价单列表失败')
     }
 
-    return data
+    // 手动获取客户信息
+    if (quotes && quotes.length > 0) {
+      const customerIds = [...new Set(quotes.map(q => q.customer_id))]
+      const { data: customers } = await client
+        .from('customers')
+        .select('id, name, phone')
+        .in('id', customerIds)
+      
+      const customerMap = new Map((customers || []).map(c => [c.id, c]))
+      
+      return quotes.map(quote => ({
+        ...quote,
+        customers: customerMap.get(quote.customer_id) || null
+      }))
+    }
+
+    return quotes || []
   }
 
   /**
@@ -61,10 +74,7 @@ export class QuotesService {
 
     const { data: quote, error: quoteError } = await client
       .from('quotes')
-      .select(`
-        *,
-        customers(name, phone, address, company)
-      `)
+      .select('*')
       .eq('id', id)
       .single()
 
@@ -72,12 +82,23 @@ export class QuotesService {
       throw new NotFoundException('报价单不存在')
     }
 
+    // 手动获取客户信息
+    let customerInfo: { id: string; name: string; phone: string; address: string; company: string } | null = null
+    if (quote.customer_id) {
+      const { data: customer } = await client
+        .from('customers')
+        .select('id, name, phone, address, company')
+        .eq('id', quote.customer_id)
+        .single()
+      customerInfo = customer as typeof customerInfo
+    }
+
     // 获取报价单明细
     const { data: items, error: itemsError } = await client
       .from('quote_items')
       .select('*')
       .eq('quote_id', id)
-      .order('created_at', { ascending: true })
+      .order('id', { ascending: true })
 
     if (itemsError) {
       console.error('获取报价单明细失败:', itemsError)
@@ -85,6 +106,7 @@ export class QuotesService {
 
     return {
       ...quote,
+      customers: customerInfo,
       items: items || [],
     }
   }
