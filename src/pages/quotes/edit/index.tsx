@@ -1,6 +1,6 @@
 import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { FC } from 'react'
 import { Plus, Trash2, ChevronRight, Package } from 'lucide-react-taro'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -67,14 +67,31 @@ const EditQuotePage: FC = () => {
   const [showProductPicker, setShowProductPicker] = useState(false)
   const [quoteId, setQuoteId] = useState<string>('')
 
-  useDidShow(() => {
-    const id = Taro.getCurrentInstance().router?.params?.id
+  // 获取路由参数
+  const getRouteId = (): string | undefined => {
+    const instance = Taro.getCurrentInstance()
+    return instance.router?.params?.id
+  }
+
+  useEffect(() => {
+    const id = getRouteId()
     if (id) {
       setQuoteId(id)
       fetchQuoteDetail(id)
+    } else {
+      Taro.showToast({ title: '参数错误', icon: 'none' })
+      setTimeout(() => Taro.navigateBack(), 1500)
     }
     fetchCustomers()
     fetchProducts()
+  }, [])
+
+  useDidShow(() => {
+    const id = getRouteId()
+    if (id && !quoteId) {
+      setQuoteId(id)
+      fetchQuoteDetail(id)
+    }
   })
 
   const fetchQuoteDetail = async (id: string) => {
@@ -178,11 +195,15 @@ const EditQuotePage: FC = () => {
 
   const handleSubmit = async () => {
     if (!selectedCustomer) {
-      Taro.showToast({ title: '请选择客户', icon: 'error' })
+      Taro.showToast({ title: '请选择客户', icon: 'none' })
       return
     }
     if (items.length === 0) {
-      Taro.showToast({ title: '请添加商品', icon: 'error' })
+      Taro.showToast({ title: '请添加商品', icon: 'none' })
+      return
+    }
+    if (!quoteId) {
+      Taro.showToast({ title: '表单ID不存在', icon: 'none' })
       return
     }
 
@@ -192,6 +213,24 @@ const EditQuotePage: FC = () => {
   const submitQuote = async () => {
     setLoading(true)
     try {
+      console.log('提交数据:', {
+        quoteId,
+        customer_id: selectedCustomer!.id,
+        items: items.map(item => ({
+          product_id: item.product_id,
+          product_name: item.product_name,
+          unit: item.unit,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          discount: item.discount,
+          amount: item.amount,
+          remark: item.remark,
+        })),
+        discount,
+        remark,
+        valid_days: validDays,
+      })
+
       const res = await Network.request({
         url: `/api/quotes/${quoteId}`,
         method: 'PUT',
@@ -221,11 +260,11 @@ const EditQuotePage: FC = () => {
           Taro.navigateBack()
         }, 1000)
       } else {
-        Taro.showToast({ title: res.data?.msg || '保存失败', icon: 'error' })
+        Taro.showToast({ title: res.data?.msg || '保存失败', icon: 'none' })
       }
     } catch (err) {
       console.error('保存表单失败:', err)
-      Taro.showToast({ title: '保存失败', icon: 'error' })
+      Taro.showToast({ title: '保存失败', icon: 'none' })
     } finally {
       setLoading(false)
     }
