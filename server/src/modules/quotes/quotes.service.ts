@@ -216,7 +216,11 @@ export class QuotesService {
         remark: item.remark,
       }))
 
-      await client.from('quote_items').insert(itemsData)
+      const { error: itemsError } = await client.from('quote_items').insert(itemsData)
+      if (itemsError) {
+        console.error('创建报价单明细失败:', itemsError)
+        throw new BadRequestException('创建报价单明细失败')
+      }
 
       // 更新报价单
       const { data, error } = await client
