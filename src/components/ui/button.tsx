@@ -1,5 +1,6 @@
 import * as React from "react"
 import { View } from "@tarojs/components"
+import Taro from "@tarojs/taro"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
@@ -39,11 +40,50 @@ export interface ButtonProps
   asChild?: boolean
   disabled?: boolean
   className?: string
+  openType?: 'share' | 'getPhoneNumber' | 'getUserInfo' | 'launchApp' | 'openSetting' | 'feedback' | 'chooseAvatar' | 'agreePrivacyAuthorization' | 'contact' | 'getRealtimePhoneNumber' | 'getAuthorize'
+  onGetPhoneNumber?: (e: any) => void
+  onGetUserInfo?: (e: any) => void
+  onOpenSetting?: (e: any) => void
+  onChooseAvatar?: (e: any) => void
+  onContact?: (e: any) => void
 }
 
 const Button = React.forwardRef<React.ElementRef<typeof View>, ButtonProps>(
-  ({ className, variant, size, asChild = false, disabled, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, disabled, openType, onGetPhoneNumber, onGetUserInfo, onOpenSetting, onChooseAvatar, onContact, ...props }, ref) => {
     const tabIndex = (props as { tabIndex?: number }).tabIndex ?? (disabled ? -1 : 0)
+    const isWeapp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP
+    
+    // 微信小程序端且有 openType 时，使用原生 button
+    if (isWeapp && openType) {
+      // 微信小程序 button 的特殊属性
+      const buttonProps: Record<string, any> = {
+        className: "w-full h-full flex items-center justify-center gap-2 bg-transparent border-0 p-0 m-0",
+        'open-type': openType,
+        disabled,
+        style: { lineHeight: 'normal' },
+      }
+      if (onGetPhoneNumber) buttonProps['bindgetphonenumber'] = onGetPhoneNumber
+      if (onGetUserInfo) buttonProps['bindgetuserinfo'] = onGetUserInfo
+      if (onOpenSetting) buttonProps['bindopensetting'] = onOpenSetting
+      if (onChooseAvatar) buttonProps['bindchooseavatar'] = onChooseAvatar
+      if (onContact) buttonProps['bindcontact'] = onContact
+      
+      return (
+        <View
+          className={cn(
+            buttonVariants({ variant, size, className }),
+            disabled && "opacity-50 pointer-events-none",
+            "p-0 border-0 bg-transparent"
+          )}
+          ref={ref}
+        >
+          <button {...buttonProps}>
+            {(props as any).children}
+          </button>
+        </View>
+      )
+    }
+    
     return (
       <View
         className={cn(

@@ -5,6 +5,7 @@ import type { FC } from 'react'
 import { Phone, Share2, Copy } from 'lucide-react-taro'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Network } from '@/network'
 
 interface QuoteItem {
@@ -105,23 +106,7 @@ const QuoteDetailPage: FC = () => {
     return statusMap[status] || { label: status, variant: 'secondary' }
   }
 
-  // 分享给客户 - 触发微信分享菜单
-  const handleShare = () => {
-    // 小程序端触发分享
-    if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP) {
-      Taro.showShareMenu({
-        withShareTicket: true,
-      } as Taro.showShareMenu.Option)
-    } else {
-      // H5端提示
-      Taro.showToast({
-        title: '请在微信小程序中使用分享功能',
-        icon: 'none',
-      })
-    }
-  }
-
-  // 复制分享链接（备用方案）
+  // 复制分享文案
   const handleCopyLink = () => {
     if (!quote) return
 
@@ -288,13 +273,23 @@ const QuoteDetailPage: FC = () => {
             <Copy size={16} color="#374151" />
             <Text className="text-sm text-gray-700">复制文案</Text>
           </View>
-          <View
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-blue-500"
-            onClick={handleShare}
-          >
-            <Share2 size={18} color="#ffffff" />
-            <Text className="text-sm text-white">发送给客户</Text>
-          </View>
+          {Taro.getEnv() === Taro.ENV_TYPE.WEAPP ? (
+            <Button
+              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-blue-500 text-white"
+              openType="share"
+            >
+              <Share2 size={18} color="#ffffff" />
+              <Text className="text-sm text-white">发送给客户</Text>
+            </Button>
+          ) : (
+            <View
+              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-blue-500"
+              onClick={() => Taro.showToast({ title: '请在微信小程序中使用分享功能', icon: 'none' })}
+            >
+              <Share2 size={18} color="#ffffff" />
+              <Text className="text-sm text-white">发送给客户</Text>
+            </View>
+          )}
         </View>
       </View>
     </View>
