@@ -47,36 +47,13 @@ const QuoteDetailPage: FC = () => {
   const [quote, setQuote] = useState<Quote | null>(null)
   const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
-  const [merchantName, setMerchantName] = useState<string>('')
 
   useDidShow(() => {
     const id = Taro.getCurrentInstance().router?.params?.id
     if (id) {
       fetchQuoteDetail(id)
     }
-
-    // 获取商家信息
-    loadMerchantInfo()
   })
-
-  // 加载商家信息
-  const loadMerchantInfo = async () => {
-    try {
-      const res = await Network.request({
-        url: '/api/merchants/info',
-        method: 'GET',
-      })
-
-      console.log('[商家信息] 响应:', res.data)
-
-      if (res.data?.code === 200 && res.data?.data) {
-        const data = res.data.data as { shop_name: string }
-        setMerchantName(data.shop_name || '')
-      }
-    } catch (error) {
-      console.error('[商家信息] 加载失败:', error)
-    }
-  }
 
   // 配置分享功能
   useShareAppMessage(() => {
@@ -375,8 +352,7 @@ const QuoteDetailPage: FC = () => {
       ctx.fillText('此报价单仅供参考，请以实际交易为准', 375, yPos)
 
       // ========== 绘制水印 ==========
-      // 使用商家名称
-      const watermarkText = merchantName ? `仅供 ${merchantName} 参考` : '仅供商家参考'
+      const watermarkText = `仅供 ${customerName}${quote.customers?.company ? ' / ' + quote.customers.company : ''} 参考`
 
       ctx.save()
       ctx.globalAlpha = 0.12
