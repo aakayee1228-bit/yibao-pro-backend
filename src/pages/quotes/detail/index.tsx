@@ -47,11 +47,22 @@ const QuoteDetailPage: FC = () => {
   const [quote, setQuote] = useState<Quote | null>(null)
   const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
+  const [userName, setUserName] = useState<string>('用户') // 添加用户名称状态
 
   useDidShow(() => {
     const id = Taro.getCurrentInstance().router?.params?.id
     if (id) {
       fetchQuoteDetail(id)
+    }
+
+    // 获取用户信息
+    try {
+      const userInfo = Taro.getStorageSync('userInfo')
+      if (userInfo && userInfo.name) {
+        setUserName(userInfo.name)
+      }
+    } catch (err) {
+      console.error('获取用户信息失败:', err)
     }
   })
 
@@ -171,17 +182,17 @@ const QuoteDetailPage: FC = () => {
 
       // 标题
       ctx.fillStyle = '#ffffff'
-      ctx.font = 'bold 48px sans-serif'
+      ctx.font = 'bold 48px Arial'
       ctx.textAlign = 'center'
       ctx.fillText('产品报价单', 375, 78)
 
       // ========== 两列信息布局 ==========
       let yPos = 140
-      ctx.font = '24px sans-serif'
+      ctx.font = '24px Arial'
 
       // 左列 - 客户信息
       ctx.fillStyle = '#1f2937'
-      ctx.font = 'bold 28px sans-serif'
+      ctx.font = 'bold 28px Arial'
       ctx.textAlign = 'left'
       const customerName = quote.customers?.name || '客户'
       ctx.fillText(`客户：${customerName}`, 30, yPos)
@@ -189,7 +200,7 @@ const QuoteDetailPage: FC = () => {
       if (quote.customers?.company) {
         yPos += 40
         ctx.fillStyle = '#6b7280'
-        ctx.font = '24px sans-serif'
+        ctx.font = '24px Arial'
         ctx.fillText(quote.customers.company, 30, yPos)
       }
 
@@ -201,7 +212,7 @@ const QuoteDetailPage: FC = () => {
       // 右列 - 表单信息
       yPos = 140
       ctx.fillStyle = '#6b7280'
-      ctx.font = '24px sans-serif'
+      ctx.font = '24px Arial'
       ctx.textAlign = 'right'
       ctx.fillText(`单号：${quote.quote_no}`, 720, yPos)
 
@@ -250,7 +261,7 @@ const QuoteDetailPage: FC = () => {
 
       // 表头文字
       ctx.fillStyle = '#ffffff'
-      ctx.font = 'bold 24px sans-serif'
+      ctx.font = 'bold 24px Arial'
       ctx.textAlign = 'center'
       ctx.fillText('序号', colX.index + colWidths.index / 2, yPos + 34)
       ctx.fillText('品名', colX.name + colWidths.name / 2, yPos + 34)
@@ -283,7 +294,7 @@ const QuoteDetailPage: FC = () => {
 
           // 绘制文字
           ctx.fillStyle = '#374151'
-          ctx.font = '22px sans-serif'
+          ctx.font = '22px Arial'
           ctx.textAlign = 'center'
 
           // 序号
@@ -310,7 +321,7 @@ const QuoteDetailPage: FC = () => {
 
           // 合计
           ctx.fillStyle = '#1e40af'
-          ctx.font = 'bold 22px sans-serif'
+          ctx.font = 'bold 22px Arial'
           ctx.fillText(`¥${Number(item.amount).toFixed(2)}`, colX.total + colWidths.total / 2, yPos + 32)
 
           yPos += 50
@@ -331,7 +342,7 @@ const QuoteDetailPage: FC = () => {
       // 商品金额
       yPos += 40
       ctx.fillStyle = '#6b7280'
-      ctx.font = '24px sans-serif'
+      ctx.font = '24px Arial'
       ctx.textAlign = 'right'
       ctx.fillText('商品金额', summaryLabelX, yPos)
       ctx.fillStyle = '#374151'
@@ -356,18 +367,18 @@ const QuoteDetailPage: FC = () => {
 
       yPos += 45
       ctx.fillStyle = '#1f2937'
-      ctx.font = 'bold 28px sans-serif'
+      ctx.font = 'bold 28px Arial'
       ctx.textAlign = 'right'
       ctx.fillText('合计', summaryLabelX, yPos)
       ctx.fillStyle = '#1e40af'
-      ctx.font = 'bold 32px sans-serif'
+      ctx.font = 'bold 32px Arial'
       ctx.fillText(`¥${Number(quote.total_amount).toFixed(2)}`, summaryValueX, yPos)
 
       // ========== 备注 ==========
       if (quote.remark) {
         yPos += 60
         ctx.fillStyle = '#9ca3af'
-        ctx.font = '22px sans-serif'
+        ctx.font = '22px Arial'
         ctx.textAlign = 'left'
 
         // 处理备注换行
@@ -395,17 +406,18 @@ const QuoteDetailPage: FC = () => {
       // ========== 底部说明 ==========
       const footerYPos = 1350
       ctx.fillStyle = '#9ca3af'
-      ctx.font = '20px sans-serif'
+      ctx.font = '20px Arial'
       ctx.textAlign = 'center'
       ctx.fillText('此报价单仅供参考，请以实际交易为准', 375, footerYPos)
 
       // ========== 绘制水印 ==========
-      const watermarkText = `仅供 ${customerName}${quote.customers?.company ? ' / ' + quote.customers.company : ''} 参考`
+      // 使用用户登录名称而不是客户名称
+      const watermarkText = `仅供 ${userName} 参考`
 
       ctx.save()
       ctx.globalAlpha = 0.12
       ctx.fillStyle = '#1e40af'
-      ctx.font = 'bold 36px sans-serif'
+      ctx.font = 'bold 36px Arial'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
 
