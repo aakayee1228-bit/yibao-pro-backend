@@ -7,9 +7,10 @@ import { QuotesModule } from '@/modules/quotes/quotes.module';
 import { CustomersModule } from '@/modules/customers/customers.module';
 import { MerchantsModule } from '@/modules/merchants/merchants.module';
 import { AnalyzeModule } from '@/modules/analyze/analyze.module';
+import { CanvasModule } from '@/modules/canvas/canvas.module';
 
 @Module({
-  imports: [ProductsModule, IndustriesModule, QuotesModule, CustomersModule, MerchantsModule, AnalyzeModule],
+  imports: [ProductsModule, IndustriesModule, QuotesModule, CustomersModule, MerchantsModule, AnalyzeModule, CanvasModule],
   controllers: [AppController],
   providers: [AppService],
 })
