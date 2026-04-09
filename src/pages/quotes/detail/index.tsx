@@ -2,7 +2,8 @@ import { View, Text, ScrollView, Canvas } from '@tarojs/components'
 import Taro, { useDidShow, useShareAppMessage } from '@tarojs/taro'
 import { useState } from 'react'
 import type { FC } from 'react'
-import { Phone, Copy, ImageDown } from 'lucide-react-taro'
+import { Phone, Share2, Copy, ImageDown } from 'lucide-react-taro'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Network } from '@/network'
 
@@ -77,6 +78,24 @@ const QuoteDetailPage: FC = () => {
     }
   }
 
+  // 配置分享功能
+  useShareAppMessage(() => {
+    if (!quote) {
+      return {
+        title: '易表单 - 查看表单详情',
+        path: '/pages/quotes/index',
+      }
+    }
+
+    const customerName = quote.customers?.name || '客户'
+    const amount = Number(quote.total_amount).toFixed(2)
+
+    return {
+      title: `【${quote.quote_no}】${customerName} - ¥${amount}`,
+      path: `/pages/quotes/detail/index?id=${quote.id}`,
+    }
+  })
+
   const fetchQuoteDetail = async (id: string) => {
     setLoading(true)
     try {
@@ -99,54 +118,14 @@ const QuoteDetailPage: FC = () => {
     }
   }
 
-  // 配置分享功能
-  useShareAppMessage(() => {
-    if (!quote) {
-      return {
-        title: '易表单 - 查看表单详情',
-        path: '/pages/quotes/index',
-      }
+  const getStatusBadge = (status: string) => {
+    const statusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+      draft: { label: '草稿', variant: 'secondary' },
+      sent: { label: '已发送', variant: 'default' },
+      accepted: { label: '已成交', variant: 'default' },
+      rejected: { label: '已拒绝', variant: 'destructive' },
     }
-
-    const customerName = quote.customers?.name || '客户'
-    const amount = Number(quote.total_amount).toFixed(2)
-
-    return {
-      title: `【${quote.quote_no}】${customerName} - ¥${amount}`,
-      path: `/pages/quotes/detail/index?id=${quote.id}`,
-    }
-  })
-
-  // 删除表单
-  const handleDelete = () => {
-    if (!quote) return
-
-    Taro.showModal({
-      title: '确认删除',
-      content: '删除后无法恢复，确定要删除这个表单吗？',
-      success: async (res) => {
-        if (res.confirm) {
-          try {
-            const deleteRes = await Network.request({
-              url: `/api/quotes/${quote.id}`,
-              method: 'DELETE',
-            })
-
-            if (deleteRes.statusCode === 200) {
-              Taro.showToast({ title: '删除成功', icon: 'success' })
-              setTimeout(() => {
-                Taro.navigateBack()
-              }, 1500)
-            } else {
-              Taro.showToast({ title: '删除失败', icon: 'none' })
-            }
-          } catch (err) {
-            console.error('删除表单失败:', err)
-            Taro.showToast({ title: '删除失败', icon: 'none' })
-          }
-        }
-      },
-    })
+    return statusMap[status] || { label: status, variant: 'secondary' }
   }
 
   // 复制分享文案
@@ -162,7 +141,7 @@ const QuoteDetailPage: FC = () => {
     Taro.showToast({ title: '已复制分享文案', icon: 'success' })
   }
 
-  // 生成图片
+  // 生成带水印的图片
   const handleGenerateImage = async () => {
     if (!quote) return
 
@@ -381,7 +360,7 @@ const QuoteDetailPage: FC = () => {
 
       // ========== 备注 ==========
       if (quote.remark) {
-        yPos += 60
+        yPos = yPos + 60
         ctx.fillStyle = '#9ca3af'
         ctx.font = '22px sans-serif'
         ctx.textAlign = 'left'
@@ -434,15 +413,16 @@ const QuoteDetailPage: FC = () => {
             title: '图片已生成',
             content: '长按图片可保存到相册，或点击右上角分享给客户',
             showCancel: false,
+            confirmText: '知道了',
           })
         },
         fail: (err) => {
-          console.error('导出图片失败:', err)
-          Taro.showToast({ title: '导出失败', icon: 'none' })
+          console.error('生成图片失败:', err)
+          Taro.showToast({ title: '生成失败', icon: 'none' })
         },
       })
     } catch (err) {
-      console.error('生成图片失败:', err)
+      console.error('生成图片异常:', err)
       Taro.showToast({ title: '生成失败', icon: 'none' })
     } finally {
       setGenerating(false)
@@ -464,6 +444,8 @@ const QuoteDetailPage: FC = () => {
       </View>
     )
   }
+
+  const statusInfo = getStatusBadge(quote.status)
 
   return (
     <View className="flex flex-col min-h-screen bg-gray-50">
@@ -524,117 +506,127 @@ const QuoteDetailPage: FC = () => {
             <View className="h-1 bg-blue-800 rounded mb-4" />
 
             {/* 商品明细表格 */}
-            <View className="overflow-hidden mb-4">
-              <View className="flex bg-blue-800 text-white text-xs font-medium">
-                <Text className="flex-1 py-2 text-center border-r border-blue-700">序号</Text>
-                <Text className="flex-[2] py-2 text-center border-r border-blue-700">品名</Text>
-                <Text className="flex-1 py-2 text-center border-r border-blue-700">单位</Text>
-                <Text className="flex-1 py-2 text-center border-r border-blue-700">数量</Text>
-                <Text className="flex-1 py-2 text-center border-r border-blue-700">单价</Text>
-                <Text className="flex-1 py-2 text-center">合计</Text>
+            <View className="mb-4">
+              <Text className="block text-base font-bold text-gray-900 mb-3">商品明细</Text>
+              
+              {/* 表头 */}
+              <View className="flex bg-blue-800 rounded-t">
+                <View className="flex-1 py-2 px-1">
+                  <Text className="block text-xs text-center text-white font-medium">序号</Text>
+                </View>
+                <View className="flex-2 py-2 px-2">
+                  <Text className="block text-xs text-center text-white font-medium">品名</Text>
+                </View>
+                <View className="flex-1 py-2 px-1">
+                  <Text className="block text-xs text-center text-white font-medium">单位</Text>
+                </View>
+                <View className="flex-1 py-2 px-1">
+                  <Text className="block text-xs text-center text-white font-medium">数量</Text>
+                </View>
+                <View className="flex-1 py-2 px-1">
+                  <Text className="block text-xs text-center text-white font-medium">单价</Text>
+                </View>
+                <View className="flex-1 py-2 px-1">
+                  <Text className="block text-xs text-center text-white font-medium">合计</Text>
+                </View>
               </View>
 
+              {/* 表格内容 */}
               {quote.items && quote.items.length > 0 ? (
-                quote.items.map((item, index) => (
-                  <View key={item.id} className={`flex text-sm ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
-                    <Text className="flex-1 py-2 text-center border-r border-gray-200 text-gray-900">
-                      {index + 1}
-                    </Text>
-                    <Text className="flex-[2] py-2 px-2 border-r border-gray-200 text-gray-900">
-                      {item.product_name}
-                    </Text>
-                    <Text className="flex-1 py-2 text-center border-r border-gray-200 text-gray-600">
-                      {item.unit}
-                    </Text>
-                    <Text className="flex-1 py-2 text-center border-r border-gray-200 text-gray-900">
-                      {item.quantity}
-                    </Text>
-                    <Text className="flex-1 py-2 text-center border-r border-gray-200 text-gray-900">
-                      ¥{Number(item.unit_price).toFixed(2)}
-                    </Text>
-                    <Text className="flex-1 py-2 text-center text-blue-800 font-medium">
-                      ¥{Number(item.amount).toFixed(2)}
-                    </Text>
-                  </View>
-                ))
-              ) : (
-                <View className="py-8 text-center text-gray-400">
-                  <Text className="text-sm">暂无商品明细</Text>
+                <View className="border border-gray-200 border-t-0 rounded-b">
+                  {quote.items.map((item, index) => (
+                    <View 
+                      key={item.id || index} 
+                      className={`flex ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} border-b border-gray-200 last:border-0`}
+                    >
+                      <View className="flex-1 py-3 px-1">
+                        <Text className="block text-sm text-center text-gray-700">{index + 1}</Text>
+                      </View>
+                      <View className="flex-2 py-3 px-2">
+                        <Text className="block text-sm text-left text-gray-700">{item.product_name}</Text>
+                      </View>
+                      <View className="flex-1 py-3 px-1">
+                        <Text className="block text-sm text-center text-gray-700">{item.unit}</Text>
+                      </View>
+                      <View className="flex-1 py-3 px-1">
+                        <Text className="block text-sm text-center text-gray-700">{item.quantity}</Text>
+                      </View>
+                      <View className="flex-1 py-3 px-1">
+                        <Text className="block text-sm text-center text-gray-700">¥{Number(item.unit_price).toFixed(2)}</Text>
+                      </View>
+                      <View className="flex-1 py-3 px-1">
+                        <Text className="block text-sm text-center text-blue-700 font-medium">¥{Number(item.amount).toFixed(2)}</Text>
+                      </View>
+                    </View>
+                  ))}
                 </View>
+              ) : (
+                <Text className="text-sm text-gray-400 text-center py-4">暂无商品</Text>
               )}
             </View>
 
             {/* 金额汇总 */}
-            <View className="bg-gray-50 rounded-lg p-4">
+            <View className="border border-gray-200 rounded-lg p-4 mb-4">
               <View className="flex justify-between items-center mb-2">
                 <Text className="text-sm text-gray-600">商品金额</Text>
-                <Text className="text-base font-medium text-gray-900">
-                  ¥{Number(quote.subtotal).toFixed(2)}
-                </Text>
+                <Text className="text-sm text-gray-900">¥{Number(quote.subtotal).toFixed(2)}</Text>
               </View>
-
               {Number(quote.discount) > 0 && (
                 <View className="flex justify-between items-center mb-2">
-                  <Text className="text-sm text-red-600">优惠金额</Text>
-                  <Text className="text-base font-medium text-red-600">
-                    -¥{Number(quote.discount).toFixed(2)}
-                  </Text>
+                  <Text className="text-sm text-gray-600">优惠金额</Text>
+                  <Text className="text-sm text-red-500">-¥{Number(quote.discount).toFixed(2)}</Text>
                 </View>
               )}
-
               <View className="border-t border-gray-200 pt-2 mt-2">
                 <View className="flex justify-between items-center">
-                  <Text className="text-lg font-bold text-gray-900">合计</Text>
-                  <Text className="text-xl font-bold text-blue-800">
-                    ¥{Number(quote.total_amount).toFixed(2)}
-                  </Text>
+                  <Text className="text-base font-bold text-gray-900">合计金额</Text>
+                  <Text className="text-xl font-bold text-blue-700">¥{Number(quote.total_amount).toFixed(2)}</Text>
                 </View>
               </View>
             </View>
 
+            {/* 备注 */}
             {quote.remark && (
-              <View className="mt-4 bg-gray-50 rounded-lg p-4">
-                <Text className="text-sm text-gray-600">
-                  <Text className="font-medium">备注：</Text>
-                  {quote.remark}
-                </Text>
+              <View className="mb-2">
+                <Text className="block text-sm text-gray-600">备注：{quote.remark}</Text>
               </View>
             )}
           </View>
 
-          {/* 操作按钮 */}
-          <View className="flex gap-2">
-            {quote.status === 'draft' && (
-              <Button
-                variant="destructive"
-                size="lg"
-                className="flex-1"
-                onClick={handleDelete}
-              >
-                删除
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              size="lg"
-              className="flex-1"
-              onClick={handleCopyLink}
-            >
-              <Copy size={16} color="#6b7280" className="mr-2" />
-              复制文案
-            </Button>
-            <Button
-              size="lg"
-              className="flex-1"
-              onClick={handleGenerateImage}
-              disabled={generating}
-            >
-              <ImageDown size={16} color="#1e40af" className="mr-2" />
-              {generating ? '生成中...' : '生成图片'}
-            </Button>
+          {/* 状态标签 */}
+          <View className="flex justify-center mb-4">
+            <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
           </View>
+
+          {/* 底部说明 */}
+          <Text className="block text-xs text-center text-gray-400">此报价单仅供参考，请以实际交易为准</Text>
         </View>
       </ScrollView>
+
+      {/* 底部操作栏 */}
+      <View className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+        <View
+          style={{ flex: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '12px', borderRadius: '8px', backgroundColor: '#f3f4f6' }}
+          onClick={handleCopyLink}
+        >
+          <Copy size={16} color="#374151" />
+          <Text className="text-sm text-gray-700">复制</Text>
+        </View>
+        <View
+          style={{ flex: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '12px', borderRadius: '8px', backgroundColor: '#22c55e' }}
+          onClick={handleGenerateImage}
+        >
+          <ImageDown size={16} color="#ffffff" />
+          <Text className="text-sm text-white">{generating ? '生成中...' : '生成图片'}</Text>
+        </View>
+        <Button
+          style={{ flex: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '12px', borderRadius: '8px', backgroundColor: '#2563eb', border: 'none' }}
+          openType="share"
+        >
+          <Share2 size={16} color="#ffffff" />
+          <Text className="text-sm text-white">分享</Text>
+        </Button>
+      </View>
     </View>
   )
 }
