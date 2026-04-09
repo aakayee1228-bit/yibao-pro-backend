@@ -169,6 +169,9 @@ const QuoteDetailPage: FC = () => {
       canvas.height = 1400 * dpr
       ctx.scale(dpr, dpr)
 
+      // 清除画布
+      ctx.clearRect(0, 0, 750, 1400)
+
       // 绘制白色背景
       ctx.fillStyle = '#ffffff'
       ctx.fillRect(0, 0, 750, 1400)
@@ -181,26 +184,30 @@ const QuoteDetailPage: FC = () => {
       ctx.fillRect(0, 0, 750, 120)
 
       // 标题
+      ctx.save() // 保存状态
       ctx.fillStyle = '#ffffff'
-      ctx.font = 'bold 48px Arial'
+      ctx.font = 'bold 48px "PingFang SC", "Microsoft YaHei", sans-serif'
       ctx.textAlign = 'center'
-      ctx.fillText('产品报价单', 375, 78)
+      ctx.textBaseline = 'middle'
+      ctx.fillText('产品报价单', 375, 60)
+      ctx.restore() // 恢复状态
 
       // ========== 两列信息布局 ==========
       let yPos = 140
-      ctx.font = '24px Arial'
+      ctx.font = '24px "PingFang SC", "Microsoft YaHei", sans-serif'
 
       // 左列 - 客户信息
       ctx.fillStyle = '#1f2937'
-      ctx.font = 'bold 28px Arial'
+      ctx.font = 'bold 28px "PingFang SC", "Microsoft YaHei", sans-serif'
       ctx.textAlign = 'left'
+      ctx.textBaseline = 'alphabetic'
       const customerName = quote.customers?.name || '客户'
       ctx.fillText(`客户：${customerName}`, 30, yPos)
 
       if (quote.customers?.company) {
         yPos += 40
         ctx.fillStyle = '#6b7280'
-        ctx.font = '24px Arial'
+        ctx.font = '24px "PingFang SC", "Microsoft YaHei", sans-serif'
         ctx.fillText(quote.customers.company, 30, yPos)
       }
 
@@ -212,7 +219,7 @@ const QuoteDetailPage: FC = () => {
       // 右列 - 表单信息
       yPos = 140
       ctx.fillStyle = '#6b7280'
-      ctx.font = '24px Arial'
+      ctx.font = '24px "PingFang SC", "Microsoft YaHei", sans-serif'
       ctx.textAlign = 'right'
       ctx.fillText(`单号：${quote.quote_no}`, 720, yPos)
 
@@ -261,14 +268,15 @@ const QuoteDetailPage: FC = () => {
 
       // 表头文字
       ctx.fillStyle = '#ffffff'
-      ctx.font = 'bold 24px Arial'
+      ctx.font = 'bold 24px "PingFang SC", "Microsoft YaHei", sans-serif'
       ctx.textAlign = 'center'
-      ctx.fillText('序号', colX.index + colWidths.index / 2, yPos + 34)
-      ctx.fillText('品名', colX.name + colWidths.name / 2, yPos + 34)
-      ctx.fillText('单位', colX.unit + colWidths.unit / 2, yPos + 34)
-      ctx.fillText('数量', colX.quantity + colWidths.quantity / 2, yPos + 34)
-      ctx.fillText('单价', colX.price + colWidths.price / 2, yPos + 34)
-      ctx.fillText('合计', colX.total + colWidths.total / 2, yPos + 34)
+      ctx.textBaseline = 'middle'
+      ctx.fillText('序号', colX.index + colWidths.index / 2, yPos + 25)
+      ctx.fillText('品名', colX.name + colWidths.name / 2, yPos + 25)
+      ctx.fillText('单位', colX.unit + colWidths.unit / 2, yPos + 25)
+      ctx.fillText('数量', colX.quantity + colWidths.quantity / 2, yPos + 25)
+      ctx.fillText('单价', colX.price + colWidths.price / 2, yPos + 25)
+      ctx.fillText('合计', colX.total + colWidths.total / 2, yPos + 25)
 
       // 表格边框
       ctx.strokeStyle = '#e5e7eb'
@@ -294,11 +302,12 @@ const QuoteDetailPage: FC = () => {
 
           // 绘制文字
           ctx.fillStyle = '#374151'
-          ctx.font = '22px Arial'
+          ctx.font = '22px "PingFang SC", "Microsoft YaHei", sans-serif'
           ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
 
           // 序号
-          ctx.fillText(String(index + 1), colX.index + colWidths.index / 2, yPos + 32)
+          ctx.fillText(String(index + 1), colX.index + colWidths.index / 2, yPos + 25)
 
           // 品名（左对齐，带截断）
           ctx.textAlign = 'left'
@@ -307,22 +316,22 @@ const QuoteDetailPage: FC = () => {
           if (productName.length > maxChars) {
             productName = productName.substring(0, maxChars) + '...'
           }
-          ctx.fillText(productName, colX.name + 10, yPos + 32)
+          ctx.fillText(productName, colX.name + 10, yPos + 25)
 
           // 单位
           ctx.textAlign = 'center'
-          ctx.fillText(item.unit, colX.unit + colWidths.unit / 2, yPos + 32)
+          ctx.fillText(item.unit, colX.unit + colWidths.unit / 2, yPos + 25)
 
           // 数量
-          ctx.fillText(item.quantity, colX.quantity + colWidths.quantity / 2, yPos + 32)
+          ctx.fillText(item.quantity, colX.quantity + colWidths.quantity / 2, yPos + 25)
 
           // 单价
-          ctx.fillText(`¥${Number(item.unit_price).toFixed(2)}`, colX.price + colWidths.price / 2, yPos + 32)
+          ctx.fillText(`¥${Number(item.unit_price).toFixed(2)}`, colX.price + colWidths.price / 2, yPos + 25)
 
           // 合计
           ctx.fillStyle = '#1e40af'
-          ctx.font = 'bold 22px Arial'
-          ctx.fillText(`¥${Number(item.amount).toFixed(2)}`, colX.total + colWidths.total / 2, yPos + 32)
+          ctx.font = 'bold 22px "PingFang SC", "Microsoft YaHei", sans-serif'
+          ctx.fillText(`¥${Number(item.amount).toFixed(2)}`, colX.total + colWidths.total / 2, yPos + 25)
 
           yPos += 50
         })
@@ -342,8 +351,9 @@ const QuoteDetailPage: FC = () => {
       // 商品金额
       yPos += 40
       ctx.fillStyle = '#6b7280'
-      ctx.font = '24px Arial'
+      ctx.font = '24px "PingFang SC", "Microsoft YaHei", sans-serif'
       ctx.textAlign = 'right'
+      ctx.textBaseline = 'alphabetic'
       ctx.fillText('商品金额', summaryLabelX, yPos)
       ctx.fillStyle = '#374151'
       ctx.fillText(`¥${Number(quote.subtotal).toFixed(2)}`, summaryValueX, yPos)
@@ -367,19 +377,21 @@ const QuoteDetailPage: FC = () => {
 
       yPos += 45
       ctx.fillStyle = '#1f2937'
-      ctx.font = 'bold 28px Arial'
+      ctx.font = 'bold 28px "PingFang SC", "Microsoft YaHei", sans-serif'
       ctx.textAlign = 'right'
+      ctx.textBaseline = 'alphabetic'
       ctx.fillText('合计', summaryLabelX, yPos)
       ctx.fillStyle = '#1e40af'
-      ctx.font = 'bold 32px Arial'
+      ctx.font = 'bold 32px "PingFang SC", "Microsoft YaHei", sans-serif'
       ctx.fillText(`¥${Number(quote.total_amount).toFixed(2)}`, summaryValueX, yPos)
 
       // ========== 备注 ==========
       if (quote.remark) {
         yPos += 60
         ctx.fillStyle = '#9ca3af'
-        ctx.font = '22px Arial'
+        ctx.font = '22px "PingFang SC", "Microsoft YaHei", sans-serif'
         ctx.textAlign = 'left'
+        ctx.textBaseline = 'alphabetic'
 
         // 处理备注换行
         const remark = `备注：${quote.remark}`
@@ -406,8 +418,9 @@ const QuoteDetailPage: FC = () => {
       // ========== 底部说明 ==========
       const footerYPos = 1350
       ctx.fillStyle = '#9ca3af'
-      ctx.font = '20px Arial'
+      ctx.font = '20px "PingFang SC", "Microsoft YaHei", sans-serif'
       ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
       ctx.fillText('此报价单仅供参考，请以实际交易为准', 375, footerYPos)
 
       // ========== 绘制水印 ==========
@@ -417,7 +430,7 @@ const QuoteDetailPage: FC = () => {
       ctx.save()
       ctx.globalAlpha = 0.12
       ctx.fillStyle = '#1e40af'
-      ctx.font = 'bold 36px Arial'
+      ctx.font = 'bold 36px "PingFang SC", "Microsoft YaHei", sans-serif'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
 
