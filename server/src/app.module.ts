@@ -6,9 +6,10 @@ import { IndustriesModule } from '@/modules/industries/industries.module';
 import { QuotesModule } from '@/modules/quotes/quotes.module';
 import { CustomersModule } from '@/modules/customers/customers.module';
 import { MerchantsModule } from '@/modules/merchants/merchants.module';
+import { AnalyzeModule } from '@/modules/analyze/analyze.module';
 
 @Module({
-  imports: [ProductsModule, IndustriesModule, QuotesModule, CustomersModule, MerchantsModule],
+  imports: [ProductsModule, IndustriesModule, QuotesModule, CustomersModule, MerchantsModule, AnalyzeModule],
   controllers: [AppController],
   providers: [AppService],
 })
