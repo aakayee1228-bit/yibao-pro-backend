@@ -1,12 +1,10 @@
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text, ScrollView, Canvas } from '@tarojs/components'
 import Taro, { useDidShow, useShareAppMessage } from '@tarojs/taro'
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import type { FC } from 'react'
 import { Phone, Copy, ImageDown } from 'lucide-react-taro'
 import { Button } from '@/components/ui/button'
 import { Network } from '@/network'
-// @ts-ignore
-import WxmlToCanvas from 'wxml-to-canvas'
 
 interface QuoteItem {
   id: string
@@ -49,8 +47,6 @@ const QuoteDetailPage: FC = () => {
   const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [merchantName, setMerchantName] = useState<string>('')
-
-  const wxmlToCanvasRef = useRef<any>(null)
 
   useDidShow(() => {
     const id = Taro.getCurrentInstance().router?.params?.id
@@ -168,331 +164,342 @@ const QuoteDetailPage: FC = () => {
 
   // 生成图片
   const handleGenerateImage = async () => {
-    if (!quote || !wxmlToCanvasRef.current) return
+    if (!quote) return
 
     setGenerating(true)
     try {
-      // 构建订单详情的 WXML 模板
-      const wxml = `
-        <view class="container">
-          <!-- 顶部标题 -->
-          <view class="header">
-            <text class="header-title">产品报价单</text>
-          </view>
+      // 使用 Taro.createSelectorQuery 获取 canvas 节点
+      const query = Taro.createSelectorQuery()
+      const nodes = await new Promise<Taro.NodesRef.Fields[]>((resolve) => {
+        query.select('#quoteCanvas')
+          .fields({ node: true, size: true })
+          .exec((data) => {
+            resolve(data)
+          })
+      })
 
-          <!-- 客户信息 -->
-          <view class="info-section">
-            <view class="info-row">
-              <text class="info-label">客户</text>
-              <text class="info-value">${quote.customers?.name || '客户'}</text>
-            </view>
-            ${quote.customers?.company ? `
-            <view class="info-row">
-              <text class="info-label">公司</text>
-              <text class="info-value">${quote.customers.company}</text>
-            </view>
-            ` : ''}
-            ${quote.customers?.phone ? `
-            <view class="info-row">
-              <text class="info-label">电话</text>
-              <text class="info-value">${quote.customers.phone}</text>
-            </view>
-            ` : ''}
-            <view class="info-row">
-              <text class="info-label">单号</text>
-              <text class="info-value">${quote.quote_no}</text>
-            </view>
-            <view class="info-row">
-              <text class="info-label">日期</text>
-              <text class="info-value">${quote.created_at ? new Date(quote.created_at).toLocaleDateString('zh-CN') : '-'}</text>
-            </view>
-            <view class="info-row">
-              <text class="info-label">有效期</text>
-              <text class="info-value">${quote.valid_days} 天</text>
-            </view>
-          </view>
-
-          <!-- 商品明细 -->
-          <view class="table-section">
-            <view class="table-header">
-              <text class="table-cell col-index">序号</text>
-              <text class="table-cell col-name">品名</text>
-              <text class="table-cell col-unit">单位</text>
-              <text class="table-cell col-qty">数量</text>
-              <text class="table-cell col-price">单价</text>
-              <text class="table-cell col-total">合计</text>
-            </view>
-            ${quote.items && quote.items.length > 0 ? quote.items.map((item, index) => `
-            <view class="table-row ${index % 2 === 0 ? 'row-even' : 'row-odd'}">
-              <text class="table-cell col-index">${index + 1}</text>
-              <text class="table-cell col-name">${item.product_name}</text>
-              <text class="table-cell col-unit">${item.unit}</text>
-              <text class="table-cell col-qty">${item.quantity}</text>
-              <text class="table-cell col-price">¥${Number(item.unit_price).toFixed(2)}</text>
-              <text class="table-cell col-total">¥${Number(item.amount).toFixed(2)}</text>
-            </view>
-            `).join('') : ''}
-          </view>
-
-          <!-- 金额汇总 -->
-          <view class="summary-section">
-            <view class="summary-row">
-              <text class="summary-label">商品金额</text>
-              <text class="summary-value">¥${Number(quote.subtotal).toFixed(2)}</text>
-            </view>
-            ${Number(quote.discount) > 0 ? `
-            <view class="summary-row">
-              <text class="summary-label discount">优惠金额</text>
-              <text class="summary-value discount">-¥${Number(quote.discount).toFixed(2)}</text>
-            </view>
-            ` : ''}
-            <view class="summary-divider"></view>
-            <view class="summary-row total">
-              <text class="summary-label">合计</text>
-              <text class="summary-value">¥${Number(quote.total_amount).toFixed(2)}</text>
-            </view>
-          </view>
-
-          ${quote.remark ? `
-          <!-- 备注 -->
-          <view class="remark-section">
-            <text class="remark-label">备注：${quote.remark}</text>
-          </view>
-          ` : ''}
-
-          <!-- 水印 -->
-          <view class="watermark">
-            <text class="watermark-text">${merchantName ? `仅供 ${merchantName} 参考` : '仅供商家参考'}</text>
-          </view>
-
-          <!-- 底部说明 -->
-          <view class="footer">
-            <text class="footer-text">此报价单仅供参考，请以实际交易为准</text>
-          </view>
-        </view>
-      `
-
-      const style = {
-        container: {
-          width: 750,
-          backgroundColor: '#ffffff',
-          paddingBottom: 50,
-        },
-        header: {
-          width: 750,
-          height: 120,
-          backgroundColor: '#1e40af',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        },
-        'header-title': {
-          fontSize: 48,
-          fontWeight: 'bold',
-          color: '#ffffff',
-        },
-        'info-section': {
-          width: 710,
-          marginTop: 20,
-          marginLeft: 20,
-          marginRight: 20,
-          padding: 20,
-          backgroundColor: '#f9fafb',
-          borderRadius: 10,
-        },
-        'info-row': {
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 15,
-        },
-        'info-label': {
-          fontSize: 28,
-          color: '#6b7280',
-          fontWeight: 'bold',
-        },
-        'info-value': {
-          fontSize: 28,
-          color: '#1f2937',
-          textAlign: 'right',
-        },
-        'table-section': {
-          width: 710,
-          marginTop: 20,
-          marginLeft: 20,
-          marginRight: 20,
-          border: '1px solid #e5e7eb',
-          borderRadius: 10,
-          overflow: 'hidden',
-        },
-        'table-header': {
-          width: 710,
-          height: 80,
-          backgroundColor: '#1e40af',
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-        },
-        'table-cell': {
-          fontSize: 24,
-          color: '#374151',
-          textAlign: 'center',
-        },
-        'col-index': {
-          width: 80,
-        },
-        'col-name': {
-          width: 180,
-          textAlign: 'left',
-          paddingLeft: 10,
-        },
-        'col-unit': {
-          width: 80,
-        },
-        'col-qty': {
-          width: 80,
-        },
-        'col-price': {
-          width: 120,
-        },
-        'col-total': {
-          width: 150,
-          fontWeight: 'bold',
-          color: '#1e40af',
-        },
-        'table-header .table-cell': {
-          color: '#ffffff',
-          fontWeight: 'bold',
-        },
-        'table-row': {
-          width: 710,
-          height: 80,
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          borderBottom: '1px solid #e5e7eb',
-        },
-        'row-even': {
-          backgroundColor: '#ffffff',
-        },
-        'row-odd': {
-          backgroundColor: '#f8fafc',
-        },
-        'summary-section': {
-          width: 710,
-          marginTop: 20,
-          marginLeft: 20,
-          marginRight: 20,
-          padding: 20,
-          backgroundColor: '#f9fafb',
-          borderRadius: 10,
-        },
-        'summary-row': {
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 15,
-        },
-        'summary-label': {
-          fontSize: 28,
-          color: '#6b7280',
-          textAlign: 'right',
-        },
-        'summary-value': {
-          fontSize: 32,
-          color: '#1f2937',
-          fontWeight: 'bold',
-          textAlign: 'right',
-        },
-        'summary-row.discount .summary-label': {
-          color: '#ef4444',
-        },
-        'summary-row.discount .summary-value': {
-          color: '#ef4444',
-        },
-        'summary-divider': {
-          width: '100%',
-          height: 1,
-          backgroundColor: '#e5e7eb',
-          marginTop: 10,
-          marginBottom: 20,
-        },
-        'summary-row.total': {
-          marginTop: 10,
-        },
-        'summary-row.total .summary-label': {
-          fontSize: 32,
-          color: '#1f2937',
-        },
-        'summary-row.total .summary-value': {
-          fontSize: 40,
-          color: '#1e40af',
-        },
-        'remark-section': {
-          width: 710,
-          marginTop: 20,
-          marginLeft: 20,
-          marginRight: 20,
-          padding: 15,
-          backgroundColor: '#f9fafb',
-          borderRadius: 10,
-        },
-        'remark-label': {
-          fontSize: 24,
-          color: '#6b7280',
-        },
-        watermark: {
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: 750,
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          opacity: 0.1,
-        },
-        'watermark-text': {
-          fontSize: 60,
-          color: '#1e40af',
-          fontWeight: 'bold',
-          transform: 'rotate(-30deg)',
-        },
-        footer: {
-          width: 750,
-          marginTop: 40,
-          textAlign: 'center',
-        },
-        'footer-text': {
-          fontSize: 20,
-          color: '#9ca3af',
-        },
+      if (!nodes || !nodes[0]) {
+        throw new Error('Canvas 节点获取失败')
       }
 
-      // 渲染到 Canvas
-      const result = await wxmlToCanvasRef.current.renderToCanvas({ wxml, style })
+      const node = nodes[0].node
+      if (!node) {
+        throw new Error('Canvas node 不存在')
+      }
 
-      // 导出为图片
-      const tempFilePath = await wxmlToCanvasRef.current.canvasToTempFilePath({
-        fileType: 'png',
-        quality: 1,
-        destWidth: result.width,
-        destHeight: result.height,
-      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const canvas = node as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const ctx = canvas.getContext('2d') as any
 
-      // 预览图片
-      Taro.previewImage({
-        urls: [tempFilePath],
-        current: tempFilePath,
-      })
+      if (!ctx) {
+        throw new Error('无法获取 Canvas 上下文')
+      }
 
-      // 显示操作提示
-      Taro.showModal({
-        title: '图片已生成',
-        content: '长按图片可保存到相册，或点击右上角分享给客户',
-        showCancel: false,
+      // 设置 canvas 尺寸
+      const dpr = Taro.getSystemInfoSync().pixelRatio
+      canvas.width = 750 * dpr
+      canvas.height = 1400 * dpr
+      ctx.scale(dpr, dpr)
+
+      // 清除画布
+      ctx.clearRect(0, 0, 750, 1400)
+
+      // 绘制白色背景
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, 750, 1400)
+
+      // ========== 顶部蓝色标题区域 ==========
+      const gradient = ctx.createLinearGradient(0, 0, 750, 0)
+      gradient.addColorStop(0, '#1e40af')
+      gradient.addColorStop(1, '#3b82f6')
+      ctx.fillStyle = gradient
+      ctx.fillRect(0, 0, 750, 120)
+
+      // 标题
+      ctx.fillStyle = '#ffffff'
+      ctx.font = 'bold 48px'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText('产品报价单', 375, 60)
+
+      // ========== 两列信息布局 ==========
+      let yPos = 140
+      ctx.font = '24px'
+
+      // 左列 - 客户信息
+      ctx.fillStyle = '#1f2937'
+      ctx.font = 'bold 28px'
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'alphabetic'
+      const customerName = quote.customers?.name || '客户'
+      ctx.fillText(`客户：${customerName}`, 30, yPos)
+
+      if (quote.customers?.company) {
+        yPos += 40
+        ctx.fillStyle = '#6b7280'
+        ctx.font = '24px'
+        ctx.fillText(quote.customers.company, 30, yPos)
+      }
+
+      if (quote.customers?.phone) {
+        yPos += 40
+        ctx.fillText(`电话：${quote.customers.phone}`, 30, yPos)
+      }
+
+      // 右列 - 表单信息
+      yPos = 140
+      ctx.fillStyle = '#6b7280'
+      ctx.font = '24px'
+      ctx.textAlign = 'right'
+      ctx.fillText(`单号：${quote.quote_no}`, 720, yPos)
+
+      yPos += 40
+      const dateStr = quote.created_at ? new Date(quote.created_at).toLocaleDateString('zh-CN') : ''
+      ctx.fillText(`日期：${dateStr}`, 720, yPos)
+
+      yPos += 40
+      ctx.fillText(`有效期：${quote.valid_days} 天`, 720, yPos)
+
+      // ========== 水平分隔线 ==========
+      yPos += 60
+      ctx.strokeStyle = '#1e40af'
+      ctx.lineWidth = 3
+      ctx.beginPath()
+      ctx.moveTo(20, yPos)
+      ctx.lineTo(730, yPos)
+      ctx.stroke()
+
+      // ========== 商品明细表格 ==========
+      yPos += 10
+
+      // 定义列宽
+      const colWidths = {
+        index: 80,    // 序号
+        name: 200,    // 品名
+        unit: 80,     // 单位
+        quantity: 80, // 数量
+        price: 100,   // 单价
+        total: 170    // 合计
+      }
+
+      // 计算列的起始位置
+      const colX = {
+        index: 30,
+        name: 30 + colWidths.index,
+        unit: 30 + colWidths.index + colWidths.name,
+        quantity: 30 + colWidths.index + colWidths.name + colWidths.unit,
+        price: 30 + colWidths.index + colWidths.name + colWidths.unit + colWidths.quantity,
+        total: 30 + colWidths.index + colWidths.name + colWidths.unit + colWidths.quantity + colWidths.price
+      }
+
+      // 表头背景
+      ctx.fillStyle = '#1e40af'
+      ctx.fillRect(20, yPos, 710, 50)
+
+      // 表头文字
+      ctx.fillStyle = '#ffffff'
+      ctx.font = 'bold 24px'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText('序号', colX.index + colWidths.index / 2, yPos + 25)
+      ctx.fillText('品名', colX.name + colWidths.name / 2, yPos + 25)
+      ctx.fillText('单位', colX.unit + colWidths.unit / 2, yPos + 25)
+      ctx.fillText('数量', colX.quantity + colWidths.quantity / 2, yPos + 25)
+      ctx.fillText('单价', colX.price + colWidths.price / 2, yPos + 25)
+      ctx.fillText('合计', colX.total + colWidths.total / 2, yPos + 25)
+
+      // 表格边框
+      ctx.strokeStyle = '#e5e7eb'
+      ctx.lineWidth = 1
+      ctx.strokeRect(20, yPos, 710, 50)
+
+      yPos += 50
+
+      // 表格内容
+      if (quote.items && quote.items.length > 0) {
+        quote.items.forEach((item, index) => {
+          if (index >= 8) return
+
+          // 绘制行背景
+          if (index % 2 === 0) {
+            ctx.fillStyle = '#f8fafc'
+            ctx.fillRect(20, yPos, 710, 50)
+          }
+
+          // 绘制单元格边框
+          ctx.strokeStyle = '#e5e7eb'
+          ctx.strokeRect(20, yPos, 710, 50)
+
+          // 绘制文字
+          ctx.fillStyle = '#374151'
+          ctx.font = '22px'
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+
+          // 序号
+          ctx.fillText(String(index + 1), colX.index + colWidths.index / 2, yPos + 25)
+
+          // 品名（左对齐，带截断）
+          ctx.textAlign = 'left'
+          let productName = item.product_name
+          const maxChars = 10 // 最多显示10个字符
+          if (productName.length > maxChars) {
+            productName = productName.substring(0, maxChars) + '...'
+          }
+          ctx.fillText(productName, colX.name + 10, yPos + 25)
+
+          // 单位
+          ctx.textAlign = 'center'
+          ctx.fillText(item.unit, colX.unit + colWidths.unit / 2, yPos + 25)
+
+          // 数量
+          ctx.fillText(item.quantity, colX.quantity + colWidths.quantity / 2, yPos + 25)
+
+          // 单价
+          ctx.fillText(`¥${Number(item.unit_price).toFixed(2)}`, colX.price + colWidths.price / 2, yPos + 25)
+
+          // 合计
+          ctx.fillStyle = '#1e40af'
+          ctx.font = 'bold 22px'
+          ctx.fillText(`¥${Number(item.amount).toFixed(2)}`, colX.total + colWidths.total / 2, yPos + 25)
+
+          yPos += 50
+        })
+      }
+
+      // ========== 金额汇总区域 ==========
+      yPos += 20
+
+      // 绘制金额汇总表格
+      ctx.strokeStyle = '#e5e7eb'
+      ctx.lineWidth = 1
+      ctx.strokeRect(420, yPos, 310, 160)
+
+      const summaryLabelX = 680
+      const summaryValueX = 720
+
+      // 商品金额
+      yPos += 40
+      ctx.fillStyle = '#6b7280'
+      ctx.font = '24px'
+      ctx.textAlign = 'right'
+      ctx.textBaseline = 'alphabetic'
+      ctx.fillText('商品金额', summaryLabelX, yPos)
+      ctx.fillStyle = '#374151'
+      ctx.fillText(`¥${Number(quote.subtotal).toFixed(2)}`, summaryValueX, yPos)
+
+      // 优惠金额
+      if (Number(quote.discount) > 0) {
+        yPos += 40
+        ctx.fillStyle = '#ef4444'
+        ctx.textAlign = 'right'
+        ctx.fillText('优惠金额', summaryLabelX, yPos)
+        ctx.fillText(`-¥${Number(quote.discount).toFixed(2)}`, summaryValueX, yPos)
+      }
+
+      // 合计金额
+      yPos += 50
+      ctx.strokeStyle = '#e5e7eb'
+      ctx.beginPath()
+      ctx.moveTo(430, yPos)
+      ctx.lineTo(730, yPos)
+      ctx.stroke()
+
+      yPos += 45
+      ctx.fillStyle = '#1f2937'
+      ctx.font = 'bold 28px'
+      ctx.textAlign = 'right'
+      ctx.textBaseline = 'alphabetic'
+      ctx.fillText('合计', summaryLabelX, yPos)
+      ctx.fillStyle = '#1e40af'
+      ctx.font = 'bold 32px'
+      ctx.fillText(`¥${Number(quote.total_amount).toFixed(2)}`, summaryValueX, yPos)
+
+      // ========== 备注 ==========
+      if (quote.remark) {
+        yPos += 60
+        ctx.fillStyle = '#9ca3af'
+        ctx.font = '22px'
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'alphabetic'
+
+        // 处理备注换行
+        const remark = `备注：${quote.remark}`
+        const maxWidth = 700
+        const words = remark.split('')
+        let line = ''
+        let remarkYPos = yPos
+
+        for (let i = 0; i < words.length; i++) {
+          const testLine = line + words[i]
+          const metrics = ctx.measureText(testLine)
+
+          if (metrics.width > maxWidth && i > 0) {
+            ctx.fillText(line, 30, remarkYPos)
+            line = words[i]
+            remarkYPos += 30
+          } else {
+            line = testLine
+          }
+        }
+        ctx.fillText(line, 30, remarkYPos)
+      }
+
+      // ========== 底部说明 ==========
+      const footerYPos = 1350
+      ctx.fillStyle = '#9ca3af'
+      ctx.font = '20px'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText('此报价单仅供参考，请以实际交易为准', 375, footerYPos)
+
+      // ========== 绘制水印 ==========
+      // 使用商家名称
+      const watermarkText = merchantName ? `仅供 ${merchantName} 参考` : '仅供商家参考'
+
+      ctx.save()
+      ctx.globalAlpha = 0.12
+      ctx.fillStyle = '#1e40af'
+      ctx.font = 'bold 36px'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+
+      for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 3; col++) {
+          const x = 150 + col * 280
+          const y = 400 + row * 150
+
+          ctx.save()
+          ctx.translate(x, y)
+          ctx.rotate(-30 * Math.PI / 180)
+          ctx.fillText(watermarkText, 0, 0)
+          ctx.restore()
+        }
+      }
+      ctx.restore()
+
+      // 导出图片
+      Taro.canvasToTempFilePath({
+        canvas: canvas,
+        success: (res) => {
+          // 预览图片
+          Taro.previewImage({
+            urls: [res.tempFilePath],
+            current: res.tempFilePath,
+          })
+
+          // 显示操作提示
+          Taro.showModal({
+            title: '图片已生成',
+            content: '长按图片可保存到相册，或点击右上角分享给客户',
+            showCancel: false,
+          })
+        },
+        fail: (err) => {
+          console.error('导出图片失败:', err)
+          Taro.showToast({ title: '导出失败', icon: 'none' })
+        },
       })
     } catch (err) {
       console.error('生成图片失败:', err)
@@ -520,8 +527,12 @@ const QuoteDetailPage: FC = () => {
 
   return (
     <View className="flex flex-col min-h-screen bg-gray-50">
-      {/* wxml-to-canvas 组件 */}
-      <WxmlToCanvas ref={wxmlToCanvasRef} className="hidden" />
+      {/* 隐藏的 Canvas 用于生成图片 */}
+      <Canvas
+        id="quoteCanvas"
+        type="2d"
+        style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '750px', height: '1400px' }}
+      />
 
       <ScrollView className="flex-1">
         <View className="p-4 pb-32">
