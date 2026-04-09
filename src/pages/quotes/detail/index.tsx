@@ -202,9 +202,6 @@ const QuoteDetailPage: FC = () => {
       canvas.height = 1400 * dpr
       ctx.scale(dpr, dpr)
 
-      // 清除画布
-      ctx.clearRect(0, 0, 750, 1400)
-
       // 绘制白色背景
       ctx.fillStyle = '#ffffff'
       ctx.fillRect(0, 0, 750, 1400)
@@ -218,27 +215,25 @@ const QuoteDetailPage: FC = () => {
 
       // 标题
       ctx.fillStyle = '#ffffff'
-      ctx.font = 'bold 48px'
+      ctx.font = 'bold 48px sans-serif'
       ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillText('产品报价单', 375, 60)
+      ctx.fillText('产品报价单', 375, 78)
 
       // ========== 两列信息布局 ==========
       let yPos = 140
-      ctx.font = '24px'
+      ctx.font = '24px sans-serif'
 
       // 左列 - 客户信息
       ctx.fillStyle = '#1f2937'
-      ctx.font = 'bold 28px'
+      ctx.font = 'bold 28px sans-serif'
       ctx.textAlign = 'left'
-      ctx.textBaseline = 'alphabetic'
       const customerName = quote.customers?.name || '客户'
       ctx.fillText(`客户：${customerName}`, 30, yPos)
 
       if (quote.customers?.company) {
         yPos += 40
         ctx.fillStyle = '#6b7280'
-        ctx.font = '24px'
+        ctx.font = '24px sans-serif'
         ctx.fillText(quote.customers.company, 30, yPos)
       }
 
@@ -250,7 +245,7 @@ const QuoteDetailPage: FC = () => {
       // 右列 - 表单信息
       yPos = 140
       ctx.fillStyle = '#6b7280'
-      ctx.font = '24px'
+      ctx.font = '24px sans-serif'
       ctx.textAlign = 'right'
       ctx.fillText(`单号：${quote.quote_no}`, 720, yPos)
 
@@ -273,41 +268,20 @@ const QuoteDetailPage: FC = () => {
       // ========== 商品明细表格 ==========
       yPos += 10
 
-      // 定义列宽
-      const colWidths = {
-        index: 80,    // 序号
-        name: 200,    // 品名
-        unit: 80,     // 单位
-        quantity: 80, // 数量
-        price: 100,   // 单价
-        total: 170    // 合计
-      }
-
-      // 计算列的起始位置
-      const colX = {
-        index: 30,
-        name: 30 + colWidths.index,
-        unit: 30 + colWidths.index + colWidths.name,
-        quantity: 30 + colWidths.index + colWidths.name + colWidths.unit,
-        price: 30 + colWidths.index + colWidths.name + colWidths.unit + colWidths.quantity,
-        total: 30 + colWidths.index + colWidths.name + colWidths.unit + colWidths.quantity + colWidths.price
-      }
-
       // 表头背景
       ctx.fillStyle = '#1e40af'
       ctx.fillRect(20, yPos, 710, 50)
 
       // 表头文字
       ctx.fillStyle = '#ffffff'
-      ctx.font = 'bold 24px'
+      ctx.font = 'bold 24px sans-serif'
       ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillText('序号', colX.index + colWidths.index / 2, yPos + 25)
-      ctx.fillText('品名', colX.name + colWidths.name / 2, yPos + 25)
-      ctx.fillText('单位', colX.unit + colWidths.unit / 2, yPos + 25)
-      ctx.fillText('数量', colX.quantity + colWidths.quantity / 2, yPos + 25)
-      ctx.fillText('单价', colX.price + colWidths.price / 2, yPos + 25)
-      ctx.fillText('合计', colX.total + colWidths.total / 2, yPos + 25)
+      ctx.fillText('序号', 60, yPos + 34)
+      ctx.fillText('品名', 240, yPos + 34)
+      ctx.fillText('单位', 400, yPos + 34)
+      ctx.fillText('数量', 480, yPos + 34)
+      ctx.fillText('单价', 560, yPos + 34)
+      ctx.fillText('合计', 680, yPos + 34)
 
       // 表格边框
       ctx.strokeStyle = '#e5e7eb'
@@ -333,36 +307,30 @@ const QuoteDetailPage: FC = () => {
 
           // 绘制文字
           ctx.fillStyle = '#374151'
-          ctx.font = '22px'
+          ctx.font = '22px sans-serif'
           ctx.textAlign = 'center'
-          ctx.textBaseline = 'middle'
 
           // 序号
-          ctx.fillText(String(index + 1), colX.index + colWidths.index / 2, yPos + 25)
+          ctx.fillText(String(index + 1), 60, yPos + 32)
 
-          // 品名（左对齐，带截断）
+          // 品名
           ctx.textAlign = 'left'
-          let productName = item.product_name
-          const maxChars = 10 // 最多显示10个字符
-          if (productName.length > maxChars) {
-            productName = productName.substring(0, maxChars) + '...'
-          }
-          ctx.fillText(productName, colX.name + 10, yPos + 25)
+          ctx.fillText(item.product_name, 100, yPos + 32)
 
           // 单位
           ctx.textAlign = 'center'
-          ctx.fillText(item.unit, colX.unit + colWidths.unit / 2, yPos + 25)
+          ctx.fillText(item.unit, 400, yPos + 32)
 
           // 数量
-          ctx.fillText(item.quantity, colX.quantity + colWidths.quantity / 2, yPos + 25)
+          ctx.fillText(item.quantity, 480, yPos + 32)
 
           // 单价
-          ctx.fillText(`¥${Number(item.unit_price).toFixed(2)}`, colX.price + colWidths.price / 2, yPos + 25)
+          ctx.fillText(`¥${Number(item.unit_price).toFixed(2)}`, 560, yPos + 32)
 
           // 合计
           ctx.fillStyle = '#1e40af'
-          ctx.font = 'bold 22px'
-          ctx.fillText(`¥${Number(item.amount).toFixed(2)}`, colX.total + colWidths.total / 2, yPos + 25)
+          ctx.font = 'bold 22px sans-serif'
+          ctx.fillText(`¥${Number(item.amount).toFixed(2)}`, 680, yPos + 32)
 
           yPos += 50
         })
@@ -374,85 +342,58 @@ const QuoteDetailPage: FC = () => {
       // 绘制金额汇总表格
       ctx.strokeStyle = '#e5e7eb'
       ctx.lineWidth = 1
-      ctx.strokeRect(420, yPos, 310, 160)
-
-      const summaryLabelX = 680
-      const summaryValueX = 720
+      ctx.strokeRect(400, yPos, 330, 160)
 
       // 商品金额
       yPos += 40
       ctx.fillStyle = '#6b7280'
-      ctx.font = '24px'
+      ctx.font = '24px sans-serif'
       ctx.textAlign = 'right'
-      ctx.textBaseline = 'alphabetic'
-      ctx.fillText('商品金额', summaryLabelX, yPos)
+      ctx.fillText('商品金额', 700, yPos)
       ctx.fillStyle = '#374151'
-      ctx.fillText(`¥${Number(quote.subtotal).toFixed(2)}`, summaryValueX, yPos)
+      ctx.fillText(`¥${Number(quote.subtotal).toFixed(2)}`, 710, yPos)
 
       // 优惠金额
       if (Number(quote.discount) > 0) {
         yPos += 40
         ctx.fillStyle = '#ef4444'
         ctx.textAlign = 'right'
-        ctx.fillText('优惠金额', summaryLabelX, yPos)
-        ctx.fillText(`-¥${Number(quote.discount).toFixed(2)}`, summaryValueX, yPos)
+        ctx.fillText('优惠金额', 700, yPos)
+        ctx.fillText(`-¥${Number(quote.discount).toFixed(2)}`, 710, yPos)
       }
 
       // 合计金额
       yPos += 50
       ctx.strokeStyle = '#e5e7eb'
       ctx.beginPath()
-      ctx.moveTo(430, yPos)
-      ctx.lineTo(730, yPos)
+      ctx.moveTo(410, yPos)
+      ctx.lineTo(720, yPos)
       ctx.stroke()
 
       yPos += 45
       ctx.fillStyle = '#1f2937'
-      ctx.font = 'bold 28px'
+      ctx.font = 'bold 28px sans-serif'
       ctx.textAlign = 'right'
-      ctx.textBaseline = 'alphabetic'
-      ctx.fillText('合计', summaryLabelX, yPos)
+      ctx.fillText('合计', 700, yPos)
       ctx.fillStyle = '#1e40af'
-      ctx.font = 'bold 32px'
-      ctx.fillText(`¥${Number(quote.total_amount).toFixed(2)}`, summaryValueX, yPos)
+      ctx.font = 'bold 32px sans-serif'
+      ctx.fillText(`¥${Number(quote.total_amount).toFixed(2)}`, 710, yPos)
 
       // ========== 备注 ==========
       if (quote.remark) {
         yPos += 60
         ctx.fillStyle = '#9ca3af'
-        ctx.font = '22px'
+        ctx.font = '22px sans-serif'
         ctx.textAlign = 'left'
-        ctx.textBaseline = 'alphabetic'
-
-        // 处理备注换行
-        const remark = `备注：${quote.remark}`
-        const maxWidth = 700
-        const words = remark.split('')
-        let line = ''
-        let remarkYPos = yPos
-
-        for (let i = 0; i < words.length; i++) {
-          const testLine = line + words[i]
-          const metrics = ctx.measureText(testLine)
-
-          if (metrics.width > maxWidth && i > 0) {
-            ctx.fillText(line, 30, remarkYPos)
-            line = words[i]
-            remarkYPos += 30
-          } else {
-            line = testLine
-          }
-        }
-        ctx.fillText(line, 30, remarkYPos)
+        ctx.fillText(`备注：${quote.remark}`, 30, yPos)
       }
 
       // ========== 底部说明 ==========
-      const footerYPos = 1350
+      yPos = 1350
       ctx.fillStyle = '#9ca3af'
-      ctx.font = '20px'
+      ctx.font = '20px sans-serif'
       ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillText('此报价单仅供参考，请以实际交易为准', 375, footerYPos)
+      ctx.fillText('此报价单仅供参考，请以实际交易为准', 375, yPos)
 
       // ========== 绘制水印 ==========
       // 使用商家名称
@@ -461,9 +402,8 @@ const QuoteDetailPage: FC = () => {
       ctx.save()
       ctx.globalAlpha = 0.12
       ctx.fillStyle = '#1e40af'
-      ctx.font = 'bold 36px'
+      ctx.font = 'bold 36px sans-serif'
       ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
 
       for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 3; col++) {
