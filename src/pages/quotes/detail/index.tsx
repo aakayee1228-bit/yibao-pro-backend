@@ -47,7 +47,7 @@ const QuoteDetailPage: FC = () => {
   const [quote, setQuote] = useState<Quote | null>(null)
   const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
-  const [userName, setUserName] = useState<string>('用户') // 添加用户名称状态
+  const [companyName, setCompanyName] = useState<string>('') // 添加商家名称状态
 
   useDidShow(() => {
     const id = Taro.getCurrentInstance().router?.params?.id
@@ -55,11 +55,13 @@ const QuoteDetailPage: FC = () => {
       fetchQuoteDetail(id)
     }
 
-    // 获取用户信息
+    // 获取用户信息中的商家名称
     try {
       const userInfo = Taro.getStorageSync('userInfo')
-      if (userInfo && userInfo.name) {
-        setUserName(userInfo.name)
+      if (userInfo) {
+        // 优先使用商家名称，如果没有则使用用户名
+        const name = userInfo.company || userInfo.name || '商家'
+        setCompanyName(name)
       }
     } catch (err) {
       console.error('获取用户信息失败:', err)
@@ -424,8 +426,8 @@ const QuoteDetailPage: FC = () => {
       ctx.fillText('此报价单仅供参考，请以实际交易为准', 375, footerYPos)
 
       // ========== 绘制水印 ==========
-      // 使用用户登录名称而不是客户名称
-      const watermarkText = `仅供 ${userName} 参考`
+      // 使用用户填写的商家名称
+      const watermarkText = companyName ? `仅供 ${companyName} 参考` : '仅供商家参考'
 
       ctx.save()
       ctx.globalAlpha = 0.12
