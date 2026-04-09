@@ -155,12 +155,12 @@ const QuotesPage: FC = () => {
               const statusInfo = getStatusBadge(quote.status)
               const isDeleting = deleting === quote.id
               return (
-                <Card key={quote.id}>
+                <Card 
+                  key={quote.id}
+                  onClick={() => handleDetail(quote)}
+                >
                   <CardContent className="p-4">
-                    <View 
-                      className="flex items-start justify-between"
-                      onClick={() => handleDetail(quote)}
-                    >
+                    <View className="flex items-start justify-between">
                       <View className="flex-1">
                         <View className="flex items-center gap-2">
                           <Text className="text-sm font-medium text-gray-900">
@@ -188,7 +188,12 @@ const QuotesPage: FC = () => {
 
                     {/* 操作按钮 - 仅草稿状态显示 */}
                     {quote.status === 'draft' && (
-                      <View className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                      <View 
+                        className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100"
+                        onClick={(e) => {
+                          e.stopPropagation?.()
+                        }}
+                      >
                         <View
                           className="flex-1 flex items-center justify-center gap-1 py-2 rounded bg-gray-100"
                           onClick={(e) => {
