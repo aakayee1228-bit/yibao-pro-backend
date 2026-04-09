@@ -70,6 +70,9 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@4.1.18)
+      wxml-to-canvas:
+        specifier: ^1.1.1
+        version: 1.1.1
       zustand:
         specifier: ^5.0.9
         version: 5.0.9(@types/react@18.3.27)(react@18.3.1)
@@ -10626,6 +10629,9 @@ packages:
     engines: {node: '>= 8'}
     hasBin: true
 
+  widget-ui@1.0.2:
+    resolution: {integrity: sha512-gDXosr5mflJdMA1weU1A47aTsTFfMJhfA4EKgO5XFebY3eVklf80KD4GODfrjo8J2WQ+9YjL1Rd9UUmKIzhShw==}
+
   wildcard@2.0.1:
     resolution: {integrity: sha512-CC1bOL87PIWSBhDcTrdeLo6eGT7mCFtrg0uIJtqJUFyK+eJnzl8A1niH56uu7KMa5XFrtiV+AQuHO3n7DsHnLQ==}
 
@@ -10670,6 +10676,9 @@ packages:
 
   wxml-minifier@0.0.1:
     resolution: {integrity: sha512-g8ZS4fyLdyRIcExnevKTnAFxbtYlAPKBGFO1DXOcsJfmppQWjH2xe2Ff6rRQ2ubYAWalaNjMYpkAl6hurhqkHg==}
+
+  wxml-to-canvas@1.1.1:
+    resolution: {integrity: sha512-3mDjHzujY/UgdCOXij/MnmwJYerVjwkyQHMBFBE8zh89DK7h7UTzoydWFqEBjIC0rfZM+AXl5kDh9hUcsNpSmg==}
 
   xhr@2.6.0:
     resolution: {integrity: sha512-/eCGLb5rxjx5e3mF1A7s+pLlR6CGyqWN91fv1JgER5mVWg1MZmlhBvy9kjcsOdRk8RrIujotWyJamfyrp+WIcA==}
@@ -23300,6 +23309,10 @@ snapshots:
     dependencies:
       isexe: 2.0.0
 
+  widget-ui@1.0.2:
+    dependencies:
+      eventemitter3: 4.0.7
+
   wildcard@2.0.1: {}
 
   word-wrap@1.2.5: {}
@@ -23340,6 +23353,10 @@ snapshots:
   wxml-minifier@0.0.1:
     dependencies:
       '@leejim/wxml-parser': 0.1.6
+
+  wxml-to-canvas@1.1.1:
+    dependencies:
+      widget-ui: 1.0.2
 
   xhr@2.6.0:
     dependencies:
