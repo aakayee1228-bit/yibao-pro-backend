@@ -353,6 +353,12 @@ const QuoteDetailPage: FC = () => {
         // 导出图片
         Taro.canvasToTempFilePath({
           canvasId: 'quoteCanvas',
+          width: 750,
+          height: 1400,
+          destWidth: 750,
+          destHeight: 1400,
+          fileType: 'png',
+          quality: 1,
           success: (res) => {
             // 预览图片
             Taro.previewImage({
@@ -405,8 +411,9 @@ const QuoteDetailPage: FC = () => {
       {/* 隐藏的 Canvas 用于生成图片 */}
       <Canvas
         canvasId="quoteCanvas"
-        style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '750px', height: '1400px' }}
+        style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '750rpx', height: '1400rpx' }}
       />
+      <Text style={{ display: 'none' }}>Canvas reference - 750x1400</Text>
 
       <ScrollView className="flex-1">
         <View className="p-4 pb-32">
