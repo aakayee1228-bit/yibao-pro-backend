@@ -170,6 +170,7 @@ export class CanvasService {
     ctx.fillStyle = white
     ctx.font = `bold 20px ${fontFamily}`
     ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
     ctx.fillText('报价单', 375, y)
 
     y += 20
@@ -206,14 +207,15 @@ export class CanvasService {
       ctx.fillStyle = textColor
       ctx.font = `bold 16px ${fontFamily}`
       ctx.textAlign = 'left'
-      ctx.fillText('报价方信息', 40, y + 22)
+      ctx.textBaseline = 'middle'
+      ctx.fillText('报价方信息', 40, y + 17.5)
 
       // 左列内容（靠左，垂直居中）
       ctx.fillStyle = gray600
       ctx.font = `14px ${fontFamily}`
       ctx.textAlign = 'left'
 
-      let currentY = startY + 53 // 35 + (22 - 14) / 2 + 14
+      let currentY = startY + 46 // 35 + 22/2
       if (quote.company_name) {
         ctx.fillText('公司名称', 40, currentY)
         ctx.fillStyle = textColor
@@ -249,7 +251,7 @@ export class CanvasService {
       ctx.font = `14px ${fontFamily}`
       ctx.textAlign = 'right'
 
-      currentY = startY + 53 // 35 + (22 - 14) / 2 + 14
+      currentY = startY + 46 // 35 + 22/2
 
       // 单号
       ctx.fillText('单号', 710, currentY)
@@ -296,14 +298,15 @@ export class CanvasService {
     ctx.fillStyle = textColor
     ctx.font = `bold 16px ${fontFamily}`
     ctx.textAlign = 'left'
-    ctx.fillText('客户方信息', 40, y + 22)
+    ctx.textBaseline = 'middle'
+    ctx.fillText('客户方信息', 40, y + 17.5)
 
     // 左列详细信息（靠左，垂直居中）
     ctx.fillStyle = gray600
     ctx.font = `14px ${fontFamily}`
     ctx.textAlign = 'left'
 
-    let currentY = startY + 50 // 35 + (16 - 14) / 2 + 14
+    let currentY = startY + 43 // 35 + 16/2
     if (quote.customers?.name) {
       ctx.fillText('客户名称', 40, currentY)
       ctx.fillStyle = textColor
@@ -338,6 +341,7 @@ export class CanvasService {
     ctx.fillStyle = textColor
     ctx.font = `bold 16px ${fontFamily}`
     ctx.textAlign = 'left'
+    ctx.textBaseline = 'middle'
     ctx.fillText('商品明细', 40, y)
 
     y += 8
@@ -353,10 +357,11 @@ export class CanvasService {
     ctx.fillRect(20, y, tableWidth, tableRowHeight)
 
     // 表头文字（白色，加粗，居中）
-    const headerY = y + 28
+    const headerY = y + tableRowHeight / 2
     ctx.fillStyle = white
     ctx.font = `bold 12px ${fontFamily}`
     ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
 
     let colX = 20
     ctx.fillText('序号', colX + colWidths[0] / 2, headerY)
@@ -398,8 +403,9 @@ export class CanvasService {
       }
 
       // 文字内容
-      const textY = rowY + 28
+      const textY = rowY + tableRowHeight / 2
       ctx.font = `14px ${fontFamily}`
+      ctx.textBaseline = 'middle'
 
       // 序号
       ctx.fillStyle = '#374151'
@@ -447,6 +453,7 @@ export class CanvasService {
     ctx.fillStyle = gray600
     ctx.font = `14px ${fontFamily}`
     ctx.textAlign = 'left'
+    ctx.textBaseline = 'middle'
     ctx.fillText('商品金额', 40, y)
     ctx.textAlign = 'right'
     ctx.fillStyle = textColor
@@ -488,6 +495,7 @@ export class CanvasService {
       ctx.fillStyle = gray600
       ctx.font = `14px ${fontFamily}`
       ctx.textAlign = 'left'
+      ctx.textBaseline = 'middle'
       ctx.fillText(`备注：${quote.remark}`, 40, y)
 
       y += 24
@@ -498,6 +506,7 @@ export class CanvasService {
     ctx.fillStyle = '#9CA3AF'
     ctx.font = `12px ${fontFamily}`
     ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
     ctx.fillText('此报价单仅供参考，请以实际交易为准', 375, y)
 
     // 转换为 Buffer
