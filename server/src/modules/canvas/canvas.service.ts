@@ -99,129 +99,129 @@ export class CanvasService {
     // 字体配置（使用中文字体）
     const fontFamily = '"WenQuanYi Micro Hei", "文泉驿微米黑", sans-serif'
 
-    // 黑色文字
-    const textColor = '#000000'
-    const grayColor = '#666666'
-    const lineHeight = 40
+    // 配色方案（新样式）
+    const textColor = '#000000'      // 黑色文字
+    const grayColor = '#666666'      // 灰色文字
+    const lineColor = '#ECECEC'      // 浅灰色分隔线（236,236,236）
+    const lineHeight = 50            // 增加行高
 
-    let y = 60
+    let y = 80
 
     // ========== 标题 ==========
     ctx.fillStyle = textColor
-    ctx.font = `bold 36px ${fontFamily}`
+    ctx.font = `bold 42px ${fontFamily}`
     ctx.textAlign = 'center'
     ctx.fillText('报价单', 375, y)
 
-    y += 60
+    y += 70
 
     // ========== 报价单信息 ==========
     ctx.textAlign = 'left'
-    ctx.font = `18px ${fontFamily}`
+    ctx.font = `20px ${fontFamily}`
 
     ctx.fillStyle = grayColor
-    ctx.fillText(`报价单号：${quote.quote_no}`, 40, y)
+    ctx.fillText(`报价单号：${quote.quote_no}`, 50, y)
     y += lineHeight
 
     const dateStr = quote.created_at ? new Date(quote.created_at).toLocaleDateString('zh-CN') : ''
-    ctx.fillText(`日期：${dateStr}`, 40, y)
+    ctx.fillText(`日期：${dateStr}`, 50, y)
     y += lineHeight
 
-    ctx.fillText(`有效期：${quote.valid_days} 天`, 40, y)
-    y += 60
+    ctx.fillText(`有效期：${quote.valid_days} 天`, 50, y)
+    y += 70
 
     // ========== 分隔线 ==========
-    ctx.strokeStyle = '#CCCCCC'
-    ctx.lineWidth = 1
-    ctx.beginPath()
-    ctx.moveTo(40, y)
-    ctx.lineTo(710, y)
-    ctx.stroke()
-    y += 40
+    ctx.fillStyle = lineColor
+    ctx.fillRect(50, y, 650, 2)
+    y += 60
 
     // ========== 客户信息 ==========
     const customerName = quote.customers?.name || '未命名'
     ctx.fillStyle = textColor
-    ctx.font = `bold 24px ${fontFamily}`
-    ctx.fillText(`客户：${customerName}`, 40, y)
+    ctx.font = `bold 28px ${fontFamily}`
+    ctx.fillText(`客户：${customerName}`, 50, y)
     y += lineHeight
 
-    ctx.font = `18px ${fontFamily}`
+    ctx.font = `20px ${fontFamily}`
     if (quote.customers?.company) {
       ctx.fillStyle = grayColor
-      ctx.fillText(`公司：${quote.customers.company}`, 40, y)
+      ctx.fillText(`公司：${quote.customers.company}`, 50, y)
       y += lineHeight
     }
 
     if (quote.customers?.phone) {
-      ctx.fillText(`电话：${quote.customers.phone}`, 40, y)
+      ctx.fillText(`电话：${quote.customers.phone}`, 50, y)
       y += lineHeight
     }
 
     if (quote.customers?.address) {
-      ctx.fillText(`地址：${quote.customers.address}`, 40, y)
+      ctx.fillText(`地址：${quote.customers.address}`, 50, y)
       y += lineHeight
     }
 
-    y += 40
+    y += 50
 
     // ========== 分隔线 ==========
-    ctx.strokeStyle = '#CCCCCC'
-    ctx.lineWidth = 1
-    ctx.beginPath()
-    ctx.moveTo(40, y)
-    ctx.lineTo(710, y)
-    ctx.stroke()
-    y += 50
+    ctx.fillStyle = lineColor
+    ctx.fillRect(50, y, 650, 2)
+    y += 70
 
     // ========== 表格标题 ==========
     ctx.fillStyle = textColor
-    ctx.font = `bold 20px ${fontFamily}`
-    ctx.fillText('商品明细', 40, y)
-    y += 40
+    ctx.font = `bold 24px ${fontFamily}`
+    ctx.fillText('商品明细', 50, y)
+    y += 50
 
     // ========== 表头 ==========
-    ctx.font = `bold 16px ${fontFamily}`
-    ctx.fillText('品名', 40, y)
-    ctx.fillText('单位', 300, y)
-    ctx.fillText('数量', 400, y)
-    ctx.fillText('单价', 500, y)
-    ctx.fillText('金额', 620, y)
+    ctx.font = `bold 18px ${fontFamily}`
+    ctx.fillStyle = textColor
+    ctx.fillText('品名', 50, y)
+    ctx.fillText('单位', 350, y)
+    ctx.fillText('数量', 450, y)
+    ctx.fillText('单价', 550, y)
+    ctx.fillText('金额', 640, y)
 
-    y += 30
+    // 竖向分隔线
+    ctx.fillStyle = lineColor
+    ctx.fillRect(340, y - 30, 1, 30)
+    ctx.fillRect(440, y - 30, 1, 30)
+    ctx.fillRect(540, y - 30, 1, 30)
+    ctx.fillRect(630, y - 30, 1, 30)
 
-    // ========== 分隔线 ==========
-    ctx.strokeStyle = '#CCCCCC'
-    ctx.lineWidth = 2
-    ctx.beginPath()
-    ctx.moveTo(40, y)
-    ctx.lineTo(710, y)
-    ctx.stroke()
-    y += 40
+    y += 35
+
+    // ========== 分隔线（表头下方粗线）==========
+    ctx.fillStyle = lineColor
+    ctx.fillRect(50, y, 650, 2)
+    y += 50
 
     // ========== 表格内容 ==========
-    ctx.font = `16px ${fontFamily}`
+    ctx.font = `18px ${fontFamily}`
 
     if (quote.items && quote.items.length > 0) {
       quote.items.forEach((item, index) => {
         if (index >= 10) return // 最多显示10条
 
         ctx.fillStyle = textColor
-        ctx.fillText(item.product_name, 40, y)
-        ctx.fillText(item.unit, 300, y)
-        ctx.fillText(item.quantity, 400, y)
-        ctx.fillText(`¥${Number(item.unit_price).toFixed(2)}`, 500, y)
-        ctx.fillText(`¥${Number(item.amount).toFixed(2)}`, 620, y)
+        ctx.fillText(item.product_name, 50, y)
+        ctx.fillText(item.unit, 350, y)
+        ctx.fillText(item.quantity, 450, y)
+        ctx.fillText(`¥${Number(item.unit_price).toFixed(2)}`, 550, y)
+        ctx.fillText(`¥${Number(item.amount).toFixed(2)}`, 640, y)
+
+        // 竖向分隔线
+        ctx.fillStyle = lineColor
+        ctx.fillRect(340, y - 35, 1, 35)
+        ctx.fillRect(440, y - 35, 1, 35)
+        ctx.fillRect(540, y - 35, 1, 35)
+        ctx.fillRect(630, y - 35, 1, 35)
 
         y += lineHeight
 
-        // 分隔线
-        ctx.strokeStyle = '#DDDDDD'
-        ctx.lineWidth = 1
-        ctx.beginPath()
-        ctx.moveTo(40, y)
-        ctx.lineTo(710, y)
-        ctx.stroke()
-        y += 40
+        // 每行分隔线
+        ctx.fillStyle = lineColor
+        ctx.fillRect(50, y, 650, 1)
+        y += 50
       })
     }
 
@@ -232,54 +232,46 @@ export class CanvasService {
     ctx.fillStyle = grayColor
     ctx.textAlign = 'right'
 
-    ctx.fillText('商品金额：', 710, y)
+    ctx.fillText('商品金额：', 700, y)
     y += lineHeight
 
     if (Number(quote.discount) > 0) {
-      ctx.fillText(`优惠金额：-¥${Number(quote.discount).toFixed(2)}`, 710, y)
+      ctx.fillText(`优惠金额：-¥${Number(quote.discount).toFixed(2)}`, 700, y)
       y += lineHeight
     }
 
     ctx.fillStyle = textColor
-    ctx.font = `bold 24px ${fontFamily}`
-    ctx.fillText(`合计金额：¥${Number(quote.total_amount).toFixed(2)}`, 710, y)
-    y += 60
+    ctx.font = `bold 28px ${fontFamily}`
+    ctx.fillText(`合计金额：¥${Number(quote.total_amount).toFixed(2)}`, 700, y)
+    y += 80
 
     // ========== 备注 ==========
     if (quote.remark) {
       y += 20
-      ctx.strokeStyle = '#CCCCCC'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.moveTo(40, y)
-      ctx.lineTo(710, y)
-      ctx.stroke()
-      y += 40
+      ctx.fillStyle = lineColor
+      ctx.fillRect(50, y, 650, 2)
+      y += 50
 
       ctx.fillStyle = textColor
-      ctx.font = `bold 18px ${fontFamily}`
+      ctx.font = `bold 20px ${fontFamily}`
       ctx.textAlign = 'left'
-      ctx.fillText('备注：', 40, y)
-      y += 30
+      ctx.fillText('备注：', 50, y)
+      y += 35
 
-      ctx.font = `16px ${fontFamily}`
+      ctx.font = `18px ${fontFamily}`
       ctx.fillStyle = grayColor
-      ctx.fillText(quote.remark, 40, y)
+      ctx.fillText(quote.remark, 50, y)
       y += lineHeight
     }
 
     // ========== 底部说明 ==========
-    y += 40
-    ctx.strokeStyle = '#CCCCCC'
-    ctx.lineWidth = 1
-    ctx.beginPath()
-    ctx.moveTo(40, y)
-    ctx.lineTo(710, y)
-    ctx.stroke()
-    y += 40
+    y += 50
+    ctx.fillStyle = lineColor
+    ctx.fillRect(50, y, 650, 2)
+    y += 50
 
     ctx.fillStyle = grayColor
-    ctx.font = `14px ${fontFamily}`
+    ctx.font = `16px ${fontFamily}`
     ctx.textAlign = 'center'
     ctx.fillText('此报价单仅供参考，请以实际交易为准', 375, y)
 
