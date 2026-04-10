@@ -1,6 +1,6 @@
 import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { FC } from 'react'
 import { Plus, Trash2, ChevronRight, Package } from 'lucide-react-taro'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -64,6 +64,12 @@ const CreateQuotePage: FC = () => {
     fetchProducts()
     fetchMerchantInfo()
   })
+
+  // 额外保障：组件首次渲染时也尝试获取商家信息
+  useEffect(() => {
+    console.log('[创建表单] useEffect 触发')
+    fetchMerchantInfo()
+  }, [])
 
   const fetchMerchantInfo = async () => {
     try {
