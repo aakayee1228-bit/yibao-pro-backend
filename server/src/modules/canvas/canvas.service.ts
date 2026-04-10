@@ -182,7 +182,7 @@ export class CanvasService {
 
     // ========== 报价方信息区（带表格格子）==========
     if (quote.company_name || quote.contact_person || quote.contact_phone || quote.contact_address) {
-      const infoBlockHeight = 105
+      const infoBlockHeight = 125
       const startY = y
 
       // 绘制表格边框和格子
@@ -210,7 +210,7 @@ export class CanvasService {
 
       // 左列内容（靠左）
       const leftStartY = startY + 35
-      const rowHeight = 17
+      const rowHeight = 22
 
       ctx.fillStyle = gray600
       ctx.font = `14px ${fontFamily}`
@@ -247,13 +247,7 @@ export class CanvasService {
         ctx.fillText(quote.contact_address, 120, leftY)
       }
 
-      // 右列标题
-      ctx.fillStyle = textColor
-      ctx.font = `bold 16px ${fontFamily}`
-      ctx.textAlign = 'right'
-      ctx.fillText('报价单信息', 710, y + 22)
-
-      // 右列内容（靠右）
+      // 右列内容（靠右，无标题）
       const rightStartY = startY + 35
       ctx.fillStyle = gray600
       ctx.font = `14px ${fontFamily}`
@@ -264,7 +258,7 @@ export class CanvasService {
       // 单号
       ctx.fillText('单号', 710, rightY)
       ctx.fillStyle = textColor
-      ctx.fillText(quote.quote_no, 700, rightY)
+      ctx.fillText(quote.quote_no, 690, rightY)
       rightY += rowHeight
       ctx.fillStyle = gray600
 
@@ -272,20 +266,20 @@ export class CanvasService {
       const dateStr = quote.created_at ? new Date(quote.created_at).toLocaleDateString('zh-CN') : '-'
       ctx.fillText('日期', 710, rightY)
       ctx.fillStyle = textColor
-      ctx.fillText(dateStr, 700, rightY)
+      ctx.fillText(dateStr, 690, rightY)
       rightY += rowHeight
       ctx.fillStyle = gray600
 
       // 有效期
       ctx.fillText('有效期', 710, rightY)
       ctx.fillStyle = textColor
-      ctx.fillText(`${quote.valid_days} 天`, 700, rightY)
+      ctx.fillText(`${quote.valid_days} 天`, 690, rightY)
 
       y = startY + infoBlockHeight + 20
     }
 
     // ========== 客户方信息区（带表格格子）==========
-    const customerInfoHeight = 70
+    const customerInfoHeight = 85
     const startY = y
 
     // 绘制表格边框和格子
@@ -310,7 +304,7 @@ export class CanvasService {
 
     // 左列详细信息（靠左）
     const leftStartY = startY + 35
-    const rowHeight = 17
+    const rowHeight = 16
 
     ctx.fillStyle = gray600
     ctx.font = `14px ${fontFamily}`
