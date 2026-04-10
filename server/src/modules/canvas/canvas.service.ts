@@ -102,8 +102,8 @@ export class CanvasService {
     const canvas = createCanvas(750, 1600)
     const ctx = canvas.getContext('2d')
 
-    // 字体配置
-    const fontFamily = '"Microsoft YaHei", "微软雅黑", sans-serif'
+    // 字体配置（使用系统中可用的中文字体）
+    const fontFamily = 'WenQuanYi Micro Hei, WenQuanYi Zen Hei, sans-serif'
 
     // 配色方案（完全按照详情表样式）
     const overallBgColor = '#F5F5F5'  // 整体浅灰色背景
