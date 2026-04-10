@@ -254,6 +254,8 @@ export class CanvasService {
       }
 
       // 右列内容（靠右，垂直居中，无标题）
+      const rightColStart = 380 // 纵向分隔线位置
+      const rightColWidth = 330 // 710 - 380
       ctx.fillStyle = gray600
       ctx.font = `14px ${fontFamily}`
       ctx.textAlign = 'right'
@@ -261,24 +263,24 @@ export class CanvasService {
       currentY = startY + headerHeight + (dataRowHeight - 14) / 2
 
       // 单号
-      ctx.fillText('单号', 710, currentY)
+      ctx.fillText('单号', rightColStart + 80, currentY) // 标签靠左
       ctx.fillStyle = textColor
-      ctx.fillText(quote.quote_no, 690, currentY)
+      ctx.fillText(quote.quote_no, rightColStart + rightColWidth - 20, currentY) // 内容靠右
       currentY += dataRowHeight
       ctx.fillStyle = gray600
 
       // 日期
       const dateStr = quote.created_at ? new Date(quote.created_at).toLocaleDateString('zh-CN') : '-'
-      ctx.fillText('日期', 710, currentY)
+      ctx.fillText('日期', rightColStart + 80, currentY)
       ctx.fillStyle = textColor
-      ctx.fillText(dateStr, 690, currentY)
+      ctx.fillText(dateStr, rightColStart + rightColWidth - 20, currentY)
       currentY += dataRowHeight
       ctx.fillStyle = gray600
 
       // 有效期
-      ctx.fillText('有效期', 710, currentY)
+      ctx.fillText('有效期', rightColStart + 80, currentY)
       ctx.fillStyle = textColor
-      ctx.fillText(`${quote.valid_days} 天`, 690, currentY)
+      ctx.fillText(`${quote.valid_days} 天`, rightColStart + rightColWidth - 20, currentY)
 
       y = startY + infoBlockHeight + 20
     }
