@@ -134,7 +134,7 @@ export class CanvasService {
     ctx.fillStyle = white
     ctx.font = `bold 18px ${fontFamily}`
     ctx.textAlign = 'center'
-    ctx.fillText('产品报价单', 375, y)
+    ctx.fillText('报价单', 375, y)
 
     y += 40
 
