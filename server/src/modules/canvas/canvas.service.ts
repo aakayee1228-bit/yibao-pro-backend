@@ -128,9 +128,24 @@ export class CanvasService {
     ctx.textAlign = 'center'
     ctx.fillText('报价单', 375, y)
 
-    y += 60
+    y += 80
 
-    // ========== 报价方信息卡片（新增）==========
+    // ========== 报价单号、日期、有效期（白色背景，无灰色背景）==========
+    ctx.textAlign = 'left'
+    ctx.font = `16px ${fontFamily}`
+    ctx.fillStyle = textColor
+    ctx.fillText(`报价单号：${quote.quote_no}`, 70, y)
+    y += lineHeight
+
+    const dateStr = quote.created_at ? new Date(quote.created_at).toLocaleDateString('zh-CN') : ''
+    ctx.fillText(`日期：${dateStr}`, 70, y)
+    y += lineHeight
+
+    ctx.fillText(`有效期：${quote.valid_days} 天`, 70, y)
+
+    y += 50
+
+    // ========== 报价方信息卡片（灰色背景 + 加粗标题）==========
     if (quote.company_name || quote.contact_person || quote.contact_phone) {
       const quoteInfoCardStart = y
       const quoteInfoCardWidth = 650
@@ -188,39 +203,7 @@ export class CanvasService {
       y += 30
     }
 
-    // ========== 报价单信息卡片 ==========
-    const infoCardStart = y
-    const infoCardWidth = 650
-    const infoCardHeight = 130
-
-    // 浅灰色背景卡片
-    ctx.fillStyle = cardBackgroundColor
-    ctx.fillRect(50, infoCardStart, infoCardWidth, infoCardHeight)
-
-    // 卡片边框（使用fillRect绘制）
-    ctx.fillStyle = cardBorderColor
-    ctx.fillRect(50, infoCardStart, infoCardWidth, borderWidth)              // 上边框
-    ctx.fillRect(50, infoCardStart + infoCardHeight - borderWidth, infoCardWidth, borderWidth)  // 下边框
-    ctx.fillRect(50, infoCardStart, borderWidth, infoCardHeight)           // 左边框
-    ctx.fillRect(50 + infoCardWidth - borderWidth, infoCardStart, borderWidth, infoCardHeight)  // 右边框
-
-    y += 30
-    ctx.textAlign = 'left'
-    ctx.font = `16px ${fontFamily}`
-
-    ctx.fillStyle = textColor
-    ctx.fillText(`报价单号：${quote.quote_no}`, 70, y)
-    y += lineHeight
-
-    const dateStr = quote.created_at ? new Date(quote.created_at).toLocaleDateString('zh-CN') : ''
-    ctx.fillText(`日期：${dateStr}`, 70, y)
-    y += lineHeight
-
-    ctx.fillText(`有效期：${quote.valid_days} 天`, 70, y)
-
-    y += 50
-
-    // ========== 客户信息卡片 ==========
+    // ========== 客户信息卡片（灰色背景 + 加粗标题）==========
     const customerCardStart = y
     const customerCardWidth = 650
     const customerCardHeight = 180
@@ -365,8 +348,8 @@ export class CanvasService {
     ctx.fillRect(50 + amountCardWidth - borderWidth, amountCardStart, borderWidth, amountCardHeight)
 
     y += 30
-    ctx.font = `16px ${fontFamily}`
     ctx.fillStyle = textColor
+    ctx.font = `bold 18px ${fontFamily}`
     ctx.textAlign = 'right'
 
     ctx.fillText('商品金额：', 650, y)
@@ -378,7 +361,7 @@ export class CanvasService {
     }
 
     ctx.fillStyle = textColor
-    ctx.font = `bold 20px ${fontFamily}`
+    ctx.font = `bold 22px ${fontFamily}`
     ctx.fillText(`合计金额：¥${Number(quote.total_amount).toFixed(2)}`, 650, y)
 
     y += 30
