@@ -182,7 +182,7 @@ export class CanvasService {
 
     // ========== 报价方信息区（带表格格子）==========
     if (quote.company_name || quote.contact_person || quote.contact_phone || quote.contact_address) {
-      const infoBlockHeight = 140
+      const infoBlockHeight = 105
       const startY = y
 
       // 绘制表格边框和格子
@@ -201,60 +201,91 @@ export class CanvasService {
 
       // 横向分隔线
       ctx.fillRect(20, y + 35, 710, 1) // 标题分隔线
-      ctx.fillRect(20, y + 87, 710, 1) // 内容分隔线
 
       // 左列标题
       ctx.fillStyle = textColor
       ctx.font = `bold 16px ${fontFamily}`
-      ctx.textAlign = 'center'
-      ctx.fillText('报价方信息', 200, y + 22)
+      ctx.textAlign = 'left'
+      ctx.fillText('报价方信息', 40, y + 22)
 
-      // 左列底部信息（联系地址）
-      if (quote.contact_address) {
-        ctx.fillStyle = gray600
-        ctx.font = `14px ${fontFamily}`
-        ctx.textAlign = 'left'
-        ctx.fillText('联系地址', 40, y + 113)
-        ctx.fillStyle = textColor
-        ctx.fillText(quote.contact_address, 120, y + 113)
-      }
-
-      // 右列内容（在内容区1中）
-      const rightStartY = startY + 35
+      // 左列内容（靠左）
+      const leftStartY = startY + 35
       const rowHeight = 17
 
       ctx.fillStyle = gray600
       ctx.font = `14px ${fontFamily}`
       ctx.textAlign = 'left'
 
-      let rightY = rightStartY + rowHeight
+      let leftY = leftStartY + rowHeight
       if (quote.company_name) {
-        ctx.fillText('公司名称', 400, rightY)
+        ctx.fillText('公司名称', 40, leftY)
         ctx.fillStyle = textColor
-        ctx.fillText(quote.company_name, 480, rightY)
-        rightY += rowHeight
+        ctx.fillText(quote.company_name, 120, leftY)
+        leftY += rowHeight
         ctx.fillStyle = gray600
       }
 
       if (quote.contact_person) {
-        ctx.fillText('联系人', 400, rightY)
+        ctx.fillText('联系人', 40, leftY)
         ctx.fillStyle = textColor
-        ctx.fillText(quote.contact_person, 480, rightY)
-        rightY += rowHeight
+        ctx.fillText(quote.contact_person, 120, leftY)
+        leftY += rowHeight
         ctx.fillStyle = gray600
       }
 
       if (quote.contact_phone) {
-        ctx.fillText('联系电话', 400, rightY)
+        ctx.fillText('联系电话', 40, leftY)
         ctx.fillStyle = textColor
-        ctx.fillText(quote.contact_phone, 480, rightY)
+        ctx.fillText(quote.contact_phone, 120, leftY)
+        leftY += rowHeight
+        ctx.fillStyle = gray600
       }
+
+      if (quote.contact_address) {
+        ctx.fillText('联系地址', 40, leftY)
+        ctx.fillStyle = textColor
+        ctx.fillText(quote.contact_address, 120, leftY)
+      }
+
+      // 右列标题
+      ctx.fillStyle = textColor
+      ctx.font = `bold 16px ${fontFamily}`
+      ctx.textAlign = 'right'
+      ctx.fillText('报价单信息', 710, y + 22)
+
+      // 右列内容（靠右）
+      const rightStartY = startY + 35
+      ctx.fillStyle = gray600
+      ctx.font = `14px ${fontFamily}`
+      ctx.textAlign = 'right'
+
+      let rightY = rightStartY + rowHeight
+
+      // 单号
+      ctx.fillText('单号', 710, rightY)
+      ctx.fillStyle = textColor
+      ctx.fillText(quote.quote_no, 700, rightY)
+      rightY += rowHeight
+      ctx.fillStyle = gray600
+
+      // 日期
+      const dateStr = quote.created_at ? new Date(quote.created_at).toLocaleDateString('zh-CN') : '-'
+      ctx.fillText('日期', 710, rightY)
+      ctx.fillStyle = textColor
+      ctx.fillText(dateStr, 700, rightY)
+      rightY += rowHeight
+      ctx.fillStyle = gray600
+
+      // 有效期
+      ctx.fillText('有效期', 710, rightY)
+      ctx.fillStyle = textColor
+      ctx.fillText(`${quote.valid_days} 天`, 700, rightY)
 
       y = startY + infoBlockHeight + 20
     }
 
     // ========== 客户方信息区（带表格格子）==========
-    const customerInfoHeight = 140
+    const customerInfoHeight = 70
     const startY = y
 
     // 绘制表格边框和格子
@@ -268,20 +299,16 @@ export class CanvasService {
     ctx.fillRect(20, y, 1, customerInfoHeight) // 左边框
     ctx.fillRect(20 + 710, y, 1, customerInfoHeight) // 右边框
 
-    // 纵向分隔线（分成两列）
-    ctx.fillRect(380, y, 1, customerInfoHeight)
-
     // 横向分隔线
     ctx.fillRect(20, y + 35, 710, 1) // 标题分隔线
-    ctx.fillRect(20, y + 87, 710, 1) // 内容分隔线
 
     // 左列标题
     ctx.fillStyle = textColor
     ctx.font = `bold 16px ${fontFamily}`
-    ctx.textAlign = 'center'
-    ctx.fillText('客户方信息', 200, y + 22)
+    ctx.textAlign = 'left'
+    ctx.fillText('客户方信息', 40, y + 22)
 
-    // 左列详细信息（在内容区1中）
+    // 左列详细信息（靠左）
     const leftStartY = startY + 35
     const rowHeight = 17
 
@@ -311,34 +338,6 @@ export class CanvasService {
       ctx.fillStyle = blue700
       ctx.fillText(quote.customers.phone, 120, leftY)
     }
-
-    // 右列内容（在内容区1中）
-    const rightStartY = startY + 35
-    ctx.fillStyle = gray600
-    ctx.font = `14px ${fontFamily}`
-    ctx.textAlign = 'left'
-
-    let rightY = rightStartY + rowHeight
-
-    // 单号
-    ctx.fillText('单号', 400, rightY)
-    ctx.fillStyle = textColor
-    ctx.fillText(quote.quote_no, 480, rightY)
-    rightY += rowHeight
-    ctx.fillStyle = gray600
-
-    // 日期
-    const dateStr = quote.created_at ? new Date(quote.created_at).toLocaleDateString('zh-CN') : '-'
-    ctx.fillText('日期', 400, rightY)
-    ctx.fillStyle = textColor
-    ctx.fillText(dateStr, 480, rightY)
-    rightY += rowHeight
-    ctx.fillStyle = gray600
-
-    // 有效期
-    ctx.fillText('有效期', 400, rightY)
-    ctx.fillStyle = textColor
-    ctx.fillText(`${quote.valid_days} 天`, 480, rightY)
 
     y = startY + customerInfoHeight + 20
 
