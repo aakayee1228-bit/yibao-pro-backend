@@ -47,7 +47,7 @@ interface Quote {
 export class CanvasService {
 
   /**
-   * 生成报价单图片（参考样式：浅灰色背景卡片）
+   * 生成报价单图片（严格按照参考样式）
    */
   async generateQuoteImage(quoteId: string): Promise<Buffer> {
     const client = getSupabaseClient()
@@ -102,303 +102,270 @@ export class CanvasService {
     const canvas = createCanvas(750, 1600)
     const ctx = canvas.getContext('2d')
 
-    // 字体配置（使用中文字体）
+    // 字体配置
     const fontFamily = '"WenQuanYi Micro Hei", "文泉驿微米黑", sans-serif'
 
-    // 配色方案（参考样式）
-    const backgroundColor = '#FFFFFF'  // 整体白色背景
-    const cardBackgroundColor = '#ECECEC'  // 内容卡片浅灰色背景（236,236,236）
-    const cardBorderColor = '#B0B0B0'   // 卡片边框（176,176,176）- 更深一点
-    const gridColor = '#B0B0B0'         // 格子线 - 更深一点
-    const textColor = '#000000'      // 黑色文字
-    const grayColor = '#666666'      // 灰色文字
-    const lineHeight = 40            // 行高
-    const cardPadding = 20           // 卡片内边距
-    const borderWidth = 2            // 边框宽度 - 增加到2px
+    // 配色方案（严格按照参考样式）
+    const backgroundColor = '#FFFFFF'  // 白色背景
+    const headerBgColor = '#ECECEC'    // 表格标题行浅灰色背景
+    const lineColor = '#000000'        // 黑色表格线
+    const textColor = '#000000'        // 黑色文字
+    const lineWidth = 1                // 表格线宽度1像素
+    const lineHeight = 35              // 行高
+    const cardPadding = 15             // 卡片内边距
 
     // 纯白色背景
     ctx.fillStyle = backgroundColor
-    ctx.fillRect(0, 0, 750, 1400)
+    ctx.fillRect(0, 0, 750, 1600)
 
     let y = 60
 
-    // ========== 标题 ==========
+    // ========== 标题区（白色背景）==========
     ctx.fillStyle = textColor
-    ctx.font = `bold 36px ${fontFamily}`
+    ctx.font = `bold 32px ${fontFamily}`
     ctx.textAlign = 'center'
     ctx.fillText('报价单', 375, y)
 
-    y += 80
-
-    // ========== 报价单号、日期、有效期（白色背景，无灰色背景）==========
-    ctx.textAlign = 'left'
-    ctx.font = `16px ${fontFamily}`
-    ctx.fillStyle = textColor
-    ctx.fillText(`报价单号：${quote.quote_no}`, 70, y)
-    y += lineHeight
-
-    const dateStr = quote.created_at ? new Date(quote.created_at).toLocaleDateString('zh-CN') : ''
-    ctx.fillText(`日期：${dateStr}`, 70, y)
-    y += lineHeight
-
-    ctx.fillText(`有效期：${quote.valid_days} 天`, 70, y)
-
     y += 50
 
-    // ========== 报价方信息卡片（灰色背景 + 加粗标题）==========
-    if (quote.company_name || quote.contact_person || quote.contact_phone) {
-      const quoteInfoCardStart = y
-      const quoteInfoCardWidth = 650
-      const quoteInfoCardHeight = 200
-
-      // 浅灰色背景卡片
-      ctx.fillStyle = cardBackgroundColor
-      ctx.fillRect(50, quoteInfoCardStart, quoteInfoCardWidth, quoteInfoCardHeight)
-
-      // 卡片边框（使用fillRect绘制）
-      ctx.fillStyle = cardBorderColor
-      ctx.fillRect(50, quoteInfoCardStart, quoteInfoCardWidth, borderWidth)
-      ctx.fillRect(50, quoteInfoCardStart + quoteInfoCardHeight - borderWidth, quoteInfoCardWidth, borderWidth)
-      ctx.fillRect(50, quoteInfoCardStart, borderWidth, quoteInfoCardHeight)
-      ctx.fillRect(50 + quoteInfoCardWidth - borderWidth, quoteInfoCardStart, borderWidth, quoteInfoCardHeight)
-
-      y += 30
-      ctx.textAlign = 'left'
-      ctx.fillStyle = textColor
-      ctx.font = `bold 20px ${fontFamily}`
-      ctx.fillText('报价方', 70, y)
-      y += 30
-
-      ctx.font = `16px ${fontFamily}`
-      if (quote.company_name) {
-        ctx.fillStyle = textColor
-        ctx.fillText(`公司：${quote.company_name}`, 70, y)
-        y += lineHeight
-      }
-
-      if (quote.contact_person) {
-        ctx.fillStyle = textColor
-        ctx.fillText(`联系人：${quote.contact_person}`, 70, y)
-        y += lineHeight
-      }
-
-      if (quote.contact_phone) {
-        ctx.fillStyle = textColor
-        ctx.fillText(`电话：${quote.contact_phone}`, 70, y)
-        y += lineHeight
-      }
-
-      if (quote.contact_address) {
-        ctx.fillStyle = textColor
-        ctx.fillText(`地址：${quote.contact_address}`, 70, y)
-        y += lineHeight
-      }
-
-      if (quote.contact_email) {
-        ctx.fillStyle = textColor
-        ctx.fillText(`邮箱：${quote.contact_email}`, 70, y)
-        y += lineHeight
-      }
-
-      y += 30
-    }
-
-    // ========== 客户信息卡片（灰色背景 + 加粗标题）==========
-    const customerCardStart = y
-    const customerCardWidth = 650
-    const customerCardHeight = 180
-
-    // 浅灰色背景卡片
-    ctx.fillStyle = cardBackgroundColor
-    ctx.fillRect(50, customerCardStart, customerCardWidth, customerCardHeight)
-
-    // 卡片边框（使用fillRect绘制）
-    ctx.fillStyle = cardBorderColor
-    ctx.fillRect(50, customerCardStart, customerCardWidth, borderWidth)
-    ctx.fillRect(50, customerCardStart + customerCardHeight - borderWidth, customerCardWidth, borderWidth)
-    ctx.fillRect(50, customerCardStart, borderWidth, customerCardHeight)
-    ctx.fillRect(50 + customerCardWidth - borderWidth, customerCardStart, borderWidth, customerCardHeight)
-
-    y += 30
-    const customerName = quote.customers?.name || '未命名'
+    // ========== 报价时间和报价单号（白色背景）==========
+    ctx.textAlign = 'left'
+    ctx.font = `14px ${fontFamily}`
     ctx.fillStyle = textColor
-    ctx.font = `bold 20px ${fontFamily}`
-    ctx.fillText(`客户：${customerName}`, 70, y)
+
+    const dateStr = quote.created_at ? new Date(quote.created_at).toLocaleDateString('zh-CN') : ''
+    ctx.fillText(`报价时间：${dateStr}`, 50, y)
     y += lineHeight
 
-    ctx.font = `16px ${fontFamily}`
+    ctx.fillText(`报价单号：${quote.quote_no}`, 50, y)
+    y += lineHeight
+
+    ctx.fillText(`有效期：${quote.valid_days} 天`, 50, y)
+
+    y += 40
+
+    // ========== 报价方信息（表格形式，标题行浅灰色背景）==========
+    // 标题行（浅灰色背景 + 加粗）
+    ctx.fillStyle = headerBgColor
+    ctx.fillRect(50, y, 650, 35)
+    ctx.fillStyle = lineColor
+    ctx.fillRect(50, y, 650, lineWidth)      // 上边框
+    ctx.fillRect(50, y + 34, 650, lineWidth) // 下边框
+    ctx.fillRect(50, y, lineWidth, 35)      // 左边框
+    ctx.fillRect(700, y, lineWidth, 35)     // 右边框
+
+    y += 22
+    ctx.fillStyle = textColor
+    ctx.font = `bold 14px ${fontFamily}`
+    ctx.textAlign = 'left'
+    ctx.fillText('报价方信息', 60, y)
+
+    y += 25
+
+    // 报价方信息内容行（白色背景）
+    ctx.fillStyle = backgroundColor
+    ctx.fillRect(50, y, 650, lineHeight * 5)
+    ctx.fillStyle = lineColor
+    ctx.fillRect(50, y + lineHeight * 5, 650, lineWidth) // 下边框
+    ctx.fillRect(50, y, lineWidth, lineHeight * 5)      // 左边框
+    ctx.fillRect(700, y, lineWidth, lineHeight * 5)     // 右边框
+
+    ctx.font = `14px ${fontFamily}`
+    if (quote.company_name) {
+      ctx.fillStyle = textColor
+      ctx.fillText(`单位：${quote.company_name}`, 60, y)
+      y += lineHeight
+    }
+
+    if (quote.contact_person) {
+      ctx.fillStyle = textColor
+      ctx.fillText(`联系人：${quote.contact_person}`, 60, y)
+      y += lineHeight
+    }
+
+    if (quote.contact_phone) {
+      ctx.fillStyle = textColor
+      ctx.fillText(`电话：${quote.contact_phone}`, 60, y)
+      y += lineHeight
+    }
+
+    if (quote.contact_email) {
+      ctx.fillStyle = textColor
+      ctx.fillText(`邮箱：${quote.contact_email}`, 60, y)
+      y += lineHeight
+    }
+
+    if (quote.contact_address) {
+      ctx.fillStyle = textColor
+      ctx.fillText(`地址：${quote.contact_address}`, 60, y)
+      y += lineHeight
+    }
+
+    y += 15
+
+    // ========== 客户方信息（表格形式，标题行浅灰色背景）==========
+    // 标题行（浅灰色背景 + 加粗）
+    ctx.fillStyle = headerBgColor
+    ctx.fillRect(50, y, 650, 35)
+    ctx.fillStyle = lineColor
+    ctx.fillRect(50, y, 650, lineWidth)
+    ctx.fillRect(50, y + 34, 650, lineWidth)
+    ctx.fillRect(50, y, lineWidth, 35)
+    ctx.fillRect(700, y, lineWidth, 35)
+
+    y += 22
+    ctx.fillStyle = textColor
+    ctx.font = `bold 14px ${fontFamily}`
+    ctx.fillText('客户方信息', 60, y)
+
+    y += 25
+
+    // 客户信息内容行（白色背景）
+    ctx.fillStyle = backgroundColor
+    ctx.fillRect(50, y, 650, lineHeight * 5)
+    ctx.fillStyle = lineColor
+    ctx.fillRect(50, y + lineHeight * 5, 650, lineWidth)
+    ctx.fillRect(50, y, lineWidth, lineHeight * 5)
+    ctx.fillRect(700, y, lineWidth, lineHeight * 5)
+
+    ctx.font = `14px ${fontFamily}`
+    if (quote.customers?.name) {
+      ctx.fillStyle = textColor
+      ctx.fillText(`客户名称：${quote.customers.name}`, 60, y)
+      y += lineHeight
+    }
+
     if (quote.customers?.company) {
       ctx.fillStyle = textColor
-      ctx.fillText(`公司：${quote.customers.company}`, 70, y)
+      ctx.fillText(`单位：${quote.customers.company}`, 60, y)
       y += lineHeight
     }
 
     if (quote.customers?.phone) {
       ctx.fillStyle = textColor
-      ctx.fillText(`电话：${quote.customers.phone}`, 70, y)
+      ctx.fillText(`电话：${quote.customers.phone}`, 60, y)
       y += lineHeight
     }
 
     if (quote.customers?.address) {
       ctx.fillStyle = textColor
-      ctx.fillText(`地址：${quote.customers.address}`, 70, y)
+      ctx.fillText(`地址：${quote.customers.address}`, 60, y)
       y += lineHeight
     }
 
-    y += 30
+    y += lineHeight  // 空一行
 
-    // ========== 商品明细卡片 ==========
-    const productCardStart = y
-    const productCardWidth = 650
-    const productCardHeight = 500  // 预估高度
+    y += 15
 
-    // 浅灰色背景卡片
-    ctx.fillStyle = cardBackgroundColor
-    ctx.fillRect(50, productCardStart, productCardWidth, productCardHeight)
+    // ========== 商品明细（表格形式，表头行浅灰色背景）==========
+    const tableStartY = y
 
-    // 卡片边框（使用fillRect绘制）
-    ctx.fillStyle = cardBorderColor
-    ctx.fillRect(50, productCardStart, productCardWidth, borderWidth)
-    ctx.fillRect(50, productCardStart + productCardHeight - borderWidth, productCardWidth, borderWidth)
-    ctx.fillRect(50, productCardStart, borderWidth, productCardHeight)
-    ctx.fillRect(50 + productCardWidth - borderWidth, productCardStart, borderWidth, productCardHeight)
+    // 表头行（浅灰色背景 + 加粗）
+    ctx.fillStyle = headerBgColor
+    ctx.fillRect(50, y, 650, 35)
+    ctx.fillStyle = lineColor
+    ctx.fillRect(50, y, 650, lineWidth)
+    ctx.fillRect(50, y + 34, 650, lineWidth)
+    ctx.fillRect(50, y, lineWidth, 35)
+    ctx.fillRect(700, y, lineWidth, 35)
 
-    // 表格格子区域（在卡片内部）
-    const tableStartX = 70
-    const tableStartY = productCardStart + 70
-    const tableWidth = 610
-    const colWidth = [200, 100, 100, 100, 100]  // 品名、单位、数量、单价、金额的列宽
-
-    y += 30
+    y += 22
     ctx.fillStyle = textColor
-    ctx.font = `bold 20px ${fontFamily}`
-    ctx.fillText('商品明细', 70, y)
-    y += 40
+    ctx.font = `bold 14px ${fontFamily}`
+    ctx.fillText('序号', 60, y)
+    ctx.fillText('商品名称', 120, y)
+    ctx.fillText('单位', 320, y)
+    ctx.fillText('数量', 380, y)
+    ctx.fillText('单价', 440, y)
+    ctx.fillText('金额', 510, y)
+    ctx.fillText('备注', 590, y)
 
-    // ========== 表头 ==========
-    y = tableStartY - 10
+    y += 25
+
+    // 商品明细内容行（白色背景）
+    const maxRows = 10
+    const actualRows = Math.min(quote.items?.length || 0, maxRows)
+
+    ctx.fillStyle = backgroundColor
+    ctx.fillRect(50, y, 650, lineHeight * actualRows)
+    ctx.fillStyle = lineColor
+
+    // 绘制纵向分隔线
+    const colPositions = [50, 110, 310, 370, 430, 500, 580, 700]
+    colPositions.forEach(x => {
+      ctx.fillRect(x, tableStartY, lineWidth, lineHeight * actualRows + 35)
+    })
+
+    // 绘制横向分隔线
+    for (let i = 0; i <= actualRows; i++) {
+      ctx.fillRect(50, y + i * lineHeight, 650, lineWidth)
+    }
+
+    // 填充商品数据
+    ctx.font = `14px ${fontFamily}`
+    quote.items.slice(0, maxRows).forEach((item, index) => {
+      const rowY = y + lineHeight * index + 22
+      ctx.fillStyle = textColor
+      ctx.fillText(`${index + 1}`, 65, rowY)
+      ctx.fillText(item.product_name, 120, rowY)
+      ctx.fillText(item.unit, 320, rowY)
+      ctx.fillText(item.quantity, 380, rowY)
+      ctx.fillText(`¥${Number(item.unit_price).toFixed(2)}`, 440, rowY)
+      ctx.fillText(`¥${Number(item.amount).toFixed(2)}`, 510, rowY)
+      if (item.remark) {
+        ctx.fillText(item.remark, 590, rowY)
+      }
+    })
+
+    y += lineHeight * actualRows + 15
+
+    // ========== 合计区（白色背景）==========
+    ctx.fillStyle = backgroundColor
+    ctx.fillRect(50, y, 650, lineHeight * 2)
+    ctx.fillStyle = lineColor
+    ctx.fillRect(50, y, 650, lineWidth)
+    ctx.fillRect(50, y + lineHeight * 2, 650, lineWidth)
+    ctx.fillRect(50, y, lineWidth, lineHeight * 2)
+    ctx.fillRect(700, y, lineWidth, lineHeight * 2)
+
+    y += 25
     ctx.font = `bold 14px ${fontFamily}`
     ctx.fillStyle = textColor
+    ctx.textAlign = 'left'
+    ctx.fillText('合计（大写）：', 60, y)
+    ctx.fillText('合计（小写）：', 60, y + lineHeight)
 
-    const headerX = tableStartX
-    ctx.fillText('品名', headerX + 10, y)
-    ctx.fillText('单位', headerX + colWidth[0] + 10, y)
-    ctx.fillText('数量', headerX + colWidth[0] + colWidth[1] + 10, y)
-    ctx.fillText('单价', headerX + colWidth[0] + colWidth[1] + colWidth[2] + 10, y)
-    ctx.fillText('金额', headerX + colWidth[0] + colWidth[1] + colWidth[2] + colWidth[3] + 10, y)
-
-    y += 40
-
-    // 计算表格内容实际高度
-    const actualRows = Math.min(quote.items?.length || 0, 10)
-    const tableContentHeight = actualRows * (lineHeight + 30)  // 每行高度（包括分隔线和间距）
-
-    // ========== 绘制完整的表格格子（从表头到最后一行）==========
-    ctx.fillStyle = gridColor
-
-    // 绘制表头底部分隔线
-    ctx.fillRect(tableStartX, tableStartY - 10, tableWidth, borderWidth)
-
-    // 绘制纵向分隔线（从表头一直延伸到最后一行）
-    let x = tableStartX
-    for (let i = 0; i < colWidth.length; i++) {
-      x += colWidth[i]
-      ctx.fillRect(x - 1, tableStartY - 40, borderWidth, tableContentHeight + 40)
-    }
-
-    // ========== 表格内容 ==========
-    ctx.font = `14px ${fontFamily}`
-
-    if (quote.items && quote.items.length > 0) {
-      quote.items.forEach((item, index) => {
-        if (index >= 10) return // 最多显示10条
-
-        ctx.fillStyle = textColor
-        ctx.fillText(item.product_name, headerX + 10, y)
-        ctx.fillText(item.unit, headerX + colWidth[0] + 10, y)
-        ctx.fillText(item.quantity, headerX + colWidth[0] + colWidth[1] + 10, y)
-        ctx.fillText(`¥${Number(item.unit_price).toFixed(2)}`, headerX + colWidth[0] + colWidth[1] + colWidth[2] + 10, y)
-        ctx.fillText(`¥${Number(item.amount).toFixed(2)}`, headerX + colWidth[0] + colWidth[1] + colWidth[2] + colWidth[3] + 10, y)
-
-        y += lineHeight
-
-        // 每行分隔线（使用fillRect绘制）
-        ctx.fillStyle = gridColor
-        ctx.fillRect(tableStartX, y, tableWidth, borderWidth)
-        y += 30
-      })
-    }
-
-    y += 20
-
-    // ========== 金额汇总卡片 ==========
-    const amountCardStart = y
-    const amountCardWidth = 650
-    const amountCardHeight = 130
-
-    // 浅灰色背景卡片
-    ctx.fillStyle = cardBackgroundColor
-    ctx.fillRect(50, amountCardStart, amountCardWidth, amountCardHeight)
-
-    // 卡片边框（使用fillRect绘制）
-    ctx.fillStyle = cardBorderColor
-    ctx.fillRect(50, amountCardStart, amountCardWidth, borderWidth)
-    ctx.fillRect(50, amountCardStart + amountCardHeight - borderWidth, amountCardWidth, borderWidth)
-    ctx.fillRect(50, amountCardStart, borderWidth, amountCardHeight)
-    ctx.fillRect(50 + amountCardWidth - borderWidth, amountCardStart, borderWidth, amountCardHeight)
-
-    y += 30
-    ctx.fillStyle = textColor
-    ctx.font = `bold 18px ${fontFamily}`
     ctx.textAlign = 'right'
+    const amountStr = Number(quote.total_amount).toFixed(2)
+    ctx.fillText(this.numberToChinese(Number(quote.total_amount)), 700, y)
+    ctx.fillText(`¥${amountStr}`, 700, y + lineHeight)
 
-    ctx.fillText('商品金额：', 650, y)
-    y += lineHeight
+    y += lineHeight * 2 + 15
 
-    if (Number(quote.discount) > 0) {
-      ctx.fillText(`优惠金额：-¥${Number(quote.discount).toFixed(2)}`, 650, y)
-      y += lineHeight
-    }
-
-    ctx.fillStyle = textColor
-    ctx.font = `bold 22px ${fontFamily}`
-    ctx.fillText(`合计金额：¥${Number(quote.total_amount).toFixed(2)}`, 650, y)
-
-    y += 30
-
-    // ========== 备注（如果有）==========
+    // ========== 备注说明区（白色背景）==========
     if (quote.remark) {
-      y += 20
-      const remarkCardStart = y
-      const remarkCardWidth = 650
-      const remarkCardHeight = 100
+      ctx.fillStyle = backgroundColor
+      ctx.fillRect(50, y, 650, lineHeight * 2)
+      ctx.fillStyle = lineColor
+      ctx.fillRect(50, y, 650, lineWidth)
+      ctx.fillRect(50, y + lineHeight * 2, 650, lineWidth)
+      ctx.fillRect(50, y, lineWidth, lineHeight * 2)
+      ctx.fillRect(700, y, lineWidth, lineHeight * 2)
 
-      // 浅灰色背景卡片
-      ctx.fillStyle = cardBackgroundColor
-      ctx.fillRect(50, remarkCardStart, remarkCardWidth, remarkCardHeight)
-
-      // 卡片边框（使用fillRect绘制）
-      ctx.fillStyle = cardBorderColor
-      ctx.fillRect(50, remarkCardStart, remarkCardWidth, borderWidth)
-      ctx.fillRect(50, remarkCardStart + remarkCardHeight - borderWidth, remarkCardWidth, borderWidth)
-      ctx.fillRect(50, remarkCardStart, borderWidth, remarkCardHeight)
-      ctx.fillRect(50 + remarkCardWidth - borderWidth, remarkCardStart, borderWidth, remarkCardHeight)
-
-      y += 30
+      y += 25
+      ctx.font = `bold 14px ${fontFamily}`
       ctx.fillStyle = textColor
-      ctx.font = `bold 16px ${fontFamily}`
       ctx.textAlign = 'left'
-      ctx.fillText('备注：', 70, y)
-      y += 30
+      ctx.fillText('备注说明：', 60, y)
 
-      ctx.font = `14px ${fontFamily}`
-      ctx.fillStyle = textColor
-      ctx.fillText(quote.remark, 70, y)
       y += lineHeight
+      ctx.font = `14px ${fontFamily}`
+      ctx.fillText(quote.remark, 60, y)
+
+      y += lineHeight + 15
     }
 
-    // ========== 底部说明 ==========
-    y += 40
+    // ========== 底部说明（白色背景）==========
     ctx.fillStyle = textColor
     ctx.font = `12px ${fontFamily}`
     ctx.textAlign = 'center'
@@ -406,5 +373,55 @@ export class CanvasService {
 
     // 转换为 Buffer
     return canvas.toBuffer('image/png')
+  }
+
+  /**
+   * 数字转中文大写
+   */
+  private numberToChinese(num: number): string {
+    const units = ['元', '万', '亿']
+    const digits = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖']
+    const smallUnits = ['', '拾', '佰', '仟']
+
+    if (num === 0) return '零元整'
+
+    const intPart = Math.floor(num)
+    const decPart = Math.round((num - intPart) * 100)
+
+    let intStr = ''
+    let temp = intPart
+
+    for (let i = 0; i < units.length && temp > 0; i++) {
+      const section = temp % 10000
+      if (section > 0) {
+        let sectionStr = ''
+        let sectionTemp = section
+        for (let j = 0; j < 4 && sectionTemp > 0; j++) {
+          const digit = sectionTemp % 10
+          if (digit > 0) {
+            sectionStr = digits[digit] + smallUnits[j] + sectionStr
+          } else if (sectionStr.length > 0 && sectionStr[0] !== '零') {
+            sectionStr = '零' + sectionStr
+          }
+          sectionTemp = Math.floor(sectionTemp / 10)
+        }
+        intStr = sectionStr + units[i] + intStr
+      }
+      temp = Math.floor(temp / 10000)
+    }
+
+    if (intStr === '') intStr = '零元'
+    else intStr = intStr + '整'
+
+    if (decPart > 0) {
+      intStr = intStr.replace('整', '')
+      const jiao = Math.floor(decPart / 10)
+      const fen = decPart % 10
+      if (jiao > 0) intStr += digits[jiao] + '角'
+      if (fen > 0) intStr += digits[fen] + '分'
+      if (intStr === '') intStr = '零'
+    }
+
+    return intStr
   }
 }
