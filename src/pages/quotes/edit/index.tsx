@@ -49,6 +49,11 @@ interface QuoteDetail {
   remark: string
   valid_days: number
   created_at: string
+  company_name?: string
+  contact_person?: string
+  contact_phone?: string
+  contact_address?: string
+  contact_email?: string
   customers: Customer | null
   items: QuoteItem[]
 }
@@ -132,11 +137,11 @@ const EditQuotePage: FC = () => {
         setValidDays(data.valid_days)
         // 加载报价方信息
         setQuoteInfo({
-          companyName: (data as any).company_name || '',
-          contactPerson: (data as any).contact_person || '',
-          contactPhone: (data as any).contact_phone || '',
-          contactAddress: (data as any).contact_address || '',
-          contactEmail: (data as any).contact_email || '',
+          companyName: data.company_name || '',
+          contactPerson: data.contact_person || '',
+          contactPhone: data.contact_phone || '',
+          contactAddress: data.contact_address || '',
+          contactEmail: data.contact_email || '',
         })
       }
     } catch (err) {
@@ -230,6 +235,25 @@ const EditQuotePage: FC = () => {
   const submitQuote = async () => {
     setLoading(true)
     try {
+      // 先更新商家信息（如果有变化）
+      if (quoteInfo.companyName || quoteInfo.contactPerson || quoteInfo.contactPhone || quoteInfo.contactAddress) {
+        try {
+          await Network.request({
+            url: '/api/merchants/update',
+            method: 'POST',
+            data: {
+              shopName: quoteInfo.companyName,
+              contactName: quoteInfo.contactPerson,
+              phone: quoteInfo.contactPhone,
+              address: quoteInfo.contactAddress,
+            },
+          })
+        } catch (err) {
+          console.error('更新商家信息失败:', err)
+          // 商家信息更新失败不影响表单更新
+        }
+      }
+
       console.log('提交数据:', {
         quoteId,
         customer_id: selectedCustomer!.id,

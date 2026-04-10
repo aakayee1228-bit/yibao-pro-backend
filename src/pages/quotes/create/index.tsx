@@ -61,7 +61,29 @@ const CreateQuotePage: FC = () => {
   useDidShow(() => {
     fetchCustomers()
     fetchProducts()
+    fetchMerchantInfo()
   })
+
+  const fetchMerchantInfo = async () => {
+    try {
+      const res = await Network.request({ url: '/api/merchants/info', method: 'GET' })
+      if (res.statusCode === 200 && res.data) {
+        const responseData = res.data as { data?: any }
+        const merchantInfo = responseData.data
+        if (merchantInfo) {
+          setQuoteInfo({
+            companyName: merchantInfo.shop_name || '',
+            contactPerson: merchantInfo.contact_name || '',
+            contactPhone: merchantInfo.phone || '',
+            contactAddress: merchantInfo.address || '',
+            contactEmail: merchantInfo.email || '',
+          })
+        }
+      }
+    } catch (err) {
+      console.error('获取商家信息失败:', err)
+    }
+  }
 
   const fetchCustomers = async () => {
     try {
@@ -143,6 +165,25 @@ const CreateQuotePage: FC = () => {
   const submitQuote = async () => {
     setLoading(true)
     try {
+      // 先更新商家信息（如果有变化）
+      if (quoteInfo.companyName || quoteInfo.contactPerson || quoteInfo.contactPhone || quoteInfo.contactAddress) {
+        try {
+          await Network.request({
+            url: '/api/merchants/update',
+            method: 'POST',
+            data: {
+              shopName: quoteInfo.companyName,
+              contactName: quoteInfo.contactPerson,
+              phone: quoteInfo.contactPhone,
+              address: quoteInfo.contactAddress,
+            },
+          })
+        } catch (err) {
+          console.error('更新商家信息失败:', err)
+          // 商家信息更新失败不影响表单创建
+        }
+      }
+
       const res = await Network.request({
         url: '/api/quotes',
         method: 'POST',
