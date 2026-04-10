@@ -39,6 +39,11 @@ interface Quote {
   remark: string
   valid_days: number
   created_at: string
+  company_name?: string
+  contact_person?: string
+  contact_phone?: string
+  contact_address?: string
+  contact_email?: string
   customers: Customer | null
   items: QuoteItem[]
 }
@@ -195,6 +200,25 @@ const QuoteDetailPage: FC = () => {
 
           {/* 白色卡片内容 */}
           <View className="bg-white rounded-b-lg shadow-sm px-4 py-4 mb-4">
+            {/* 报价方信息 */}
+            {(quote.company_name || quote.contact_person || quote.contact_phone) && (
+              <View className="mb-4 pb-4 border-b border-gray-100">
+                <Text className="block text-base font-bold text-gray-900 mb-2">报价方信息</Text>
+                {quote.company_name && (
+                  <Text className="block text-sm text-gray-600 mb-1">{quote.company_name}</Text>
+                )}
+                {quote.contact_person && (
+                  <Text className="block text-sm text-gray-600 mb-1">联系人：{quote.contact_person}</Text>
+                )}
+                {quote.contact_phone && (
+                  <Text className="block text-sm text-gray-600 mb-1">电话：{quote.contact_phone}</Text>
+                )}
+                {quote.contact_address && (
+                  <Text className="block text-sm text-gray-600">地址：{quote.contact_address}</Text>
+                )}
+              </View>
+            )}
+
             {/* 两列信息布局 */}
             <View className="flex flex-row gap-4 mb-4">
               {/* 左列 - 客户信息 */}

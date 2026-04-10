@@ -130,7 +130,7 @@ export class CanvasService {
     }
 
     // 创建 Canvas
-    const canvas = createCanvas(750, 1600)
+    const canvas = createCanvas(750, 1800)
     const ctx = canvas.getContext('2d')
 
     // 字体配置（使用系统中可用的中文字体）
@@ -153,7 +153,7 @@ export class CanvasService {
 
     // 整体浅灰色背景
     ctx.fillStyle = overallBgColor
-    ctx.fillRect(0, 0, 750, 1600)
+    ctx.fillRect(0, 0, 750, 1800)
 
     let y = 20
 
@@ -179,6 +179,46 @@ export class CanvasService {
     ctx.fillStyle = cardBgColor
     const cardHeight = tableRowHeight * 12 + 200 // 预留高度
     ctx.fillRect(20, y, 710, cardHeight)
+
+    // ========== 报价方信息区 ==========
+    if (quote.company_name || quote.contact_person || quote.contact_phone || quote.contact_address) {
+      // 标题
+      ctx.fillStyle = textColor
+      ctx.font = `bold 16px ${fontFamily}`
+      ctx.textAlign = 'left'
+      ctx.fillText('报价方信息', 40, y + 20)
+
+      // 商家信息内容
+      let merchantInfoY = y + 48
+      ctx.font = `14px ${fontFamily}`
+      ctx.fillStyle = gray600
+
+      if (quote.company_name) {
+        ctx.fillText(quote.company_name, 40, merchantInfoY)
+        merchantInfoY += infoRowHeight
+      }
+
+      if (quote.contact_person) {
+        ctx.fillText(`联系人：${quote.contact_person}`, 40, merchantInfoY)
+        merchantInfoY += infoRowHeight
+      }
+
+      if (quote.contact_phone) {
+        ctx.fillText(`电话：${quote.contact_phone}`, 40, merchantInfoY)
+        merchantInfoY += infoRowHeight
+      }
+
+      if (quote.contact_address) {
+        ctx.fillText(`地址：${quote.contact_address}`, 40, merchantInfoY)
+      }
+
+      y += merchantInfoY - y + 10
+
+      // 分隔线
+      ctx.fillStyle = lineColor
+      ctx.fillRect(20, y, 710, 1)
+      y += 20
+    }
 
     // ========== 客户信息区（左右两列布局）==========
     const customerInfoY = y + 16
