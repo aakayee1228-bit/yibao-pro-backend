@@ -182,7 +182,7 @@ export class CanvasService {
 
     // ========== 报价方信息区（带表格格子）==========
     if (quote.company_name || quote.contact_person || quote.contact_phone || quote.contact_address) {
-      const infoBlockHeight = 125
+      const infoBlockHeight = 130
       const startY = y
 
       // 绘制表格边框和格子
@@ -208,72 +208,68 @@ export class CanvasService {
       ctx.textAlign = 'left'
       ctx.fillText('报价方信息', 40, y + 22)
 
-      // 左列内容（靠左）
-      const leftStartY = startY + 35
-      const rowHeight = 22
-
+      // 左列内容（靠左，垂直居中）
       ctx.fillStyle = gray600
       ctx.font = `14px ${fontFamily}`
       ctx.textAlign = 'left'
 
-      let leftY = leftStartY + rowHeight
+      let currentY = startY + 53 // 35 + (22 - 14) / 2 + 14
       if (quote.company_name) {
-        ctx.fillText('公司名称', 40, leftY)
+        ctx.fillText('公司名称', 40, currentY)
         ctx.fillStyle = textColor
-        ctx.fillText(quote.company_name, 120, leftY)
-        leftY += rowHeight
+        ctx.fillText(quote.company_name, 120, currentY)
+        currentY += 22
         ctx.fillStyle = gray600
       }
 
       if (quote.contact_person) {
-        ctx.fillText('联系人', 40, leftY)
+        ctx.fillText('联系人', 40, currentY)
         ctx.fillStyle = textColor
-        ctx.fillText(quote.contact_person, 120, leftY)
-        leftY += rowHeight
+        ctx.fillText(quote.contact_person, 120, currentY)
+        currentY += 22
         ctx.fillStyle = gray600
       }
 
       if (quote.contact_phone) {
-        ctx.fillText('联系电话', 40, leftY)
+        ctx.fillText('联系电话', 40, currentY)
         ctx.fillStyle = textColor
-        ctx.fillText(quote.contact_phone, 120, leftY)
-        leftY += rowHeight
+        ctx.fillText(quote.contact_phone, 120, currentY)
+        currentY += 22
         ctx.fillStyle = gray600
       }
 
       if (quote.contact_address) {
-        ctx.fillText('联系地址', 40, leftY)
+        ctx.fillText('联系地址', 40, currentY)
         ctx.fillStyle = textColor
-        ctx.fillText(quote.contact_address, 120, leftY)
+        ctx.fillText(quote.contact_address, 120, currentY)
       }
 
-      // 右列内容（靠右，无标题）
-      const rightStartY = startY + 35
+      // 右列内容（靠右，垂直居中，无标题）
       ctx.fillStyle = gray600
       ctx.font = `14px ${fontFamily}`
       ctx.textAlign = 'right'
 
-      let rightY = rightStartY + rowHeight
+      currentY = startY + 53 // 35 + (22 - 14) / 2 + 14
 
       // 单号
-      ctx.fillText('单号', 710, rightY)
+      ctx.fillText('单号', 710, currentY)
       ctx.fillStyle = textColor
-      ctx.fillText(quote.quote_no, 690, rightY)
-      rightY += rowHeight
+      ctx.fillText(quote.quote_no, 690, currentY)
+      currentY += 22
       ctx.fillStyle = gray600
 
       // 日期
       const dateStr = quote.created_at ? new Date(quote.created_at).toLocaleDateString('zh-CN') : '-'
-      ctx.fillText('日期', 710, rightY)
+      ctx.fillText('日期', 710, currentY)
       ctx.fillStyle = textColor
-      ctx.fillText(dateStr, 690, rightY)
-      rightY += rowHeight
+      ctx.fillText(dateStr, 690, currentY)
+      currentY += 22
       ctx.fillStyle = gray600
 
       // 有效期
-      ctx.fillText('有效期', 710, rightY)
+      ctx.fillText('有效期', 710, currentY)
       ctx.fillStyle = textColor
-      ctx.fillText(`${quote.valid_days} 天`, 690, rightY)
+      ctx.fillText(`${quote.valid_days} 天`, 690, currentY)
 
       y = startY + infoBlockHeight + 20
     }
@@ -302,35 +298,32 @@ export class CanvasService {
     ctx.textAlign = 'left'
     ctx.fillText('客户方信息', 40, y + 22)
 
-    // 左列详细信息（靠左）
-    const leftStartY = startY + 35
-    const rowHeight = 16
-
+    // 左列详细信息（靠左，垂直居中）
     ctx.fillStyle = gray600
     ctx.font = `14px ${fontFamily}`
     ctx.textAlign = 'left'
 
-    let leftY = leftStartY + rowHeight
+    let currentY = startY + 50 // 35 + (16 - 14) / 2 + 14
     if (quote.customers?.name) {
-      ctx.fillText('客户名称', 40, leftY)
+      ctx.fillText('客户名称', 40, currentY)
       ctx.fillStyle = textColor
-      ctx.fillText(quote.customers.name, 120, leftY)
-      leftY += rowHeight
+      ctx.fillText(quote.customers.name, 120, currentY)
+      currentY += 16
       ctx.fillStyle = gray600
     }
 
     if (quote.customers?.company) {
-      ctx.fillText('公司名称', 40, leftY)
+      ctx.fillText('公司名称', 40, currentY)
       ctx.fillStyle = textColor
-      ctx.fillText(quote.customers.company, 120, leftY)
-      leftY += rowHeight
+      ctx.fillText(quote.customers.company, 120, currentY)
+      currentY += 16
       ctx.fillStyle = gray600
     }
 
     if (quote.customers?.phone) {
-      ctx.fillText('联系电话', 40, leftY)
+      ctx.fillText('联系电话', 40, currentY)
       ctx.fillStyle = blue700
-      ctx.fillText(quote.customers.phone, 120, leftY)
+      ctx.fillText(quote.customers.phone, 120, currentY)
     }
 
     y = startY + customerInfoHeight + 20
