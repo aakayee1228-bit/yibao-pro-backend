@@ -200,8 +200,15 @@ export class CanvasService {
       // 纵向分隔线（分成两列）
       ctx.fillRect(380, y, 1, infoBlockHeight)
 
-      // 横向分隔线
-      ctx.fillRect(20, y + 35, 710, 1) // 标题分隔线
+      // 横向分隔线（标题行 + 每行数据）
+      const headerHeight = 35
+      const dataRowHeight = 23
+      const dataRows = 4
+      ctx.fillRect(20, y + headerHeight, 710, 1) // 标题分隔线
+
+      for (let i = 1; i <= dataRows; i++) {
+        ctx.fillRect(20, y + headerHeight + i * dataRowHeight, 710, 1)
+      }
 
       // 左列标题
       ctx.fillStyle = textColor
@@ -215,12 +222,12 @@ export class CanvasService {
       ctx.font = `14px ${fontFamily}`
       ctx.textAlign = 'left'
 
-      let currentY = startY + 35 + 4 // (22 - 14) / 2 = 4
+      let currentY = startY + headerHeight + (dataRowHeight - 14) / 2
       if (quote.company_name) {
         ctx.fillText('公司名称', 40, currentY)
         ctx.fillStyle = textColor
         ctx.fillText(quote.company_name, 120, currentY)
-        currentY += 22
+        currentY += dataRowHeight
         ctx.fillStyle = gray600
       }
 
@@ -228,7 +235,7 @@ export class CanvasService {
         ctx.fillText('联系人', 40, currentY)
         ctx.fillStyle = textColor
         ctx.fillText(quote.contact_person, 120, currentY)
-        currentY += 22
+        currentY += dataRowHeight
         ctx.fillStyle = gray600
       }
 
@@ -236,7 +243,7 @@ export class CanvasService {
         ctx.fillText('联系电话', 40, currentY)
         ctx.fillStyle = textColor
         ctx.fillText(quote.contact_phone, 120, currentY)
-        currentY += 22
+        currentY += dataRowHeight
         ctx.fillStyle = gray600
       }
 
@@ -251,13 +258,13 @@ export class CanvasService {
       ctx.font = `14px ${fontFamily}`
       ctx.textAlign = 'right'
 
-      currentY = startY + 35 + 4
+      currentY = startY + headerHeight + (dataRowHeight - 14) / 2
 
       // 单号
       ctx.fillText('单号', 710, currentY)
       ctx.fillStyle = textColor
       ctx.fillText(quote.quote_no, 690, currentY)
-      currentY += 22
+      currentY += dataRowHeight
       ctx.fillStyle = gray600
 
       // 日期
@@ -265,7 +272,7 @@ export class CanvasService {
       ctx.fillText('日期', 710, currentY)
       ctx.fillStyle = textColor
       ctx.fillText(dateStr, 690, currentY)
-      currentY += 22
+      currentY += dataRowHeight
       ctx.fillStyle = gray600
 
       // 有效期
@@ -291,8 +298,15 @@ export class CanvasService {
     ctx.fillRect(20, y, 1, customerInfoHeight) // 左边框
     ctx.fillRect(20 + 710, y, 1, customerInfoHeight) // 右边框
 
-    // 横向分隔线
-    ctx.fillRect(20, y + 35, 710, 1) // 标题分隔线
+    // 横向分隔线（标题行 + 每行数据）
+    const headerHeight = 35
+    const dataRowHeight = 16
+    const dataRows = 3
+    ctx.fillRect(20, y + headerHeight, 710, 1) // 标题分隔线
+
+    for (let i = 1; i <= dataRows; i++) {
+      ctx.fillRect(20, y + headerHeight + i * dataRowHeight, 710, 1)
+    }
 
     // 左列标题
     ctx.fillStyle = textColor
@@ -306,12 +320,12 @@ export class CanvasService {
     ctx.font = `14px ${fontFamily}`
     ctx.textAlign = 'left'
 
-    let currentY = startY + 35 + 1 // (16 - 14) / 2 = 1
+    let currentY = startY + headerHeight + (dataRowHeight - 14) / 2
     if (quote.customers?.name) {
       ctx.fillText('客户名称', 40, currentY)
       ctx.fillStyle = textColor
       ctx.fillText(quote.customers.name, 120, currentY)
-      currentY += 16
+      currentY += dataRowHeight
       ctx.fillStyle = gray600
     }
 
@@ -319,7 +333,7 @@ export class CanvasService {
       ctx.fillText('公司名称', 40, currentY)
       ctx.fillStyle = textColor
       ctx.fillText(quote.customers.company, 120, currentY)
-      currentY += 16
+      currentY += dataRowHeight
       ctx.fillStyle = gray600
     }
 
@@ -348,9 +362,56 @@ export class CanvasService {
 
     // ========== 商品明细表格 ==========
     const tableWidth = 710
-    const colWidths = [60, 220, 80, 80, 130, 140] // 序号、品名、单位、数量、单价、合计
     const maxRows = 10
     const actualRows = Math.min(quote.items?.length || 0, maxRows)
+
+    // 动态计算列宽
+    ctx.font = `12px ${fontFamily}`
+    const headerTexts = ['序号', '品名', '单位', '数量', '单价', '合计']
+    const minColWidths = [50, 150, 50, 60, 80, 80] // 各列最小宽度
+
+    // 计算每列的最大内容宽度
+    const maxContentWidths = [0, 0, 0, 0, 0, 0]
+
+    // 测量表头宽度
+    headerTexts.forEach((text, i) => {
+      const width = ctx.measureText(text).width
+      maxContentWidths[i] = Math.max(maxContentWidths[i], width)
+    })
+
+    // 测量数据宽度
+    ctx.font = `14px ${fontFamily}`
+    quote.items.slice(0, maxRows).forEach((item) => {
+      // 序号
+      maxContentWidths[0] = Math.max(maxContentWidths[0], ctx.measureText('999').width)
+      // 品名
+      maxContentWidths[1] = Math.max(maxContentWidths[1], ctx.measureText(item.product_name).width)
+      // 单位
+      maxContentWidths[2] = Math.max(maxContentWidths[2], ctx.measureText(item.unit).width)
+      // 数量
+      maxContentWidths[3] = Math.max(maxContentWidths[3], ctx.measureText(`${item.quantity}`).width)
+      // 单价
+      maxContentWidths[4] = Math.max(maxContentWidths[4], ctx.measureText(`¥${Number(item.unit_price).toFixed(2)}`).width)
+      // 合计
+      maxContentWidths[5] = Math.max(maxContentWidths[5], ctx.measureText(`¥${Number(item.amount).toFixed(2)}`).width)
+    })
+
+    // 计算最终列宽（加上内边距）
+    const padding = 20 // 每列左右内边距总和
+    const colWidths = maxContentWidths.map((w, i) => Math.max(w + padding, minColWidths[i]))
+
+    // 调整列宽以匹配总宽度
+    const currentTotal = colWidths.reduce((sum, w) => sum + w, 0)
+    if (currentTotal !== tableWidth) {
+      // 按比例调整
+      const scale = tableWidth / currentTotal
+      for (let i = 0; i < colWidths.length; i++) {
+        colWidths[i] = Math.floor(colWidths[i] * scale)
+      }
+      // 修正最后一列的宽度以精确匹配总宽度
+      const actualTotal = colWidths.reduce((sum, w) => sum + w, 0)
+      colWidths[colWidths.length - 1] += tableWidth - actualTotal
+    }
 
     // 蓝色表头行（圆角）
     ctx.fillStyle = blue800
