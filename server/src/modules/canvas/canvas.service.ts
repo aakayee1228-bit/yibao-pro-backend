@@ -345,13 +345,13 @@ export class CanvasService {
       ctx.fillText(quote.customers.phone, 120, currentY)
     }
 
-    y = startY + customerInfoHeight + 20
+    y = startY + customerInfoHeight + 25
 
     // ========== 蓝色水平分隔线 ==========
     ctx.fillStyle = blue800
     ctx.fillRect(20, y, 710, 4)
 
-    y += 12
+    y += 20
 
     // ========== "商品明细"标题 ==========
     ctx.fillStyle = textColor
@@ -360,7 +360,7 @@ export class CanvasService {
     ctx.textBaseline = 'top'
     ctx.fillText('商品明细', 40, y)
 
-    y += 8
+    y += 12
 
     // ========== 商品明细表格 ==========
     const tableWidth = 710
