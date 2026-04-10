@@ -42,7 +42,7 @@ interface Quote {
 export class CanvasService {
 
   /**
-   * 生成报价单图片
+   * 生成报价单图片（最简单样式）
    */
   async generateQuoteImage(quoteId: string): Promise<Buffer> {
     const client = getSupabaseClient()
@@ -88,287 +88,199 @@ export class CanvasService {
       items: itemsData || [],
     }
 
-    // 创建 Canvas（3:4 比例）
-    const canvas = createCanvas(750, 1000)
+    // 创建 Canvas（最简单样式，纯白背景）
+    const canvas = createCanvas(750, 1400)
     const ctx = canvas.getContext('2d')
 
-    // 定义配色方案（浅蓝色主题）
-    const colors = {
-      background: '#DEEBFB',      // 主背景 - 浅蓝色
-      cardBackground: '#FFFFFF',  // 卡片背景 - 白色
-      primary: '#2563EB',         // 主色 - 蓝色
-      primaryLight: '#3B82F6',    // 主色浅 - 蓝色
-      secondary: '#64748B',       // 次要色 - 灰色
-      text: '#1E293B',            // 文字色 - 深色
-      textLight: '#94A3B8',       // 文字浅色 - 浅灰色
-      border: '#E2E8F0',          // 边框色
-      success: '#10B981',         // 成功色 - 绿色
-      danger: '#EF4444',          // 危险色 - 红色
-    }
-
-    // 绘制主背景
-    ctx.fillStyle = colors.background
-    ctx.fillRect(0, 0, 750, 1000)
-
-    // ========== 顶部标题区域 ==========
-    ctx.fillStyle = colors.cardBackground
-    ctx.fillRect(30, 30, 690, 120)
-
-    // 标题背景装饰条
-    ctx.fillStyle = colors.primary
-    ctx.fillRect(30, 30, 8, 120)
-
-    // 标题文字
-    ctx.fillStyle = colors.text
-    ctx.font = 'bold 36px sans-serif'
-    ctx.textAlign = 'left'
-    ctx.fillText('产品报价单', 70, 90)
-
-    // 右侧图标装饰（圆形）
-    ctx.fillStyle = colors.primaryLight
-    ctx.beginPath()
-    ctx.arc(660, 90, 30, 0, Math.PI * 2)
-    ctx.fill()
-
+    // 纯白色背景
     ctx.fillStyle = '#FFFFFF'
-    ctx.font = 'bold 24px sans-serif'
+    ctx.fillRect(0, 0, 750, 1400)
+
+    // 黑色文字
+    const textColor = '#000000'
+    const grayColor = '#666666'
+    const lineHeight = 40
+
+    let y = 60
+
+    // ========== 标题 ==========
+    ctx.fillStyle = textColor
+    ctx.font = 'bold 36px sans-serif'
     ctx.textAlign = 'center'
-    ctx.fillText('¥', 660, 98)
+    ctx.fillText('报价单', 375, y)
 
-    // ========== 客户信息卡片 ==========
-    const cardY = 180
-    ctx.fillStyle = colors.cardBackground
-    this.roundRect(ctx, 30, cardY, 690, 100, 12)
-    ctx.fill()
-
-    // 客户信息标题
-    ctx.fillStyle = colors.secondary
-    ctx.font = '16px sans-serif'
-    ctx.textAlign = 'left'
-    ctx.fillText('客户信息', 60, cardY + 35)
-
-    // 客户名称
-    const customerName = quote.customers?.name || '未命名'
-    ctx.fillStyle = colors.text
-    ctx.font = 'bold 22px sans-serif'
-    ctx.fillText(customerName, 60, cardY + 70)
-
-    // 公司名称
-    if (quote.customers?.company) {
-      ctx.fillStyle = colors.textLight
-      ctx.font = '16px sans-serif'
-      ctx.fillText(quote.customers.company, 60, cardY + 90)
-    }
-
-    // 联系方式
-    if (quote.customers?.phone) {
-      ctx.fillStyle = colors.textLight
-      ctx.font = '14px sans-serif'
-      ctx.textAlign = 'right'
-      ctx.fillText(quote.customers.phone, 690, cardY + 70)
-    }
+    y += 60
 
     // ========== 报价单信息 ==========
-    const infoY = 300
-    ctx.fillStyle = colors.cardBackground
-    this.roundRect(ctx, 30, infoY, 690, 80, 12)
-    ctx.fill()
-
-    ctx.fillStyle = colors.secondary
-    ctx.font = '14px sans-serif'
     ctx.textAlign = 'left'
-    ctx.fillText(`报价单号：${quote.quote_no}`, 60, infoY + 35)
+    ctx.font = '18px sans-serif'
 
-    ctx.fillStyle = colors.textLight
-    ctx.font = '14px sans-serif'
+    ctx.fillStyle = grayColor
+    ctx.fillText(`报价单号：${quote.quote_no}`, 40, y)
+    y += lineHeight
+
     const dateStr = quote.created_at ? new Date(quote.created_at).toLocaleDateString('zh-CN') : ''
-    ctx.fillText(`创建日期：${dateStr}`, 60, infoY + 60)
+    ctx.fillText(`日期：${dateStr}`, 40, y)
+    y += lineHeight
 
-    ctx.fillStyle = colors.primary
+    ctx.fillText(`有效期：${quote.valid_days} 天`, 40, y)
+    y += 60
+
+    // ========== 分隔线 ==========
+    ctx.strokeStyle = '#CCCCCC'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(40, y)
+    ctx.lineTo(710, y)
+    ctx.stroke()
+    y += 40
+
+    // ========== 客户信息 ==========
+    const customerName = quote.customers?.name || '未命名'
+    ctx.fillStyle = textColor
+    ctx.font = 'bold 24px sans-serif'
+    ctx.fillText(`客户：${customerName}`, 40, y)
+    y += lineHeight
+
+    ctx.font = '18px sans-serif'
+    if (quote.customers?.company) {
+      ctx.fillStyle = grayColor
+      ctx.fillText(`公司：${quote.customers.company}`, 40, y)
+      y += lineHeight
+    }
+
+    if (quote.customers?.phone) {
+      ctx.fillText(`电话：${quote.customers.phone}`, 40, y)
+      y += lineHeight
+    }
+
+    if (quote.customers?.address) {
+      ctx.fillText(`地址：${quote.customers.address}`, 40, y)
+      y += lineHeight
+    }
+
+    y += 40
+
+    // ========== 分隔线 ==========
+    ctx.strokeStyle = '#CCCCCC'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(40, y)
+    ctx.lineTo(710, y)
+    ctx.stroke()
+    y += 50
+
+    // ========== 表格标题 ==========
+    ctx.fillStyle = textColor
+    ctx.font = 'bold 20px sans-serif'
+    ctx.fillText('商品明细', 40, y)
+    y += 40
+
+    // ========== 表头 ==========
     ctx.font = 'bold 16px sans-serif'
-    ctx.textAlign = 'right'
-    ctx.fillText(`有效期 ${quote.valid_days} 天`, 690, infoY + 50)
+    ctx.fillText('品名', 40, y)
+    ctx.fillText('单位', 300, y)
+    ctx.fillText('数量', 400, y)
+    ctx.fillText('单价', 500, y)
+    ctx.fillText('金额', 620, y)
 
-    // ========== 商品明细表格 ==========
-    const tableY = 400
-    const tableHeight = 400
+    y += 30
 
-    // 表格背景
-    ctx.fillStyle = colors.cardBackground
-    this.roundRect(ctx, 30, tableY, 690, tableHeight, 12)
-    ctx.fill()
+    // ========== 分隔线 ==========
+    ctx.strokeStyle = '#CCCCCC'
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.moveTo(40, y)
+    ctx.lineTo(710, y)
+    ctx.stroke()
+    y += 40
 
-    // 表头
-    const headerHeight = 50
-    ctx.fillStyle = colors.primary
-    this.roundRectTop(ctx, 30, tableY, 690, headerHeight, 12)
-    ctx.fill()
-
-    // 表头文字
-    ctx.fillStyle = '#FFFFFF'
-    ctx.font = 'bold 16px sans-serif'
-    ctx.textAlign = 'center'
-    ctx.fillText('品名', 80, tableY + 32)
-    ctx.fillText('单位', 260, tableY + 32)
-    ctx.fillText('数量', 340, tableY + 32)
-    ctx.fillText('单价', 420, tableY + 32)
-    ctx.fillText('金额', 620, tableY + 32)
-
-    // 表格内容
-    const rowHeight = 45
-    const startY = tableY + headerHeight
-    const maxRows = Math.floor((tableHeight - headerHeight) / rowHeight)
+    // ========== 表格内容 ==========
+    ctx.font = '16px sans-serif'
 
     if (quote.items && quote.items.length > 0) {
       quote.items.forEach((item, index) => {
-        if (index >= maxRows) return
+        if (index >= 10) return // 最多显示10条
 
-        const rowY = startY + index * rowHeight
+        ctx.fillStyle = textColor
+        ctx.fillText(item.product_name, 40, y)
+        ctx.fillText(item.unit, 300, y)
+        ctx.fillText(item.quantity, 400, y)
+        ctx.fillText(`¥${Number(item.unit_price).toFixed(2)}`, 500, y)
+        ctx.fillText(`¥${Number(item.amount).toFixed(2)}`, 620, y)
 
-        // 行背景（交替颜色）
-        if (index % 2 === 0) {
-          ctx.fillStyle = '#F8FAFC'
-          ctx.fillRect(40, rowY + 5, 670, rowHeight - 10)
-        }
+        y += lineHeight
 
-        // 绘制数据
-        ctx.fillStyle = colors.text
-        ctx.font = '14px sans-serif'
-        ctx.textAlign = 'left'
-
-        // 品名（截断过长文本）
-        const maxNameWidth = 160
-        const displayName = this.truncateText(ctx, item.product_name, maxNameWidth)
-        ctx.fillText(displayName, 80, rowY + 28)
-
-        // 单位
-        ctx.textAlign = 'center'
-        ctx.fillText(item.unit, 260, rowY + 28)
-
-        // 数量
-        ctx.fillText(item.quantity, 340, rowY + 28)
-
-        // 单价
-        ctx.fillText(`¥${Number(item.unit_price).toFixed(2)}`, 420, rowY + 28)
-
-        // 金额
-        ctx.fillStyle = colors.primary
-        ctx.font = 'bold 14px sans-serif'
-        ctx.fillText(`¥${Number(item.amount).toFixed(2)}`, 620, rowY + 28)
+        // 分隔线
+        ctx.strokeStyle = '#DDDDDD'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(40, y)
+        ctx.lineTo(710, y)
+        ctx.stroke()
+        y += 40
       })
     }
 
     // ========== 金额汇总 ==========
-    const summaryY = 830
-    ctx.fillStyle = colors.cardBackground
-    this.roundRect(ctx, 30, summaryY, 690, 140, 12)
-    ctx.fill()
+    y += 20
 
-    // 金额项
-    ctx.fillStyle = colors.secondary
-    ctx.font = '14px sans-serif'
-    ctx.textAlign = 'left'
+    ctx.font = '18px sans-serif'
+    ctx.fillStyle = grayColor
+    ctx.textAlign = 'right'
 
-    ctx.fillText('商品金额', 60, summaryY + 40)
-    ctx.fillStyle = colors.text
-    ctx.fillText(`¥${Number(quote.subtotal).toFixed(2)}`, 690, summaryY + 40)
+    ctx.fillText('商品金额：', 710, y)
+    y += lineHeight
 
-    // 优惠
     if (Number(quote.discount) > 0) {
-      ctx.fillStyle = colors.secondary
-      ctx.fillText('优惠金额', 60, summaryY + 70)
-      ctx.fillStyle = colors.danger
-      ctx.fillText(`-¥${Number(quote.discount).toFixed(2)}`, 690, summaryY + 70)
+      ctx.fillText(`优惠金额：-¥${Number(quote.discount).toFixed(2)}`, 710, y)
+      y += lineHeight
     }
 
-    // 分隔线
-    ctx.strokeStyle = colors.border
-    ctx.lineWidth = 1
-    ctx.beginPath()
-    ctx.moveTo(50, summaryY + 85)
-    ctx.lineTo(690, summaryY + 85)
-    ctx.stroke()
-
-    // 合计
-    const offsetY = Number(quote.discount) > 0 ? 110 : 80
-    ctx.fillStyle = colors.text
-    ctx.font = 'bold 18px sans-serif'
-    ctx.textAlign = 'left'
-    ctx.fillText('合计金额', 60, summaryY + offsetY)
-
-    ctx.fillStyle = colors.primary
-    ctx.font = 'bold 28px sans-serif'
-    ctx.textAlign = 'right'
-    ctx.fillText(`¥${Number(quote.total_amount).toFixed(2)}`, 690, summaryY + offsetY)
+    ctx.fillStyle = textColor
+    ctx.font = 'bold 24px sans-serif'
+    ctx.fillText(`合计金额：¥${Number(quote.total_amount).toFixed(2)}`, 710, y)
+    y += 60
 
     // ========== 备注 ==========
     if (quote.remark) {
-      ctx.fillStyle = colors.textLight
-      ctx.font = '12px sans-serif'
+      y += 20
+      ctx.strokeStyle = '#CCCCCC'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(40, y)
+      ctx.lineTo(710, y)
+      ctx.stroke()
+      y += 40
+
+      ctx.fillStyle = textColor
+      ctx.font = 'bold 18px sans-serif'
       ctx.textAlign = 'left'
-      const remarkText = `备注：${this.truncateText(ctx, quote.remark, 600)}`
-      ctx.fillText(remarkText, 60, 985)
+      ctx.fillText('备注：', 40, y)
+      y += 30
+
+      ctx.font = '16px sans-serif'
+      ctx.fillStyle = grayColor
+      ctx.fillText(quote.remark, 40, y)
+      y += lineHeight
     }
+
+    // ========== 底部说明 ==========
+    y += 40
+    ctx.strokeStyle = '#CCCCCC'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(40, y)
+    ctx.lineTo(710, y)
+    ctx.stroke()
+    y += 40
+
+    ctx.fillStyle = grayColor
+    ctx.font = '14px sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText('此报价单仅供参考，请以实际交易为准', 375, y)
 
     // 转换为 Buffer
     return canvas.toBuffer('image/png')
-  }
-
-  /**
-   * 绘制圆角矩形
-   */
-  private roundRect(ctx: any, x: number, y: number, width: number, height: number, radius: number) {
-    ctx.beginPath()
-    ctx.moveTo(x + radius, y)
-    ctx.lineTo(x + width - radius, y)
-    ctx.quadraticCurveTo(x + width, y, x + width, y + radius)
-    ctx.lineTo(x + width, y + height - radius)
-    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
-    ctx.lineTo(x + radius, y + height)
-    ctx.quadraticCurveTo(x, y + height, x, y + height - radius)
-    ctx.lineTo(x, y + radius)
-    ctx.quadraticCurveTo(x, y, x + radius, y)
-    ctx.closePath()
-  }
-
-  /**
-   * 绘制圆角矩形（仅顶部）
-   */
-  private roundRectTop(ctx: any, x: number, y: number, width: number, height: number, radius: number) {
-    ctx.beginPath()
-    ctx.moveTo(x + radius, y)
-    ctx.lineTo(x + width - radius, y)
-    ctx.quadraticCurveTo(x + width, y, x + width, y + radius)
-    ctx.lineTo(x + width, y + height)
-    ctx.lineTo(x, y + height)
-    ctx.lineTo(x, y + radius)
-    ctx.quadraticCurveTo(x, y, x + radius, y)
-    ctx.closePath()
-  }
-
-  /**
-   * 截断文本以适应宽度
-   */
-  private truncateText(ctx: any, text: string, maxWidth: number): string {
-    const width = ctx.measureText(text).width
-    if (width <= maxWidth) {
-      return text
-    }
-
-    // 二分查找截断点
-    let left = 0
-    let right = text.length
-    while (left < right) {
-      const mid = Math.floor((left + right) / 2)
-      const truncated = text.substring(0, mid) + '...'
-      const truncatedWidth = ctx.measureText(truncated).width
-      if (truncatedWidth <= maxWidth) {
-        left = mid + 1
-      } else {
-        right = mid
-      }
-    }
-
-    return text.substring(0, left - 1) + '...'
   }
 }
