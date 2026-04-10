@@ -59,6 +59,7 @@ const CreateQuotePage: FC = () => {
   })
 
   useDidShow(() => {
+    console.log('[创建表单] useDidShow 触发')
     fetchCustomers()
     fetchProducts()
     fetchMerchantInfo()
@@ -66,22 +67,31 @@ const CreateQuotePage: FC = () => {
 
   const fetchMerchantInfo = async () => {
     try {
+      console.log('[创建表单] 开始获取商家信息...')
       const res = await Network.request({ url: '/api/merchants/info', method: 'GET' })
+      console.log('[创建表单] 商家信息响应:', res.statusCode, res.data)
+
       if (res.statusCode === 200 && res.data) {
         const responseData = res.data as { data?: any }
         const merchantInfo = responseData.data
+        console.log('[创建表单] 商家信息详情:', merchantInfo)
+
         if (merchantInfo) {
-          setQuoteInfo({
+          const newQuoteInfo = {
             companyName: merchantInfo.shop_name || '',
             contactPerson: merchantInfo.contact_name || '',
             contactPhone: merchantInfo.phone || '',
             contactAddress: merchantInfo.address || '',
             contactEmail: merchantInfo.email || '',
-          })
+          }
+          console.log('[创建表单] 设置报价方信息:', newQuoteInfo)
+          setQuoteInfo(newQuoteInfo)
+        } else {
+          console.log('[创建表单] 商家信息为空，使用默认值')
         }
       }
     } catch (err) {
-      console.error('获取商家信息失败:', err)
+      console.error('[创建表单] 获取商家信息失败:', err)
     }
   }
 
