@@ -560,16 +560,29 @@ export class CanvasService {
 
     y += 36
 
-    // ========== 备注区 ==========
+    // ========== 备注区（独立区块）==========
     if (quote.remark) {
-      y += 16
+      y += 20
+
+      // 绘制备注区边框
+      const remarkHeight = 50
+      ctx.fillStyle = cardBgColor
+      ctx.fillRect(20, y, 710, remarkHeight)
+
+      ctx.fillStyle = lineColor
+      ctx.fillRect(20, y, 710, 1) // 上边框
+      ctx.fillRect(20, y + remarkHeight, 710, 1) // 下边框
+      ctx.fillRect(20, y, 1, remarkHeight) // 左边框
+      ctx.fillRect(20 + 710, y, 1, remarkHeight) // 右边框
+
+      // 备注文字
       ctx.fillStyle = gray600
       ctx.font = `14px ${fontFamily}`
       ctx.textAlign = 'left'
       ctx.textBaseline = 'top'
-      ctx.fillText(`备注：${quote.remark}`, 40, y - 7)
+      ctx.fillText(`备注：${quote.remark}`, 40, y + 15)
 
-      y += 24
+      y += remarkHeight
     }
 
     // ========== 底部说明 ==========
