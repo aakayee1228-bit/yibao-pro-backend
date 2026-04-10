@@ -221,10 +221,10 @@ const QuoteDetailPage: FC = () => {
 
             {/* 两列信息布局 */}
             <View className="flex flex-row gap-4 mb-4">
-              {/* 左列 - 客户信息 */}
+              {/* 左列 - 客户方信息 */}
               <View className="flex-1">
                 <Text className="block text-base font-bold text-gray-900 mb-2">
-                  客户：{quote.customers?.name || '客户'}
+                  客户方信息：{quote.customers?.name || '客户'}
                 </Text>
                 {quote.customers?.company && (
                   <Text className="block text-sm text-gray-600 mb-1">{quote.customers.company}</Text>

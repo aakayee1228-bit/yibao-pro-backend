@@ -180,90 +180,160 @@ export class CanvasService {
     const cardHeight = tableRowHeight * 12 + 200 // 预留高度
     ctx.fillRect(20, y, 710, cardHeight)
 
-    // ========== 报价方信息区 ==========
+    // ========== 报价方信息区（带表格格子）==========
     if (quote.company_name || quote.contact_person || quote.contact_phone || quote.contact_address) {
-      // 标题
+      const infoBlockHeight = 140
+      const startY = y
+
+      // 绘制表格边框和格子
+      ctx.fillStyle = cardBgColor
+      ctx.fillRect(20, y, 710, infoBlockHeight)
+
+      // 边框
+      ctx.fillStyle = lineColor
+      ctx.fillRect(20, y, 710, 1) // 上边框
+      ctx.fillRect(20, y + infoBlockHeight, 710, 1) // 下边框
+      ctx.fillRect(20, y, 1, infoBlockHeight) // 左边框
+      ctx.fillRect(20 + 710, y, 1, infoBlockHeight) // 右边框
+
+      // 纵向分隔线（分成两列）
+      ctx.fillRect(380, y, 1, infoBlockHeight)
+
+      // 横向分隔线
+      ctx.fillRect(20, y + 35, 710, 1) // 标题分隔线
+      ctx.fillRect(20, y + 87, 710, 1) // 内容分隔线
+
+      // 左列内容
+      y += 25
       ctx.fillStyle = textColor
       ctx.font = `bold 16px ${fontFamily}`
-      ctx.textAlign = 'left'
-      ctx.fillText('报价方信息', 40, y + 20)
+      ctx.textAlign = 'center'
+      ctx.fillText('报价方信息', 200, y)
 
-      // 商家信息内容
-      let merchantInfoY = y + 48
-      ctx.font = `14px ${fontFamily}`
+      // 右列内容
       ctx.fillStyle = gray600
+      ctx.font = `14px ${fontFamily}`
+      ctx.textAlign = 'left'
 
+      let rightY = startY + 65
       if (quote.company_name) {
-        ctx.fillText(quote.company_name, 40, merchantInfoY)
-        merchantInfoY += infoRowHeight
+        ctx.fillText('公司名称', 400, rightY)
+        ctx.fillStyle = textColor
+        ctx.fillText(quote.company_name, 480, rightY)
+        rightY += 26
+        ctx.fillStyle = gray600
       }
 
       if (quote.contact_person) {
-        ctx.fillText(`联系人：${quote.contact_person}`, 40, merchantInfoY)
-        merchantInfoY += infoRowHeight
+        ctx.fillText('联系人', 400, rightY)
+        ctx.fillStyle = textColor
+        ctx.fillText(quote.contact_person, 480, rightY)
+        rightY += 26
+        ctx.fillStyle = gray600
       }
 
       if (quote.contact_phone) {
-        ctx.fillText(`电话：${quote.contact_phone}`, 40, merchantInfoY)
-        merchantInfoY += infoRowHeight
+        ctx.fillText('联系电话', 400, rightY)
+        ctx.fillStyle = textColor
+        ctx.fillText(quote.contact_phone, 480, rightY)
       }
 
+      // 底部信息
       if (quote.contact_address) {
-        ctx.fillText(`地址：${quote.contact_address}`, 40, merchantInfoY)
+        y = startY + 113
+        ctx.fillStyle = gray600
+        ctx.fillText('联系地址', 40, y)
+        ctx.fillStyle = textColor
+        ctx.fillText(quote.contact_address, 120, y)
       }
 
-      y += merchantInfoY - y + 10
-
-      // 分隔线
-      ctx.fillStyle = lineColor
-      ctx.fillRect(20, y, 710, 1)
-      y += 20
+      y = startY + infoBlockHeight + 20
     }
 
-    // ========== 客户信息区（左右两列布局）==========
-    const customerInfoY = y + 16
+    // ========== 客户方信息区（带表格格子）==========
+    const customerInfoHeight = 140
+    const startY = y
 
-    // 左列 - 客户信息
+    // 绘制表格边框和格子
+    ctx.fillStyle = cardBgColor
+    ctx.fillRect(20, y, 710, customerInfoHeight)
+
+    // 边框
+    ctx.fillStyle = lineColor
+    ctx.fillRect(20, y, 710, 1) // 上边框
+    ctx.fillRect(20, y + customerInfoHeight, 710, 1) // 下边框
+    ctx.fillRect(20, y, 1, customerInfoHeight) // 左边框
+    ctx.fillRect(20 + 710, y, 1, customerInfoHeight) // 右边框
+
+    // 纵向分隔线（分成两列）
+    ctx.fillRect(380, y, 1, customerInfoHeight)
+
+    // 横向分隔线
+    ctx.fillRect(20, y + 35, 710, 1) // 标题分隔线
+    ctx.fillRect(20, y + 87, 710, 1) // 内容分隔线
+
+    // 左列内容
+    y += 25
     ctx.fillStyle = textColor
     ctx.font = `bold 16px ${fontFamily}`
+    ctx.textAlign = 'center'
+    ctx.fillText('客户方信息', 200, y)
+
+    // 左列详细信息
+    y = startY + 65
+    ctx.fillStyle = gray600
+    ctx.font = `14px ${fontFamily}`
     ctx.textAlign = 'left'
-    ctx.fillText(`客户：${quote.customers?.name || '未命名'}`, 40, customerInfoY)
+
+    if (quote.customers?.name) {
+      ctx.fillText('客户名称', 40, y)
+      ctx.fillStyle = textColor
+      ctx.fillText(quote.customers.name, 120, y)
+      y += 26
+      ctx.fillStyle = gray600
+    }
 
     if (quote.customers?.company) {
-      ctx.font = `14px ${fontFamily}`
+      ctx.fillText('公司名称', 40, y)
+      ctx.fillStyle = textColor
+      ctx.fillText(quote.customers.company, 120, y)
+      y += 26
       ctx.fillStyle = gray600
-      ctx.fillText(quote.customers.company, 40, customerInfoY + infoRowHeight)
     }
 
     if (quote.customers?.phone) {
+      ctx.fillText('联系电话', 40, y)
       ctx.fillStyle = blue700
-      ctx.fillText(quote.customers.phone, 40, customerInfoY + infoRowHeight * 2)
+      ctx.fillText(quote.customers.phone, 120, y)
     }
 
-    // 右列 - 表单信息（右对齐）
-    ctx.textAlign = 'right'
-
-    // 单号
+    // 右列内容（单号、日期、有效期）
+    y = startY + 65
     ctx.fillStyle = gray600
     ctx.font = `14px ${fontFamily}`
-    ctx.fillText('单号', 710, customerInfoY)
+    ctx.textAlign = 'left'
+
+    // 单号
+    ctx.fillText('单号', 400, y)
     ctx.fillStyle = textColor
-    ctx.fillText(quote.quote_no, 710, customerInfoY + infoRowHeight)
+    ctx.fillText(quote.quote_no, 480, y)
+    y += 26
+    ctx.fillStyle = gray600
 
     // 日期
     const dateStr = quote.created_at ? new Date(quote.created_at).toLocaleDateString('zh-CN') : '-'
-    ctx.fillStyle = gray600
-    ctx.fillText('日期', 710, customerInfoY + infoRowHeight * 2)
+    ctx.fillText('日期', 400, y)
     ctx.fillStyle = textColor
-    ctx.fillText(dateStr, 710, customerInfoY + infoRowHeight * 3)
+    ctx.fillText(dateStr, 480, y)
+    y += 26
+    ctx.fillStyle = gray600
 
     // 有效期
-    ctx.fillStyle = gray600
-    ctx.fillText('有效期', 710, customerInfoY + infoRowHeight * 4)
+    ctx.fillText('有效期', 400, y)
     ctx.fillStyle = textColor
-    ctx.fillText(`${quote.valid_days} 天`, 710, customerInfoY + infoRowHeight * 5)
+    ctx.fillText(`${quote.valid_days} 天`, 480, y)
 
-    y += customerInfoY + infoRowHeight * 6 - y
+    y = startY + customerInfoHeight + 20
 
     // ========== 蓝色水平分隔线 ==========
     ctx.fillStyle = blue800
