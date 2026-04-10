@@ -286,7 +286,7 @@ export class CanvasService {
     }
 
     // ========== 客户方信息区（带表格格子）==========
-    const customerInfoHeight = 85
+    const customerInfoHeight = 105
     const startY = y
 
     // 绘制表格边框和格子
@@ -303,7 +303,7 @@ export class CanvasService {
     // 横向分隔线（标题行 + 每行数据）
     const headerHeight = 35
     const dataRowHeight = 16
-    const dataRows = 3
+    const dataRows = 4
     ctx.fillRect(20, y + headerHeight, 710, 1) // 标题分隔线
 
     for (let i = 1; i <= dataRows; i++) {
@@ -343,6 +343,14 @@ export class CanvasService {
       ctx.fillText('联系电话', 40, currentY)
       ctx.fillStyle = blue700
       ctx.fillText(quote.customers.phone, 120, currentY)
+      currentY += dataRowHeight
+      ctx.fillStyle = gray600
+    }
+
+    if (quote.customers?.address) {
+      ctx.fillText('联系地址', 40, currentY)
+      ctx.fillStyle = textColor
+      ctx.fillText(quote.customers.address, 120, currentY)
     }
 
     y = startY + customerInfoHeight + 25

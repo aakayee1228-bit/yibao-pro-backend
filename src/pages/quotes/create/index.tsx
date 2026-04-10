@@ -314,6 +314,11 @@ const CreateQuotePage: FC = () => {
                   <Text className="block text-xs text-gray-500 mt-1">
                     {selectedCustomer.phone} {selectedCustomer.company && `· ${selectedCustomer.company}`}
                   </Text>
+                  {selectedCustomer.address && (
+                    <Text className="block text-xs text-gray-500 mt-1">
+                      地址：{selectedCustomer.address}
+                    </Text>
+                  )}
                 </View>
                 <ChevronRight size={18} color="#9ca3af" />
               </View>
