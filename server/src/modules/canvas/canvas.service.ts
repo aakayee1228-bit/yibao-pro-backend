@@ -42,7 +42,7 @@ interface Quote {
 export class CanvasService {
 
   /**
-   * 生成报价单图片（最简单样式）
+   * 生成报价单图片（参考样式：浅灰色背景卡片）
    */
   async generateQuoteImage(quoteId: string): Promise<Buffer> {
     const client = getSupabaseClient()
@@ -88,190 +88,193 @@ export class CanvasService {
       items: itemsData || [],
     }
 
-    // 创建 Canvas（最简单样式，纯白背景）
+    // 创建 Canvas
     const canvas = createCanvas(750, 1400)
     const ctx = canvas.getContext('2d')
-
-    // 纯白色背景
-    ctx.fillStyle = '#FFFFFF'
-    ctx.fillRect(0, 0, 750, 1400)
 
     // 字体配置（使用中文字体）
     const fontFamily = '"WenQuanYi Micro Hei", "文泉驿微米黑", sans-serif'
 
-    // 配色方案（新样式）
+    // 配色方案（参考样式）
+    const backgroundColor = '#FFFFFF'  // 整体白色背景
+    const cardBackgroundColor = '#ECECEC'  // 内容卡片浅灰色背景（236,236,236）
     const textColor = '#000000'      // 黑色文字
     const grayColor = '#666666'      // 灰色文字
-    const lineColor = '#ECECEC'      // 浅灰色分隔线（236,236,236）
-    const lineHeight = 50            // 增加行高
+    const lineHeight = 40            // 行高
+    const cardPadding = 20           // 卡片内边距
 
-    let y = 80
+    // 纯白色背景
+    ctx.fillStyle = backgroundColor
+    ctx.fillRect(0, 0, 750, 1400)
+
+    let y = 60
 
     // ========== 标题 ==========
     ctx.fillStyle = textColor
-    ctx.font = `bold 42px ${fontFamily}`
+    ctx.font = `bold 36px ${fontFamily}`
     ctx.textAlign = 'center'
     ctx.fillText('报价单', 375, y)
 
-    y += 70
+    y += 60
 
-    // ========== 报价单信息 ==========
+    // ========== 报价单信息卡片 ==========
+    const infoCardStart = y
+    ctx.fillStyle = cardBackgroundColor
+    ctx.fillRect(50, infoCardStart, 650, 130)  // 浅灰色背景卡片
+
+    y += 30
     ctx.textAlign = 'left'
-    ctx.font = `20px ${fontFamily}`
+    ctx.font = `16px ${fontFamily}`
 
-    ctx.fillStyle = grayColor
-    ctx.fillText(`报价单号：${quote.quote_no}`, 50, y)
+    ctx.fillStyle = textColor
+    ctx.fillText(`报价单号：${quote.quote_no}`, 70, y)
     y += lineHeight
 
     const dateStr = quote.created_at ? new Date(quote.created_at).toLocaleDateString('zh-CN') : ''
-    ctx.fillText(`日期：${dateStr}`, 50, y)
+    ctx.fillText(`日期：${dateStr}`, 70, y)
     y += lineHeight
 
-    ctx.fillText(`有效期：${quote.valid_days} 天`, 50, y)
-    y += 70
+    ctx.fillText(`有效期：${quote.valid_days} 天`, 70, y)
 
-    // ========== 分隔线 ==========
-    ctx.fillStyle = lineColor
-    ctx.fillRect(50, y, 650, 2)
-    y += 60
+    y += 50
 
-    // ========== 客户信息 ==========
+    // ========== 客户信息卡片 ==========
+    const customerCardStart = y
+    const customerCardHeight = 180
+    ctx.fillStyle = cardBackgroundColor
+    ctx.fillRect(50, customerCardStart, 650, customerCardHeight)
+
+    y += 30
     const customerName = quote.customers?.name || '未命名'
     ctx.fillStyle = textColor
-    ctx.font = `bold 28px ${fontFamily}`
-    ctx.fillText(`客户：${customerName}`, 50, y)
+    ctx.font = `bold 20px ${fontFamily}`
+    ctx.fillText(`客户：${customerName}`, 70, y)
     y += lineHeight
 
-    ctx.font = `20px ${fontFamily}`
+    ctx.font = `16px ${fontFamily}`
     if (quote.customers?.company) {
-      ctx.fillStyle = grayColor
-      ctx.fillText(`公司：${quote.customers.company}`, 50, y)
+      ctx.fillStyle = textColor
+      ctx.fillText(`公司：${quote.customers.company}`, 70, y)
       y += lineHeight
     }
 
     if (quote.customers?.phone) {
-      ctx.fillText(`电话：${quote.customers.phone}`, 50, y)
+      ctx.fillStyle = textColor
+      ctx.fillText(`电话：${quote.customers.phone}`, 70, y)
       y += lineHeight
     }
 
     if (quote.customers?.address) {
-      ctx.fillText(`地址：${quote.customers.address}`, 50, y)
+      ctx.fillStyle = textColor
+      ctx.fillText(`地址：${quote.customers.address}`, 70, y)
       y += lineHeight
     }
 
-    y += 50
+    y += 30
 
-    // ========== 分隔线 ==========
-    ctx.fillStyle = lineColor
-    ctx.fillRect(50, y, 650, 2)
-    y += 70
+    // ========== 商品明细卡片 ==========
+    const productCardStart = y
+    const productCardHeight = 500  // 预估高度
+    ctx.fillStyle = cardBackgroundColor
+    ctx.fillRect(50, productCardStart, 650, productCardHeight)
 
-    // ========== 表格标题 ==========
+    y += 30
     ctx.fillStyle = textColor
-    ctx.font = `bold 24px ${fontFamily}`
-    ctx.fillText('商品明细', 50, y)
-    y += 50
+    ctx.font = `bold 20px ${fontFamily}`
+    ctx.fillText('商品明细', 70, y)
+    y += 40
 
     // ========== 表头 ==========
-    ctx.font = `bold 18px ${fontFamily}`
+    ctx.font = `bold 14px ${fontFamily}`
     ctx.fillStyle = textColor
-    ctx.fillText('品名', 50, y)
-    ctx.fillText('单位', 350, y)
-    ctx.fillText('数量', 450, y)
-    ctx.fillText('单价', 550, y)
-    ctx.fillText('金额', 640, y)
+    ctx.fillText('品名', 70, y)
+    ctx.fillText('单位', 320, y)
+    ctx.fillText('数量', 420, y)
+    ctx.fillText('单价', 520, y)
+    ctx.fillText('金额', 600, y)
 
-    // 竖向分隔线
-    ctx.fillStyle = lineColor
-    ctx.fillRect(340, y - 30, 1, 30)
-    ctx.fillRect(440, y - 30, 1, 30)
-    ctx.fillRect(540, y - 30, 1, 30)
-    ctx.fillRect(630, y - 30, 1, 30)
+    y += 30
 
-    y += 35
-
-    // ========== 分隔线（表头下方粗线）==========
-    ctx.fillStyle = lineColor
-    ctx.fillRect(50, y, 650, 2)
-    y += 50
+    // 表头分隔线
+    ctx.fillStyle = '#CCCCCC'
+    ctx.fillRect(70, y, 610, 1)
+    y += 30
 
     // ========== 表格内容 ==========
-    ctx.font = `18px ${fontFamily}`
+    ctx.font = `14px ${fontFamily}`
 
     if (quote.items && quote.items.length > 0) {
       quote.items.forEach((item, index) => {
         if (index >= 10) return // 最多显示10条
 
         ctx.fillStyle = textColor
-        ctx.fillText(item.product_name, 50, y)
-        ctx.fillText(item.unit, 350, y)
-        ctx.fillText(item.quantity, 450, y)
-        ctx.fillText(`¥${Number(item.unit_price).toFixed(2)}`, 550, y)
-        ctx.fillText(`¥${Number(item.amount).toFixed(2)}`, 640, y)
-
-        // 竖向分隔线
-        ctx.fillStyle = lineColor
-        ctx.fillRect(340, y - 35, 1, 35)
-        ctx.fillRect(440, y - 35, 1, 35)
-        ctx.fillRect(540, y - 35, 1, 35)
-        ctx.fillRect(630, y - 35, 1, 35)
+        ctx.fillText(item.product_name, 70, y)
+        ctx.fillText(item.unit, 320, y)
+        ctx.fillText(item.quantity, 420, y)
+        ctx.fillText(`¥${Number(item.unit_price).toFixed(2)}`, 520, y)
+        ctx.fillText(`¥${Number(item.amount).toFixed(2)}`, 600, y)
 
         y += lineHeight
 
         // 每行分隔线
-        ctx.fillStyle = lineColor
-        ctx.fillRect(50, y, 650, 1)
-        y += 50
+        ctx.fillStyle = '#DDDDDD'
+        ctx.fillRect(70, y, 610, 1)
+        y += 30
       })
     }
 
-    // ========== 金额汇总 ==========
     y += 20
 
-    ctx.font = `18px ${fontFamily}`
-    ctx.fillStyle = grayColor
+    // ========== 金额汇总卡片 ==========
+    const amountCardStart = y
+    const amountCardHeight = 130
+    ctx.fillStyle = cardBackgroundColor
+    ctx.fillRect(50, amountCardStart, 650, amountCardHeight)
+
+    y += 30
+    ctx.font = `16px ${fontFamily}`
+    ctx.fillStyle = textColor
     ctx.textAlign = 'right'
 
-    ctx.fillText('商品金额：', 700, y)
+    ctx.fillText('商品金额：', 650, y)
     y += lineHeight
 
     if (Number(quote.discount) > 0) {
-      ctx.fillText(`优惠金额：-¥${Number(quote.discount).toFixed(2)}`, 700, y)
+      ctx.fillText(`优惠金额：-¥${Number(quote.discount).toFixed(2)}`, 650, y)
       y += lineHeight
     }
 
     ctx.fillStyle = textColor
-    ctx.font = `bold 28px ${fontFamily}`
-    ctx.fillText(`合计金额：¥${Number(quote.total_amount).toFixed(2)}`, 700, y)
-    y += 80
+    ctx.font = `bold 20px ${fontFamily}`
+    ctx.fillText(`合计金额：¥${Number(quote.total_amount).toFixed(2)}`, 650, y)
 
-    // ========== 备注 ==========
+    y += 30
+
+    // ========== 备注（如果有）==========
     if (quote.remark) {
       y += 20
-      ctx.fillStyle = lineColor
-      ctx.fillRect(50, y, 650, 2)
-      y += 50
+      const remarkCardStart = y
+      const remarkCardHeight = 100
+      ctx.fillStyle = cardBackgroundColor
+      ctx.fillRect(50, remarkCardStart, 650, remarkCardHeight)
 
+      y += 30
       ctx.fillStyle = textColor
-      ctx.font = `bold 20px ${fontFamily}`
+      ctx.font = `bold 16px ${fontFamily}`
       ctx.textAlign = 'left'
-      ctx.fillText('备注：', 50, y)
-      y += 35
+      ctx.fillText('备注：', 70, y)
+      y += 30
 
-      ctx.font = `18px ${fontFamily}`
-      ctx.fillStyle = grayColor
-      ctx.fillText(quote.remark, 50, y)
+      ctx.font = `14px ${fontFamily}`
+      ctx.fillStyle = textColor
+      ctx.fillText(quote.remark, 70, y)
       y += lineHeight
     }
 
     // ========== 底部说明 ==========
-    y += 50
-    ctx.fillStyle = lineColor
-    ctx.fillRect(50, y, 650, 2)
-    y += 50
-
-    ctx.fillStyle = grayColor
-    ctx.font = `16px ${fontFamily}`
+    y += 40
+    ctx.fillStyle = textColor
+    ctx.font = `12px ${fontFamily}`
     ctx.textAlign = 'center'
     ctx.fillText('此报价单仅供参考，请以实际交易为准', 375, y)
 
