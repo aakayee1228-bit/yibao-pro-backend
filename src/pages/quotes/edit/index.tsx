@@ -67,6 +67,15 @@ const EditQuotePage: FC = () => {
   const [showProductPicker, setShowProductPicker] = useState(false)
   const [quoteId, setQuoteId] = useState<string>('')
 
+  // 报价方信息
+  const [quoteInfo, setQuoteInfo] = useState({
+    companyName: '',
+    contactPerson: '',
+    contactPhone: '',
+    contactAddress: '',
+    contactEmail: '',
+  })
+
   // 获取路由参数
   const getRouteId = (): string | undefined => {
     const instance = Taro.getCurrentInstance()
@@ -121,6 +130,14 @@ const EditQuotePage: FC = () => {
         setDiscount(Number(data.discount))
         setRemark(data.remark || '')
         setValidDays(data.valid_days)
+        // 加载报价方信息
+        setQuoteInfo({
+          companyName: (data as any).company_name || '',
+          contactPerson: (data as any).contact_person || '',
+          contactPhone: (data as any).contact_phone || '',
+          contactAddress: (data as any).contact_address || '',
+          contactEmail: (data as any).contact_email || '',
+        })
       }
     } catch (err) {
       console.error('获取表单详情失败:', err)
@@ -229,6 +246,12 @@ const EditQuotePage: FC = () => {
         discount,
         remark,
         valid_days: validDays,
+        // 报价方信息
+        company_name: quoteInfo.companyName,
+        contact_person: quoteInfo.contactPerson,
+        contact_phone: quoteInfo.contactPhone,
+        contact_address: quoteInfo.contactAddress,
+        contact_email: quoteInfo.contactEmail,
       })
 
       const res = await Network.request({
@@ -249,6 +272,12 @@ const EditQuotePage: FC = () => {
           discount,
           remark,
           valid_days: validDays,
+          // 报价方信息
+          company_name: quoteInfo.companyName,
+          contact_person: quoteInfo.contactPerson,
+          contact_phone: quoteInfo.contactPhone,
+          contact_address: quoteInfo.contactAddress,
+          contact_email: quoteInfo.contactEmail,
         },
       })
 
@@ -281,6 +310,58 @@ const EditQuotePage: FC = () => {
   return (
     <View className="flex flex-col min-h-screen bg-gray-50">
       <ScrollView className="flex-1 p-4">
+        {/* 报价方信息 */}
+        <Card className="mb-4">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">报价方信息</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <View className="flex flex-col gap-3">
+              <View>
+                <Text className="text-xs text-gray-500 mb-1">公司名称</Text>
+                <Input
+                  value={quoteInfo.companyName}
+                  onInput={(e) => setQuoteInfo({ ...quoteInfo, companyName: e.detail.value })}
+                  placeholder="请输入公司名称"
+                />
+              </View>
+              <View>
+                <Text className="text-xs text-gray-500 mb-1">联系人</Text>
+                <Input
+                  value={quoteInfo.contactPerson}
+                  onInput={(e) => setQuoteInfo({ ...quoteInfo, contactPerson: e.detail.value })}
+                  placeholder="请输入联系人姓名"
+                />
+              </View>
+              <View>
+                <Text className="text-xs text-gray-500 mb-1">联系电话</Text>
+                <Input
+                  type="number"
+                  value={quoteInfo.contactPhone}
+                  onInput={(e) => setQuoteInfo({ ...quoteInfo, contactPhone: e.detail.value })}
+                  placeholder="请输入联系电话"
+                />
+              </View>
+              <View>
+                <Text className="text-xs text-gray-500 mb-1">联系地址</Text>
+                <Input
+                  value={quoteInfo.contactAddress}
+                  onInput={(e) => setQuoteInfo({ ...quoteInfo, contactAddress: e.detail.value })}
+                  placeholder="请输入联系地址"
+                />
+              </View>
+              <View>
+                <Text className="text-xs text-gray-500 mb-1">邮箱（可选）</Text>
+                <Input
+                  value={quoteInfo.contactEmail}
+                  onInput={(e) => setQuoteInfo({ ...quoteInfo, contactEmail: e.detail.value })}
+                  placeholder="请输入邮箱地址"
+                />
+              </View>
+            </View>
+          </CardContent>
+        </Card>
+
         {/* 选择客户 */}
         <Card className="mb-4">
           <CardHeader className="pb-2">

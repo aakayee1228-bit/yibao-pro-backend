@@ -18,6 +18,11 @@ interface CreateQuoteDto {
   discount?: number
   remark?: string
   valid_days?: number
+  company_name?: string
+  contact_person?: string
+  contact_phone?: string
+  contact_address?: string
+  contact_email?: string
 }
 
 @Injectable()
@@ -148,6 +153,11 @@ export class QuotesService {
         total_amount: totalAmount,
         remark: dto.remark,
         valid_days: dto.valid_days || 30,
+        company_name: dto.company_name,
+        contact_person: dto.contact_person,
+        contact_phone: dto.contact_phone,
+        contact_address: dto.contact_address,
+        contact_email: dto.contact_email,
       })
       .select()
       .single()
@@ -231,6 +241,11 @@ export class QuotesService {
           total_amount: totalAmount,
           remark: dto.remark,
           valid_days: dto.valid_days,
+          company_name: dto.company_name,
+          contact_person: dto.contact_person,
+          contact_phone: dto.contact_phone,
+          contact_address: dto.contact_address,
+          contact_email: dto.contact_email,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)

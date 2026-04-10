@@ -73,6 +73,12 @@ export class QuotesController {
       discount?: number
       remark?: string
       valid_days?: number
+      // 报价方信息
+      company_name?: string
+      contact_person?: string
+      contact_phone?: string
+      contact_address?: string
+      contact_email?: string
     },
   ) {
     const data = await this.quotesService.create(userId || 'default-user', body)
@@ -105,6 +111,12 @@ export class QuotesController {
       discount: number
       remark: string
       valid_days: number
+      // 报价方信息
+      company_name?: string
+      contact_person?: string
+      contact_phone?: string
+      contact_address?: string
+      contact_email?: string
     }>,
   ) {
     const data = await this.quotesService.update(id, body)

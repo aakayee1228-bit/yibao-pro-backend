@@ -34,6 +34,11 @@ interface Quote {
   remark: string
   valid_days: number
   created_at: string
+  company_name?: string
+  contact_person?: string
+  contact_phone?: string
+  contact_address?: string
+  contact_email?: string
   customers: Customer | null
   items: QuoteItem[]
 }
@@ -84,12 +89,17 @@ export class CanvasService {
       remark: quotesData.remark,
       valid_days: quotesData.valid_days,
       created_at: quotesData.created_at,
+      company_name: quotesData.company_name,
+      contact_person: quotesData.contact_person,
+      contact_phone: quotesData.contact_phone,
+      contact_address: quotesData.contact_address,
+      contact_email: quotesData.contact_email,
       customers: customer,
       items: itemsData || [],
     }
 
     // 创建 Canvas
-    const canvas = createCanvas(750, 1400)
+    const canvas = createCanvas(750, 1600)
     const ctx = canvas.getContext('2d')
 
     // 字体配置（使用中文字体）
@@ -119,6 +129,64 @@ export class CanvasService {
     ctx.fillText('报价单', 375, y)
 
     y += 60
+
+    // ========== 报价方信息卡片（新增）==========
+    if (quote.company_name || quote.contact_person || quote.contact_phone) {
+      const quoteInfoCardStart = y
+      const quoteInfoCardWidth = 650
+      const quoteInfoCardHeight = 200
+
+      // 浅灰色背景卡片
+      ctx.fillStyle = cardBackgroundColor
+      ctx.fillRect(50, quoteInfoCardStart, quoteInfoCardWidth, quoteInfoCardHeight)
+
+      // 卡片边框（使用fillRect绘制）
+      ctx.fillStyle = cardBorderColor
+      ctx.fillRect(50, quoteInfoCardStart, quoteInfoCardWidth, borderWidth)
+      ctx.fillRect(50, quoteInfoCardStart + quoteInfoCardHeight - borderWidth, quoteInfoCardWidth, borderWidth)
+      ctx.fillRect(50, quoteInfoCardStart, borderWidth, quoteInfoCardHeight)
+      ctx.fillRect(50 + quoteInfoCardWidth - borderWidth, quoteInfoCardStart, borderWidth, quoteInfoCardHeight)
+
+      y += 30
+      ctx.textAlign = 'left'
+      ctx.fillStyle = textColor
+      ctx.font = `bold 20px ${fontFamily}`
+      ctx.fillText('报价方', 70, y)
+      y += 30
+
+      ctx.font = `16px ${fontFamily}`
+      if (quote.company_name) {
+        ctx.fillStyle = textColor
+        ctx.fillText(`公司：${quote.company_name}`, 70, y)
+        y += lineHeight
+      }
+
+      if (quote.contact_person) {
+        ctx.fillStyle = textColor
+        ctx.fillText(`联系人：${quote.contact_person}`, 70, y)
+        y += lineHeight
+      }
+
+      if (quote.contact_phone) {
+        ctx.fillStyle = textColor
+        ctx.fillText(`电话：${quote.contact_phone}`, 70, y)
+        y += lineHeight
+      }
+
+      if (quote.contact_address) {
+        ctx.fillStyle = textColor
+        ctx.fillText(`地址：${quote.contact_address}`, 70, y)
+        y += lineHeight
+      }
+
+      if (quote.contact_email) {
+        ctx.fillStyle = textColor
+        ctx.fillText(`邮箱：${quote.contact_email}`, 70, y)
+        y += lineHeight
+      }
+
+      y += 30
+    }
 
     // ========== 报价单信息卡片 ==========
     const infoCardStart = y
@@ -216,21 +284,7 @@ export class CanvasService {
     const tableStartX = 70
     const tableStartY = productCardStart + 70
     const tableWidth = 610
-    const tableHeight = 400
     const colWidth = [200, 100, 100, 100, 100]  // 品名、单位、数量、单价、金额的列宽
-
-    // 绘制表格格子（使用fillRect绘制）
-    ctx.fillStyle = gridColor
-
-    // 竖向分隔线
-    let x = tableStartX
-    for (let i = 0; i < colWidth.length; i++) {
-      x += colWidth[i]
-      ctx.fillRect(x - 1, tableStartY - 40, borderWidth, tableHeight + 40)
-    }
-
-    // 横向分隔线（表头下方）
-    ctx.fillRect(tableStartX, tableStartY - 10, tableWidth, borderWidth)
 
     y += 30
     ctx.fillStyle = textColor
@@ -251,6 +305,23 @@ export class CanvasService {
     ctx.fillText('金额', headerX + colWidth[0] + colWidth[1] + colWidth[2] + colWidth[3] + 10, y)
 
     y += 40
+
+    // 计算表格内容实际高度
+    const actualRows = Math.min(quote.items?.length || 0, 10)
+    const tableContentHeight = actualRows * (lineHeight + 30)  // 每行高度（包括分隔线和间距）
+
+    // ========== 绘制完整的表格格子（从表头到最后一行）==========
+    ctx.fillStyle = gridColor
+
+    // 绘制表头底部分隔线
+    ctx.fillRect(tableStartX, tableStartY - 10, tableWidth, borderWidth)
+
+    // 绘制纵向分隔线（从表头一直延伸到最后一行）
+    let x = tableStartX
+    for (let i = 0; i < colWidth.length; i++) {
+      x += colWidth[i]
+      ctx.fillRect(x - 1, tableStartY - 40, borderWidth, tableContentHeight + 40)
+    }
 
     // ========== 表格内容 ==========
     ctx.font = `14px ${fontFamily}`
