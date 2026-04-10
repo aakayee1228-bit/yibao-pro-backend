@@ -145,14 +145,29 @@ export class CanvasService {
     y += 40
 
     // ========== 报价方信息（表格形式，标题行浅灰色背景）==========
-    // 标题行（浅灰色背景 + 加粗）
+    const quoteInfoStartY = y
+    const quoteInfoRows = 6 // 1行标题 + 5行内容
+
+    // 绘制完整的表格背景（标题行浅灰，内容行白色）
     ctx.fillStyle = headerBgColor
-    ctx.fillRect(50, y, 650, 35)
+    ctx.fillRect(50, y, 650, 35) // 标题行背景
+
+    ctx.fillStyle = backgroundColor
+    ctx.fillRect(50, y + 35, 650, lineHeight * 5) // 内容行背景
+
+    // 绘制完整的表格边框和格子线
     ctx.fillStyle = lineColor
-    ctx.fillRect(50, y, 650, lineWidth)      // 上边框
-    ctx.fillRect(50, y + 34, 650, lineWidth) // 下边框
-    ctx.fillRect(50, y, lineWidth, 35)      // 左边框
-    ctx.fillRect(700, y, lineWidth, 35)     // 右边框
+
+    // 外边框
+    ctx.fillRect(50, y, 650, lineWidth)                    // 上边框
+    ctx.fillRect(50, y + 35, 650, lineWidth)               // 标题行下边框
+    ctx.fillRect(50, y + 35 + lineHeight * 5, 650, lineWidth) // 底边框
+    ctx.fillRect(50, y, lineWidth, 35 + lineHeight * 5)    // 左边框
+    ctx.fillRect(700, y, lineWidth, 35 + lineHeight * 5)   // 右边框
+
+    // 纵向格子线（从表头一直贯穿到底部）
+    ctx.fillRect(50, y, lineWidth, 35 + lineHeight * 5)    // 左边框（已绘制）
+    ctx.fillRect(700, y, lineWidth, 35 + lineHeight * 5)   // 右边框（已绘制）
 
     y += 22
     ctx.fillStyle = textColor
@@ -161,14 +176,6 @@ export class CanvasService {
     ctx.fillText('报价方信息', 60, y)
 
     y += 25
-
-    // 报价方信息内容行（白色背景）
-    ctx.fillStyle = backgroundColor
-    ctx.fillRect(50, y, 650, lineHeight * 5)
-    ctx.fillStyle = lineColor
-    ctx.fillRect(50, y + lineHeight * 5, 650, lineWidth) // 下边框
-    ctx.fillRect(50, y, lineWidth, lineHeight * 5)      // 左边框
-    ctx.fillRect(700, y, lineWidth, lineHeight * 5)     // 右边框
 
     ctx.font = `14px ${fontFamily}`
     if (quote.company_name) {
@@ -204,14 +211,24 @@ export class CanvasService {
     y += 15
 
     // ========== 客户方信息（表格形式，标题行浅灰色背景）==========
-    // 标题行（浅灰色背景 + 加粗）
+    const customerInfoStartY = y
+
+    // 绘制完整的表格背景（标题行浅灰，内容行白色）
     ctx.fillStyle = headerBgColor
-    ctx.fillRect(50, y, 650, 35)
+    ctx.fillRect(50, y, 650, 35) // 标题行背景
+
+    ctx.fillStyle = backgroundColor
+    ctx.fillRect(50, y + 35, 650, lineHeight * 5) // 内容行背景
+
+    // 绘制完整的表格边框和格子线
     ctx.fillStyle = lineColor
-    ctx.fillRect(50, y, 650, lineWidth)
-    ctx.fillRect(50, y + 34, 650, lineWidth)
-    ctx.fillRect(50, y, lineWidth, 35)
-    ctx.fillRect(700, y, lineWidth, 35)
+
+    // 外边框
+    ctx.fillRect(50, y, 650, lineWidth)                    // 上边框
+    ctx.fillRect(50, y + 35, 650, lineWidth)               // 标题行下边框
+    ctx.fillRect(50, y + 35 + lineHeight * 5, 650, lineWidth) // 底边框
+    ctx.fillRect(50, y, lineWidth, 35 + lineHeight * 5)    // 左边框
+    ctx.fillRect(700, y, lineWidth, 35 + lineHeight * 5)   // 右边框
 
     y += 22
     ctx.fillStyle = textColor
@@ -219,14 +236,6 @@ export class CanvasService {
     ctx.fillText('客户方信息', 60, y)
 
     y += 25
-
-    // 客户信息内容行（白色背景）
-    ctx.fillStyle = backgroundColor
-    ctx.fillRect(50, y, 650, lineHeight * 5)
-    ctx.fillStyle = lineColor
-    ctx.fillRect(50, y + lineHeight * 5, 650, lineWidth)
-    ctx.fillRect(50, y, lineWidth, lineHeight * 5)
-    ctx.fillRect(700, y, lineWidth, lineHeight * 5)
 
     ctx.font = `14px ${fontFamily}`
     if (quote.customers?.name) {
@@ -259,16 +268,38 @@ export class CanvasService {
 
     // ========== 商品明细（表格形式，表头行浅灰色背景）==========
     const tableStartY = y
+    const maxRows = 10
+    const actualRows = Math.min(quote.items?.length || 0, maxRows)
 
-    // 表头行（浅灰色背景 + 加粗）
+    // 绘制完整的表格背景（表头行浅灰，内容行白色）
     ctx.fillStyle = headerBgColor
-    ctx.fillRect(50, y, 650, 35)
-    ctx.fillStyle = lineColor
-    ctx.fillRect(50, y, 650, lineWidth)
-    ctx.fillRect(50, y + 34, 650, lineWidth)
-    ctx.fillRect(50, y, lineWidth, 35)
-    ctx.fillRect(700, y, lineWidth, 35)
+    ctx.fillRect(50, y, 650, 35) // 表头行背景
 
+    ctx.fillStyle = backgroundColor
+    ctx.fillRect(50, y + 35, 650, lineHeight * actualRows) // 内容行背景
+
+    // 绘制完整的表格边框和格子线
+    ctx.fillStyle = lineColor
+
+    // 外边框
+    ctx.fillRect(50, y, 650, lineWidth)                         // 上边框
+    ctx.fillRect(50, y + 35, 650, lineWidth)                    // 表头下边框
+    ctx.fillRect(50, y + 35 + lineHeight * actualRows, 650, lineWidth) // 底边框
+    ctx.fillRect(50, y, lineWidth, 35 + lineHeight * actualRows)    // 左边框
+    ctx.fillRect(700, y, lineWidth, 35 + lineHeight * actualRows)   // 右边框
+
+    // 纵向格子线（从表头一直贯穿到最后一行底部）
+    const colPositions = [110, 310, 370, 430, 500, 580]
+    colPositions.forEach(x => {
+      ctx.fillRect(x, y, lineWidth, 35 + lineHeight * actualRows)
+    })
+
+    // 横向格子线（每行之间的分隔线，从最左边到最右边）
+    for (let i = 1; i < actualRows; i++) {
+      ctx.fillRect(50, y + 35 + i * lineHeight, 650, lineWidth)
+    }
+
+    // 填充表头文字
     y += 22
     ctx.fillStyle = textColor
     ctx.font = `bold 14px ${fontFamily}`
@@ -281,25 +312,6 @@ export class CanvasService {
     ctx.fillText('备注', 590, y)
 
     y += 25
-
-    // 商品明细内容行（白色背景）
-    const maxRows = 10
-    const actualRows = Math.min(quote.items?.length || 0, maxRows)
-
-    ctx.fillStyle = backgroundColor
-    ctx.fillRect(50, y, 650, lineHeight * actualRows)
-    ctx.fillStyle = lineColor
-
-    // 绘制纵向分隔线
-    const colPositions = [50, 110, 310, 370, 430, 500, 580, 700]
-    colPositions.forEach(x => {
-      ctx.fillRect(x, tableStartY, lineWidth, lineHeight * actualRows + 35)
-    })
-
-    // 绘制横向分隔线
-    for (let i = 0; i <= actualRows; i++) {
-      ctx.fillRect(50, y + i * lineHeight, 650, lineWidth)
-    }
 
     // 填充商品数据
     ctx.font = `14px ${fontFamily}`
@@ -319,14 +331,16 @@ export class CanvasService {
 
     y += lineHeight * actualRows + 15
 
-    // ========== 合计区（白色背景）==========
+    // ========== 合计区（白色背景，有边框）==========
     ctx.fillStyle = backgroundColor
     ctx.fillRect(50, y, 650, lineHeight * 2)
+
+    // 绘制合计区边框
     ctx.fillStyle = lineColor
-    ctx.fillRect(50, y, 650, lineWidth)
-    ctx.fillRect(50, y + lineHeight * 2, 650, lineWidth)
-    ctx.fillRect(50, y, lineWidth, lineHeight * 2)
-    ctx.fillRect(700, y, lineWidth, lineHeight * 2)
+    ctx.fillRect(50, y, 650, lineWidth)              // 上边框
+    ctx.fillRect(50, y + lineHeight * 2, 650, lineWidth) // 下边框
+    ctx.fillRect(50, y, lineWidth, lineHeight * 2)  // 左边框
+    ctx.fillRect(700, y, lineWidth, lineHeight * 2) // 右边框
 
     y += 25
     ctx.font = `bold 14px ${fontFamily}`
@@ -342,15 +356,17 @@ export class CanvasService {
 
     y += lineHeight * 2 + 15
 
-    // ========== 备注说明区（白色背景）==========
+    // ========== 备注说明区（白色背景，有边框）==========
     if (quote.remark) {
       ctx.fillStyle = backgroundColor
       ctx.fillRect(50, y, 650, lineHeight * 2)
+
+      // 绘制备注说明区边框
       ctx.fillStyle = lineColor
-      ctx.fillRect(50, y, 650, lineWidth)
-      ctx.fillRect(50, y + lineHeight * 2, 650, lineWidth)
-      ctx.fillRect(50, y, lineWidth, lineHeight * 2)
-      ctx.fillRect(700, y, lineWidth, lineHeight * 2)
+      ctx.fillRect(50, y, 650, lineWidth)              // 上边框
+      ctx.fillRect(50, y + lineHeight * 2, 650, lineWidth) // 下边框
+      ctx.fillRect(50, y, lineWidth, lineHeight * 2)  // 左边框
+      ctx.fillRect(700, y, lineWidth, lineHeight * 2) // 右边框
 
       y += 25
       ctx.font = `bold 14px ${fontFamily}`
