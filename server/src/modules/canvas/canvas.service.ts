@@ -96,6 +96,9 @@ export class CanvasService {
     ctx.fillStyle = '#FFFFFF'
     ctx.fillRect(0, 0, 750, 1400)
 
+    // 字体配置（使用中文字体）
+    const fontFamily = '"WenQuanYi Micro Hei", "文泉驿微米黑", sans-serif'
+
     // 黑色文字
     const textColor = '#000000'
     const grayColor = '#666666'
@@ -105,7 +108,7 @@ export class CanvasService {
 
     // ========== 标题 ==========
     ctx.fillStyle = textColor
-    ctx.font = 'bold 36px sans-serif'
+    ctx.font = `bold 36px ${fontFamily}`
     ctx.textAlign = 'center'
     ctx.fillText('报价单', 375, y)
 
@@ -113,7 +116,7 @@ export class CanvasService {
 
     // ========== 报价单信息 ==========
     ctx.textAlign = 'left'
-    ctx.font = '18px sans-serif'
+    ctx.font = `18px ${fontFamily}`
 
     ctx.fillStyle = grayColor
     ctx.fillText(`报价单号：${quote.quote_no}`, 40, y)
@@ -138,11 +141,11 @@ export class CanvasService {
     // ========== 客户信息 ==========
     const customerName = quote.customers?.name || '未命名'
     ctx.fillStyle = textColor
-    ctx.font = 'bold 24px sans-serif'
+    ctx.font = `bold 24px ${fontFamily}`
     ctx.fillText(`客户：${customerName}`, 40, y)
     y += lineHeight
 
-    ctx.font = '18px sans-serif'
+    ctx.font = `18px ${fontFamily}`
     if (quote.customers?.company) {
       ctx.fillStyle = grayColor
       ctx.fillText(`公司：${quote.customers.company}`, 40, y)
@@ -172,12 +175,12 @@ export class CanvasService {
 
     // ========== 表格标题 ==========
     ctx.fillStyle = textColor
-    ctx.font = 'bold 20px sans-serif'
+    ctx.font = `bold 20px ${fontFamily}`
     ctx.fillText('商品明细', 40, y)
     y += 40
 
     // ========== 表头 ==========
-    ctx.font = 'bold 16px sans-serif'
+    ctx.font = `bold 16px ${fontFamily}`
     ctx.fillText('品名', 40, y)
     ctx.fillText('单位', 300, y)
     ctx.fillText('数量', 400, y)
@@ -196,7 +199,7 @@ export class CanvasService {
     y += 40
 
     // ========== 表格内容 ==========
-    ctx.font = '16px sans-serif'
+    ctx.font = `16px ${fontFamily}`
 
     if (quote.items && quote.items.length > 0) {
       quote.items.forEach((item, index) => {
@@ -225,7 +228,7 @@ export class CanvasService {
     // ========== 金额汇总 ==========
     y += 20
 
-    ctx.font = '18px sans-serif'
+    ctx.font = `18px ${fontFamily}`
     ctx.fillStyle = grayColor
     ctx.textAlign = 'right'
 
@@ -238,7 +241,7 @@ export class CanvasService {
     }
 
     ctx.fillStyle = textColor
-    ctx.font = 'bold 24px sans-serif'
+    ctx.font = `bold 24px ${fontFamily}`
     ctx.fillText(`合计金额：¥${Number(quote.total_amount).toFixed(2)}`, 710, y)
     y += 60
 
@@ -254,12 +257,12 @@ export class CanvasService {
       y += 40
 
       ctx.fillStyle = textColor
-      ctx.font = 'bold 18px sans-serif'
+      ctx.font = `bold 18px ${fontFamily}`
       ctx.textAlign = 'left'
       ctx.fillText('备注：', 40, y)
       y += 30
 
-      ctx.font = '16px sans-serif'
+      ctx.font = `16px ${fontFamily}`
       ctx.fillStyle = grayColor
       ctx.fillText(quote.remark, 40, y)
       y += lineHeight
@@ -276,7 +279,7 @@ export class CanvasService {
     y += 40
 
     ctx.fillStyle = grayColor
-    ctx.font = '14px sans-serif'
+    ctx.font = `14px ${fontFamily}`
     ctx.textAlign = 'center'
     ctx.fillText('此报价单仅供参考，请以实际交易为准', 375, y)
 
