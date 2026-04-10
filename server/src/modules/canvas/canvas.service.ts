@@ -98,10 +98,13 @@ export class CanvasService {
     // 配色方案（参考样式）
     const backgroundColor = '#FFFFFF'  // 整体白色背景
     const cardBackgroundColor = '#ECECEC'  // 内容卡片浅灰色背景（236,236,236）
+    const cardBorderColor = '#B0B0B0'   // 卡片边框（176,176,176）- 更深一点
+    const gridColor = '#B0B0B0'         // 格子线 - 更深一点
     const textColor = '#000000'      // 黑色文字
     const grayColor = '#666666'      // 灰色文字
     const lineHeight = 40            // 行高
     const cardPadding = 20           // 卡片内边距
+    const borderWidth = 2            // 边框宽度 - 增加到2px
 
     // 纯白色背景
     ctx.fillStyle = backgroundColor
@@ -119,8 +122,19 @@ export class CanvasService {
 
     // ========== 报价单信息卡片 ==========
     const infoCardStart = y
+    const infoCardWidth = 650
+    const infoCardHeight = 130
+
+    // 浅灰色背景卡片
     ctx.fillStyle = cardBackgroundColor
-    ctx.fillRect(50, infoCardStart, 650, 130)  // 浅灰色背景卡片
+    ctx.fillRect(50, infoCardStart, infoCardWidth, infoCardHeight)
+
+    // 卡片边框（使用fillRect绘制）
+    ctx.fillStyle = cardBorderColor
+    ctx.fillRect(50, infoCardStart, infoCardWidth, borderWidth)              // 上边框
+    ctx.fillRect(50, infoCardStart + infoCardHeight - borderWidth, infoCardWidth, borderWidth)  // 下边框
+    ctx.fillRect(50, infoCardStart, borderWidth, infoCardHeight)           // 左边框
+    ctx.fillRect(50 + infoCardWidth - borderWidth, infoCardStart, borderWidth, infoCardHeight)  // 右边框
 
     y += 30
     ctx.textAlign = 'left'
@@ -140,9 +154,19 @@ export class CanvasService {
 
     // ========== 客户信息卡片 ==========
     const customerCardStart = y
+    const customerCardWidth = 650
     const customerCardHeight = 180
+
+    // 浅灰色背景卡片
     ctx.fillStyle = cardBackgroundColor
-    ctx.fillRect(50, customerCardStart, 650, customerCardHeight)
+    ctx.fillRect(50, customerCardStart, customerCardWidth, customerCardHeight)
+
+    // 卡片边框（使用fillRect绘制）
+    ctx.fillStyle = cardBorderColor
+    ctx.fillRect(50, customerCardStart, customerCardWidth, borderWidth)
+    ctx.fillRect(50, customerCardStart + customerCardHeight - borderWidth, customerCardWidth, borderWidth)
+    ctx.fillRect(50, customerCardStart, borderWidth, customerCardHeight)
+    ctx.fillRect(50 + customerCardWidth - borderWidth, customerCardStart, borderWidth, customerCardHeight)
 
     y += 30
     const customerName = quote.customers?.name || '未命名'
@@ -174,9 +198,39 @@ export class CanvasService {
 
     // ========== 商品明细卡片 ==========
     const productCardStart = y
+    const productCardWidth = 650
     const productCardHeight = 500  // 预估高度
+
+    // 浅灰色背景卡片
     ctx.fillStyle = cardBackgroundColor
-    ctx.fillRect(50, productCardStart, 650, productCardHeight)
+    ctx.fillRect(50, productCardStart, productCardWidth, productCardHeight)
+
+    // 卡片边框（使用fillRect绘制）
+    ctx.fillStyle = cardBorderColor
+    ctx.fillRect(50, productCardStart, productCardWidth, borderWidth)
+    ctx.fillRect(50, productCardStart + productCardHeight - borderWidth, productCardWidth, borderWidth)
+    ctx.fillRect(50, productCardStart, borderWidth, productCardHeight)
+    ctx.fillRect(50 + productCardWidth - borderWidth, productCardStart, borderWidth, productCardHeight)
+
+    // 表格格子区域（在卡片内部）
+    const tableStartX = 70
+    const tableStartY = productCardStart + 70
+    const tableWidth = 610
+    const tableHeight = 400
+    const colWidth = [200, 100, 100, 100, 100]  // 品名、单位、数量、单价、金额的列宽
+
+    // 绘制表格格子（使用fillRect绘制）
+    ctx.fillStyle = gridColor
+
+    // 竖向分隔线
+    let x = tableStartX
+    for (let i = 0; i < colWidth.length; i++) {
+      x += colWidth[i]
+      ctx.fillRect(x - 1, tableStartY - 40, borderWidth, tableHeight + 40)
+    }
+
+    // 横向分隔线（表头下方）
+    ctx.fillRect(tableStartX, tableStartY - 10, tableWidth, borderWidth)
 
     y += 30
     ctx.fillStyle = textColor
@@ -185,20 +239,18 @@ export class CanvasService {
     y += 40
 
     // ========== 表头 ==========
+    y = tableStartY - 10
     ctx.font = `bold 14px ${fontFamily}`
     ctx.fillStyle = textColor
-    ctx.fillText('品名', 70, y)
-    ctx.fillText('单位', 320, y)
-    ctx.fillText('数量', 420, y)
-    ctx.fillText('单价', 520, y)
-    ctx.fillText('金额', 600, y)
 
-    y += 30
+    const headerX = tableStartX
+    ctx.fillText('品名', headerX + 10, y)
+    ctx.fillText('单位', headerX + colWidth[0] + 10, y)
+    ctx.fillText('数量', headerX + colWidth[0] + colWidth[1] + 10, y)
+    ctx.fillText('单价', headerX + colWidth[0] + colWidth[1] + colWidth[2] + 10, y)
+    ctx.fillText('金额', headerX + colWidth[0] + colWidth[1] + colWidth[2] + colWidth[3] + 10, y)
 
-    // 表头分隔线
-    ctx.fillStyle = '#CCCCCC'
-    ctx.fillRect(70, y, 610, 1)
-    y += 30
+    y += 40
 
     // ========== 表格内容 ==========
     ctx.font = `14px ${fontFamily}`
@@ -208,17 +260,17 @@ export class CanvasService {
         if (index >= 10) return // 最多显示10条
 
         ctx.fillStyle = textColor
-        ctx.fillText(item.product_name, 70, y)
-        ctx.fillText(item.unit, 320, y)
-        ctx.fillText(item.quantity, 420, y)
-        ctx.fillText(`¥${Number(item.unit_price).toFixed(2)}`, 520, y)
-        ctx.fillText(`¥${Number(item.amount).toFixed(2)}`, 600, y)
+        ctx.fillText(item.product_name, headerX + 10, y)
+        ctx.fillText(item.unit, headerX + colWidth[0] + 10, y)
+        ctx.fillText(item.quantity, headerX + colWidth[0] + colWidth[1] + 10, y)
+        ctx.fillText(`¥${Number(item.unit_price).toFixed(2)}`, headerX + colWidth[0] + colWidth[1] + colWidth[2] + 10, y)
+        ctx.fillText(`¥${Number(item.amount).toFixed(2)}`, headerX + colWidth[0] + colWidth[1] + colWidth[2] + colWidth[3] + 10, y)
 
         y += lineHeight
 
-        // 每行分隔线
-        ctx.fillStyle = '#DDDDDD'
-        ctx.fillRect(70, y, 610, 1)
+        // 每行分隔线（使用fillRect绘制）
+        ctx.fillStyle = gridColor
+        ctx.fillRect(tableStartX, y, tableWidth, borderWidth)
         y += 30
       })
     }
@@ -227,9 +279,19 @@ export class CanvasService {
 
     // ========== 金额汇总卡片 ==========
     const amountCardStart = y
+    const amountCardWidth = 650
     const amountCardHeight = 130
+
+    // 浅灰色背景卡片
     ctx.fillStyle = cardBackgroundColor
-    ctx.fillRect(50, amountCardStart, 650, amountCardHeight)
+    ctx.fillRect(50, amountCardStart, amountCardWidth, amountCardHeight)
+
+    // 卡片边框（使用fillRect绘制）
+    ctx.fillStyle = cardBorderColor
+    ctx.fillRect(50, amountCardStart, amountCardWidth, borderWidth)
+    ctx.fillRect(50, amountCardStart + amountCardHeight - borderWidth, amountCardWidth, borderWidth)
+    ctx.fillRect(50, amountCardStart, borderWidth, amountCardHeight)
+    ctx.fillRect(50 + amountCardWidth - borderWidth, amountCardStart, borderWidth, amountCardHeight)
 
     y += 30
     ctx.font = `16px ${fontFamily}`
@@ -254,9 +316,19 @@ export class CanvasService {
     if (quote.remark) {
       y += 20
       const remarkCardStart = y
+      const remarkCardWidth = 650
       const remarkCardHeight = 100
+
+      // 浅灰色背景卡片
       ctx.fillStyle = cardBackgroundColor
-      ctx.fillRect(50, remarkCardStart, 650, remarkCardHeight)
+      ctx.fillRect(50, remarkCardStart, remarkCardWidth, remarkCardHeight)
+
+      // 卡片边框（使用fillRect绘制）
+      ctx.fillStyle = cardBorderColor
+      ctx.fillRect(50, remarkCardStart, remarkCardWidth, borderWidth)
+      ctx.fillRect(50, remarkCardStart + remarkCardHeight - borderWidth, remarkCardWidth, borderWidth)
+      ctx.fillRect(50, remarkCardStart, borderWidth, remarkCardHeight)
+      ctx.fillRect(50 + remarkCardWidth - borderWidth, remarkCardStart, borderWidth, remarkCardHeight)
 
       y += 30
       ctx.fillStyle = textColor
