@@ -1,0 +1,19 @@
+{
+  "buildCommand": "cd server && npm run build",
+  "outputDirectory": "server/dist",
+  "devCommand": "cd server && npm run start:dev",
+  "installCommand": "cd server && npm install",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
+    }
+  ],
+  "functions": {
+    "api/index.js": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 60
+    }
+  }
+}
