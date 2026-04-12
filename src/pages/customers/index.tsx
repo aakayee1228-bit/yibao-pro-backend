@@ -233,52 +233,62 @@ const CustomersPage: FC = () => {
             <ScrollView className="p-4" style={{ maxHeight: '60vh' }}>
               <View className="mb-4">
                 <Text className="text-sm text-gray-500 mb-1">客户名称 *</Text>
-                <Input
-                  value={formData.name}
-                  onInput={(e) => setFormData({ ...formData, name: e.detail.value })}
-                  placeholder="请输入客户名称"
-                  className="w-full"
-                />
+                <View className="bg-gray-50 rounded-lg px-3 py-2">
+                  <Input
+                    value={formData.name}
+                    onInput={(e) => setFormData({ ...formData, name: e.detail.value })}
+                    placeholder="请输入客户名称"
+                    className="w-full bg-transparent"
+                  />
+                </View>
               </View>
-              
+
               <View className="mb-4">
                 <Text className="text-sm text-gray-500 mb-1">联系电话</Text>
-                <Input
-                  value={formData.phone}
-                  onInput={(e) => setFormData({ ...formData, phone: e.detail.value })}
-                  placeholder="请输入联系电话"
-                  className="w-full"
-                />
+                <View className="bg-gray-50 rounded-lg px-3 py-2">
+                  <Input
+                    value={formData.phone}
+                    onInput={(e) => setFormData({ ...formData, phone: e.detail.value })}
+                    placeholder="请输入联系电话"
+                    className="w-full bg-transparent"
+                  />
+                </View>
               </View>
-              
+
               <View className="mb-4">
                 <Text className="text-sm text-gray-500 mb-1">公司名称</Text>
-                <Input
-                  value={formData.company}
-                  onInput={(e) => setFormData({ ...formData, company: e.detail.value })}
-                  placeholder="请输入公司名称"
-                  className="w-full"
-                />
+                <View className="bg-gray-50 rounded-lg px-3 py-2">
+                  <Input
+                    value={formData.company}
+                    onInput={(e) => setFormData({ ...formData, company: e.detail.value })}
+                    placeholder="请输入公司名称"
+                    className="w-full bg-transparent"
+                  />
+                </View>
               </View>
-              
+
               <View className="mb-4">
                 <Text className="text-sm text-gray-500 mb-1">地址</Text>
-                <Input
-                  value={formData.address}
-                  onInput={(e) => setFormData({ ...formData, address: e.detail.value })}
-                  placeholder="请输入地址"
-                  className="w-full"
-                />
+                <View className="bg-gray-50 rounded-lg px-3 py-2">
+                  <Input
+                    value={formData.address}
+                    onInput={(e) => setFormData({ ...formData, address: e.detail.value })}
+                    placeholder="请输入地址"
+                    className="w-full bg-transparent"
+                  />
+                </View>
               </View>
-              
+
               <View className="mb-4">
                 <Text className="text-sm text-gray-500 mb-1">备注</Text>
-                <Input
-                  value={formData.remark}
-                  onInput={(e) => setFormData({ ...formData, remark: e.detail.value })}
-                  placeholder="请输入备注"
-                  className="w-full"
-                />
+                <View className="bg-gray-50 rounded-lg px-3 py-2">
+                  <Input
+                    value={formData.remark}
+                    onInput={(e) => setFormData({ ...formData, remark: e.detail.value })}
+                    placeholder="请输入备注"
+                    className="w-full bg-transparent"
+                  />
+                </View>
               </View>
             </ScrollView>
 

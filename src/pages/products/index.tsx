@@ -348,66 +348,87 @@ const ProductsPage: FC = () => {
           <View className="flex flex-col gap-4 py-4">
             <View className="flex flex-col gap-2">
               <Label>商品名称 *</Label>
-              <Input
-                placeholder="请输入商品名称"
-                value={formData.name}
-                onInput={(e) => setFormData({ ...formData, name: e.detail.value })}
-              />
+              <View className="bg-gray-50 rounded-lg px-3 py-2">
+                <Input
+                  className="w-full bg-transparent"
+                  placeholder="请输入商品名称"
+                  value={formData.name}
+                  onInput={(e) => setFormData({ ...formData, name: e.detail.value })}
+                />
+              </View>
             </View>
             <View className="flex flex-col gap-2">
               <Label>商品编码</Label>
-              <Input
-                placeholder="选填，用于快速检索"
-                value={formData.code}
-                onInput={(e) => setFormData({ ...formData, code: e.detail.value })}
-              />
+              <View className="bg-gray-50 rounded-lg px-3 py-2">
+                <Input
+                  className="w-full bg-transparent"
+                  placeholder="选填，用于快速检索"
+                  value={formData.code}
+                  onInput={(e) => setFormData({ ...formData, code: e.detail.value })}
+                />
+              </View>
             </View>
             <View className="flex flex-row gap-3">
               <View className="flex-1 flex flex-col gap-2">
                 <Label>单位 *</Label>
-                <Input
-                  placeholder="个/件/米"
-                  value={formData.unit}
-                  onInput={(e) => setFormData({ ...formData, unit: e.detail.value })}
-                />
+                <View className="bg-gray-50 rounded-lg px-3 py-2">
+                  <Input
+                    className="w-full bg-transparent"
+                    placeholder="个/件/米"
+                    value={formData.unit}
+                    onInput={(e) => setFormData({ ...formData, unit: e.detail.value })}
+                  />
+                </View>
               </View>
               <View className="flex-1 flex flex-col gap-2">
                 <Label>规格</Label>
-                <Input
-                  placeholder="选填"
-                  value={formData.specification}
-                  onInput={(e) => setFormData({ ...formData, specification: e.detail.value })}
-                />
+                <View className="bg-gray-50 rounded-lg px-3 py-2">
+                  <Input
+                    className="w-full bg-transparent"
+                    placeholder="选填"
+                    value={formData.specification}
+                    onInput={(e) => setFormData({ ...formData, specification: e.detail.value })}
+                  />
+                </View>
               </View>
             </View>
             <View className="flex flex-row gap-3">
               <View className="flex-1 flex flex-col gap-2">
                 <Label>零售价 *</Label>
-                <Input
-                  type="number"
-                  placeholder="必填"
-                  value={formData.retail_price}
-                  onInput={(e) => setFormData({ ...formData, retail_price: e.detail.value })}
-                />
+                <View className="bg-gray-50 rounded-lg px-3 py-2">
+                  <Input
+                    className="w-full bg-transparent"
+                    type="number"
+                    placeholder="必填"
+                    value={formData.retail_price}
+                    onInput={(e) => setFormData({ ...formData, retail_price: e.detail.value })}
+                  />
+                </View>
               </View>
               <View className="flex-1 flex flex-col gap-2">
                 <Label>批发价</Label>
-                <Input
-                  type="number"
-                  placeholder="选填"
-                  value={formData.wholesale_price}
-                  onInput={(e) => setFormData({ ...formData, wholesale_price: e.detail.value })}
-                />
+                <View className="bg-gray-50 rounded-lg px-3 py-2">
+                  <Input
+                    className="w-full bg-transparent"
+                    type="number"
+                    placeholder="选填"
+                    value={formData.wholesale_price}
+                    onInput={(e) => setFormData({ ...formData, wholesale_price: e.detail.value })}
+                  />
+                </View>
               </View>
             </View>
             <View className="flex flex-col gap-2">
               <Label>成本价</Label>
-              <Input
-                type="number"
-                placeholder="选填，仅自己可见"
-                value={formData.cost_price}
-                onInput={(e) => setFormData({ ...formData, cost_price: e.detail.value })}
-              />
+              <View className="bg-gray-50 rounded-lg px-3 py-2">
+                <Input
+                  className="w-full bg-transparent"
+                  type="number"
+                  placeholder="选填，仅自己可见"
+                  value={formData.cost_price}
+                  onInput={(e) => setFormData({ ...formData, cost_price: e.detail.value })}
+                />
+              </View>
             </View>
           </View>
           <DialogFooter>

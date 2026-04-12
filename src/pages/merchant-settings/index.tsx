@@ -114,13 +114,15 @@ const MerchantSettingsPage: FC = () => {
                 <Store size={20} color="#6b7280" />
                 <View className="flex-1">
                   <Text className="block text-xs text-gray-500 mb-1">商家名称</Text>
-                  <Input
-                    className="w-full"
-                    placeholder="请输入商家名称"
-                    value={shopName}
-                    onInput={(e) => setShopName(e.detail.value)}
-                    maxlength={50}
-                  />
+                  <View className="bg-gray-50 rounded-lg px-3 py-2">
+                    <Input
+                      className="w-full bg-transparent"
+                      placeholder="请输入商家名称"
+                      value={shopName}
+                      onInput={(e) => setShopName(e.detail.value)}
+                      maxlength={50}
+                    />
+                  </View>
                 </View>
               </View>
 
@@ -129,13 +131,15 @@ const MerchantSettingsPage: FC = () => {
                 <User size={20} color="#6b7280" />
                 <View className="flex-1">
                   <Text className="block text-xs text-gray-500 mb-1">联系人</Text>
-                  <Input
-                    className="w-full"
-                    placeholder="请输入联系人姓名"
-                    value={contactName}
-                    onInput={(e) => setContactName(e.detail.value)}
-                    maxlength={20}
-                  />
+                  <View className="bg-gray-50 rounded-lg px-3 py-2">
+                    <Input
+                      className="w-full bg-transparent"
+                      placeholder="请输入联系人姓名"
+                      value={contactName}
+                      onInput={(e) => setContactName(e.detail.value)}
+                      maxlength={20}
+                    />
+                  </View>
                 </View>
               </View>
 
@@ -144,14 +148,16 @@ const MerchantSettingsPage: FC = () => {
                 <Phone size={20} color="#6b7280" />
                 <View className="flex-1">
                   <Text className="block text-xs text-gray-500 mb-1">联系电话</Text>
-                  <Input
-                    className="w-full"
-                    type="number"
-                    placeholder="请输入手机号"
-                    value={phone}
-                    onInput={(e) => setPhone(e.detail.value)}
-                    maxlength={11}
-                  />
+                  <View className="bg-gray-50 rounded-lg px-3 py-2">
+                    <Input
+                      className="w-full bg-transparent"
+                      type="number"
+                      placeholder="请输入手机号"
+                      value={phone}
+                      onInput={(e) => setPhone(e.detail.value)}
+                      maxlength={11}
+                    />
+                  </View>
                 </View>
               </View>
 
@@ -160,13 +166,15 @@ const MerchantSettingsPage: FC = () => {
                 <MapPin size={20} color="#6b7280" />
                 <View className="flex-1">
                   <Text className="block text-xs text-gray-500 mb-1">地址</Text>
-                  <Input
-                    className="w-full"
-                    placeholder="请输入地址"
-                    value={address}
-                    onInput={(e) => setAddress(e.detail.value)}
-                    maxlength={200}
-                  />
+                  <View className="bg-gray-50 rounded-lg px-3 py-2">
+                    <Input
+                      className="w-full bg-transparent"
+                      placeholder="请输入地址"
+                      value={address}
+                      onInput={(e) => setAddress(e.detail.value)}
+                      maxlength={200}
+                    />
+                  </View>
                 </View>
               </View>
             </View>
