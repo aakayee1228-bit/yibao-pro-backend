@@ -14,7 +14,7 @@ export default defineAppConfig({
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#fff',
-    navigationBarTitleText: '易表单',
+    navigationBarTitleText: '易表单Pro',
     navigationBarTextStyle: 'black',
   },
   // 全局分享配置

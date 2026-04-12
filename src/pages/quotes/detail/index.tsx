@@ -64,7 +64,7 @@ const QuoteDetailPage: FC = () => {
   useShareAppMessage(() => {
     if (!quote) {
       return {
-        title: '易表单 - 查看表单详情',
+        title: '易表单Pro - 查看表单详情',
         path: '/pages/quotes/index',
       }
     }
@@ -83,7 +83,7 @@ const QuoteDetailPage: FC = () => {
   useShareTimeline(() => {
     if (!quote) {
       return {
-        title: '易表单 - 多行业报价单生成工具',
+        title: '易表单Pro - 多行业报价单生成工具',
       }
     }
 

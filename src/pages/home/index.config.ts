@@ -1,9 +1,9 @@
 export default typeof definePageConfig === 'function'
   ? definePageConfig({
-      navigationBarTitleText: '易表单',
+      navigationBarTitleText: '易表单Pro',
       enablePullDownRefresh: true,
     })
   : {
-      navigationBarTitleText: '智能报价助手',
+      navigationBarTitleText: '易表单Pro',
       enablePullDownRefresh: true,
     }
