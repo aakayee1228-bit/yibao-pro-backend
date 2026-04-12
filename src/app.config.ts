@@ -17,6 +17,12 @@ export default defineAppConfig({
     navigationBarTitleText: '易表单',
     navigationBarTextStyle: 'black',
   },
+  // 全局分享配置
+  // 注意：分享图片需要先添加到项目中，建议尺寸 5:4，如 400x320 像素
+  // 将图片放置在 src/assets/share.jpg 后，取消下面注释并修改路径
+  // shareAppMessage: {
+  //   imageUrl: '/assets/share.jpg',
+  // },
   tabBar: {
     color: '#6b7280',
     selectedColor: '#2563eb',

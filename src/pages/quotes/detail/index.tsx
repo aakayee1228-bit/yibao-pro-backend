@@ -1,10 +1,9 @@
-import { View, Text, ScrollView } from '@tarojs/components'
-import Taro, { useDidShow, useShareAppMessage } from '@tarojs/taro'
+import { View, Text, ScrollView, Button } from '@tarojs/components'
+import Taro, { useDidShow, useShareAppMessage, useShareTimeline } from '@tarojs/taro'
 import { useState } from 'react'
 import type { FC } from 'react'
 import { Phone, Share2, Copy, ImageDown } from 'lucide-react-taro'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Network } from '@/network'
 
 interface QuoteItem {
@@ -60,7 +59,7 @@ const QuoteDetailPage: FC = () => {
     }
   })
 
-  // 配置分享功能
+  // 配置分享功能（分享给朋友）
   useShareAppMessage(() => {
     if (!quote) {
       return {
@@ -75,6 +74,23 @@ const QuoteDetailPage: FC = () => {
     return {
       title: `【${quote.quote_no}】${customerName} - ¥${amount}`,
       path: `/pages/quotes/detail/index?id=${quote.id}`,
+      imageUrl: '', // 使用默认图片
+    }
+  })
+
+  // 配置分享到朋友圈
+  useShareTimeline(() => {
+    if (!quote) {
+      return {
+        title: '易表单 - 多行业报价单生成工具',
+      }
+    }
+
+    const customerName = quote.customers?.name || '客户'
+    const amount = Number(quote.total_amount).toFixed(2)
+
+    return {
+      title: `${customerName}的报价单，金额¥${amount}`,
     }
   })
 
@@ -110,17 +126,25 @@ const QuoteDetailPage: FC = () => {
     return statusMap[status] || { label: status, variant: 'secondary' }
   }
 
-  // 复制分享文案
+  // 复制小程序链接
   const handleCopyLink = () => {
     if (!quote) return
 
-    const customerName = quote.customers?.name || '客户'
-    const amount = Number(quote.total_amount).toFixed(2)
+    // 获取小程序的完整链接
+    const appId = Taro.getAccountInfoSync().miniProgram.appId
+    const path = `/pages/quotes/detail/index?id=${quote.id}`
 
+    // 复制小程序链接到剪贴板
     Taro.setClipboardData({
-      data: `【易表单】${customerName} 您好，这是您的表单：\n单号：${quote.quote_no}\n金额：¥${amount}\n\n请在微信中搜索「易表单」小程序查看详情。`,
+      data: `${appId}#${path}`,
     })
-    Taro.showToast({ title: '已复制分享文案', icon: 'success' })
+
+    Taro.showModal({
+      title: '链接已复制',
+      content: '小程序链接已复制到剪贴板，可以在微信中粘贴发送给朋友',
+      showCancel: false,
+      confirmText: '知道了',
+    })
   }
 
   // 生成带水印的图片（调用后端接口）
@@ -374,11 +398,23 @@ const QuoteDetailPage: FC = () => {
           <Text className="text-sm text-white">{generating ? '生成中...' : '生成图片'}</Text>
         </View>
         <Button
-          style={{ flex: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '12px', borderRadius: '8px', backgroundColor: '#2563eb', border: 'none' }}
           openType="share"
+          className="flex-1"
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '4px',
+            padding: '12px',
+            borderRadius: '8px',
+            backgroundColor: '#2563eb',
+            border: 'none',
+            lineHeight: '20px'
+          }}
         >
           <Share2 size={16} color="#ffffff" />
-          <Text className="text-sm text-white">分享</Text>
+          <Text className="text-sm text-white" style={{ color: '#ffffff', fontSize: '14px' }}>分享</Text>
         </Button>
       </View>
     </View>
