@@ -1,9 +1,10 @@
-import { View, Text, ScrollView, Button } from '@tarojs/components'
+import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow, useShareAppMessage, useShareTimeline } from '@tarojs/taro'
 import { useState } from 'react'
 import type { FC } from 'react'
 import { Phone, Share2, Copy, ImageDown } from 'lucide-react-taro'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Network } from '@/network'
 
 interface QuoteItem {
@@ -401,20 +402,11 @@ const QuoteDetailPage: FC = () => {
           openType="share"
           className="flex-1"
           style={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '4px',
-            padding: '12px',
-            borderRadius: '8px',
             backgroundColor: '#2563eb',
-            border: 'none',
-            lineHeight: '20px'
           }}
         >
           <Share2 size={16} color="#ffffff" />
-          <Text className="text-sm text-white" style={{ color: '#ffffff', fontSize: '14px' }}>分享</Text>
+          <Text className="text-white" style={{ color: '#ffffff' }}>分享</Text>
         </Button>
       </View>
     </View>
