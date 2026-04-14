@@ -150,7 +150,7 @@ export class CanvasService {
   /**
    * 生成 PDF 内容
    */
-  private generatePDFContent(doc: PDFDocument, quote: Quote): void {
+  private generatePDFContent(doc: any, quote: any): void {
     const width = doc.page.width
     const height = doc.page.height
     const margin = 50
