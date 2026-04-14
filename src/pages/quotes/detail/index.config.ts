@@ -1,6 +1,7 @@
 export default typeof definePageConfig === 'function'
   ? definePageConfig({
-      navigationBarTitleText: '表单详情',
+      navigationBarTitleText: '报价单详情 - v2',
       enableShareAppMessage: true,
+      enableShareTimeline: true,
     })
-  : { navigationBarTitleText: '表单详情', enableShareAppMessage: true }
+  : { navigationBarTitleText: '报价单详情 - v2', enableShareAppMessage: true, enableShareTimeline: true }
