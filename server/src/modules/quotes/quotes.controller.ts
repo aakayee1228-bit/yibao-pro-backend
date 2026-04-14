@@ -11,7 +11,7 @@ export class QuotesController {
    */
   @Get()
   async getAll(
-    @Headers('x-user-id') userId: string,
+    @Headers('x-openid') userId: string,
     @Query('status') status?: string,
     @Query('customer_id') customerId?: string,
   ) {
@@ -28,7 +28,7 @@ export class QuotesController {
    * GET /api/quotes/stats
    */
   @Get('stats')
-  async getStats(@Headers('x-user-id') userId: string) {
+  async getStats(@Headers('x-openid') userId: string) {
     const data = await this.quotesService.getStats(userId)
     return {
       code: 0,
@@ -42,8 +42,11 @@ export class QuotesController {
    * GET /api/quotes/:id
    */
   @Get(':id')
-  async getById(@Param('id') id: string) {
-    const data = await this.quotesService.getById(id)
+  async getById(
+    @Param('id') id: string,
+    @Headers('x-openid') userId: string,
+  ) {
+    const data = await this.quotesService.getById(id, userId)
     return {
       code: 0,
       msg: 'success',
@@ -57,7 +60,7 @@ export class QuotesController {
    */
   @Post()
   async create(
-    @Headers('x-user-id') userId: string,
+    @Headers('x-openid') userId: string,
     @Body() body: {
       customer_id: string
       items: Array<{
@@ -81,7 +84,13 @@ export class QuotesController {
       contact_email?: string
     },
   ) {
-    const data = await this.quotesService.create(userId || 'default-user', body)
+    if (!userId) {
+      return {
+        code: 401,
+        msg: '未授权：缺少用户身份信息',
+      }
+    }
+    const data = await this.quotesService.create(userId, body)
     return {
       code: 0,
       msg: 'success',

@@ -32,11 +32,16 @@ export class QuotesService {
    */
   async getAll(userId?: string, filters?: { status?: string; customer_id?: string }) {
     const client = getSupabaseClient()
-    
+
     let query = client
       .from('quotes')
       .select('*')
       .order('created_at', { ascending: false })
+
+    // 添加用户过滤
+    if (userId) {
+      query = query.eq('user_id', userId)
+    }
 
     if (filters?.status) {
       query = query.eq('status', filters.status)
@@ -158,6 +163,7 @@ export class QuotesService {
         contact_phone: dto.contact_phone,
         contact_address: dto.contact_address,
         contact_email: dto.contact_email,
+        user_id: userId, // 添加 user_id
       })
       .select()
       .single()
