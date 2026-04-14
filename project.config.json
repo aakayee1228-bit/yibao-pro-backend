@@ -1,5 +1,5 @@
 {
-  "miniprogramRoot": "./dist",
+  "miniprogramRoot": "dist-weapp",
   "projectname": "易表单Pro-v3-PDF",
   "description": "test",
   "appid": "wxce8df0af7fd86188",
