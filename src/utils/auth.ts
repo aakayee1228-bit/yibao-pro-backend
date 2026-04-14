@@ -95,8 +95,9 @@ export async function login(): Promise<LoginResult> {
     console.log('登录 code:', code)
 
     // 2. 调用后端接口，用 code 换取 openid
+    const domain = typeof PROJECT_DOMAIN !== 'undefined' ? PROJECT_DOMAIN : 'https://yibao-pro-backend.onrender.com'
     const response = await Taro.request({
-      url: `${process.env.PROJECT_DOMAIN || 'https://yibao-pro-backend.onrender.com'}/api/auth/login`,
+      url: `${domain}/api/auth/login`,
       method: 'POST',
       data: { code },
       header: {
