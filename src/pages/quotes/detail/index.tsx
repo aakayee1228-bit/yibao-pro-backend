@@ -158,8 +158,9 @@ const QuoteDetailPage: FC = () => {
       console.log('PDF生成成功:', tempFilePath)
 
       // 下载 PDF 文件
+      const domain = typeof PROJECT_DOMAIN !== 'undefined' ? PROJECT_DOMAIN : 'https://yibao-pro-backend.onrender.com'
       const downloadRes = await Taro.downloadFile({
-        url: `${process.env.PROJECT_DOMAIN || 'https://yibao-pro-backend.onrender.com'}/api/canvas/download?path=${encodeURIComponent(tempFilePath)}`,
+        url: `${domain}/api/canvas/download?path=${encodeURIComponent(tempFilePath)}`,
       })
 
       console.log('PDF下载响应:', downloadRes.statusCode, downloadRes.tempFilePath)
