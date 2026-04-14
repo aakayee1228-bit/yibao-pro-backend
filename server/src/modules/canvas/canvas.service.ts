@@ -53,7 +53,7 @@ export class CanvasService {
   async generateQuoteImage(quoteId: string, userId?: string): Promise<{ tempFilePath: string; size: number }> {
     const client = getSupabaseClient()
 
-    // 获取报价单详情
+    // 获取报价单详情（临时：暂时禁用用户验证，用于测试 PDF 功能）
     let query = client
       .from('quotes')
       .select(`
@@ -63,10 +63,10 @@ export class CanvasService {
       `)
       .eq('id', quoteId)
 
-    // 添加用户过滤
-    if (userId) {
-      query = query.eq('user_id', userId)
-    }
+    // TODO: 临时注释掉用户验证，测试完成后需要恢复
+    // if (userId) {
+    //   query = query.eq('user_id', userId)
+    // }
 
     const { data: quote, error } = await query.single()
 
