@@ -8,9 +8,10 @@ import { CustomersModule } from '@/modules/customers/customers.module';
 import { MerchantsModule } from '@/modules/merchants/merchants.module';
 import { AnalyzeModule } from '@/modules/analyze/analyze.module';
 import { CanvasModule } from '@/modules/canvas/canvas.module';
+import { AuthModule } from '@/modules/auth/auth.module';
 
 @Module({
-  imports: [ProductsModule, IndustriesModule, QuotesModule, CustomersModule, MerchantsModule, AnalyzeModule, CanvasModule],
+  imports: [ProductsModule, IndustriesModule, QuotesModule, CustomersModule, MerchantsModule, AnalyzeModule, CanvasModule, AuthModule],
   controllers: [AppController],
   providers: [AppService],
 })

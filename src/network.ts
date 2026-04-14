@@ -1,4 +1,5 @@
 import Taro from '@tarojs/taro'
+import { getAuthToken } from '@/utils/auth'
 
 /**
  * 网络请求模块
@@ -16,24 +17,45 @@ export namespace Network {
         return `${PROJECT_DOMAIN}${url}`
     }
 
+    /**
+     * 获取带用户认证的请求头
+     */
+    const getAuthHeaders = (originalHeaders: Record<string, any> = {}): Record<string, any> => {
+        const headers = { ...originalHeaders }
+
+        // 尝试获取用户 openid
+        const auth = getAuthToken()
+        if (auth && auth.openid) {
+            headers['X-Openid'] = auth.openid
+        }
+
+        return headers
+    }
+
     export const request: typeof Taro.request = option => {
+        const headers = getAuthHeaders(option.header)
         return Taro.request({
             ...option,
             url: createUrl(option.url),
+            header: headers,
         })
     }
 
     export const uploadFile: typeof Taro.uploadFile = option => {
+        const headers = getAuthHeaders(option.header)
         return Taro.uploadFile({
             ...option,
             url: createUrl(option.url),
+            header: headers,
         })
     }
 
     export const downloadFile: typeof Taro.downloadFile = option => {
+        const headers = getAuthHeaders(option.header)
         return Taro.downloadFile({
             ...option,
             url: createUrl(option.url),
+            header: headers,
         })
     }
 }

@@ -1,6 +1,6 @@
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text, ScrollView, Canvas } from '@tarojs/components'
 import Taro, { useDidShow, useShareAppMessage, useShareTimeline } from '@tarojs/taro'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { FC } from 'react'
 import { Phone, Share2, Copy, ImageDown } from 'lucide-react-taro'
 import { Badge } from '@/components/ui/badge'
@@ -50,52 +50,39 @@ interface Quote {
 
 const QuoteDetailPage: FC = () => {
   const [quote, setQuote] = useState<Quote | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
+  const canvasRef = useRef<any>(null)
+
+  const router = Taro.useRouter()
+  const { id } = router.params
 
   useDidShow(() => {
-    const id = Taro.getCurrentInstance().router?.params?.id
     if (id) {
-      fetchQuoteDetail(id)
+      fetchQuoteDetail()
     }
   })
 
-  // 配置分享功能（分享给朋友）
+  // 分享配置
   useShareAppMessage(() => {
-    if (!quote) {
-      return {
-        title: '易表单Pro - 查看表单详情',
-        path: '/pages/quotes/index',
-      }
-    }
-
-    const customerName = quote.customers?.name || '客户'
-    const amount = Number(quote.total_amount).toFixed(2)
-
+    if (!quote) return {}
     return {
-      title: `【${quote.quote_no}】${customerName} - ¥${amount}`,
+      title: `${quote.customers?.name || '客户'}的报价单 - ${quote.quote_no}`,
       path: `/pages/quotes/detail/index?id=${quote.id}`,
-      imageUrl: '', // 使用默认图片
     }
   })
 
-  // 配置分享到朋友圈
   useShareTimeline(() => {
-    if (!quote) {
-      return {
-        title: '易表单Pro - 多行业报价单生成工具',
-      }
-    }
-
-    const customerName = quote.customers?.name || '客户'
-    const amount = Number(quote.total_amount).toFixed(2)
-
+    if (!quote) return {}
     return {
-      title: `${customerName}的报价单，金额¥${amount}`,
+      title: `${quote.customers?.name || '客户'}的报价单 - ${quote.quote_no}`,
+      query: `id=${quote.id}`,
     }
   })
 
-  const fetchQuoteDetail = async (id: string) => {
+  const fetchQuoteDetail = async () => {
+    if (!id) return
+
     setLoading(true)
     try {
       const res = await Network.request({
@@ -148,43 +135,207 @@ const QuoteDetailPage: FC = () => {
     })
   }
 
-  // 生成带水印的图片（调用后端接口）
+  // 使用前端 Canvas 生成图片（解决中文乱码问题）
   const handleGenerateImage = async () => {
     if (!quote) return
 
     setGenerating(true)
     try {
-      console.log('开始生成图片，报价单ID:', quote.id)
+      console.log('开始生成图片（前端Canvas）')
 
-      // 调用后端接口生成图片
-      const res = await Network.request({
-        url: `/api/canvas/quote/${quote.id}`,
-        method: 'GET',
-        responseType: 'arraybuffer',
+      // 获取屏幕宽度
+      const { windowWidth } = Taro.getSystemInfoSync()
+
+      // 创建离屏 Canvas
+      const canvas = Taro.createOffscreenCanvas({
+        type: '2d',
+        width: windowWidth * 2, // 高清
+        height: 1800 * 2, // 高清
       })
 
-      console.log('后端接口返回数据长度:', res.data.byteLength)
+      const ctx = canvas.getContext('2d')
 
-      // 保存为临时文件
-      const imagePath = `${Taro.env.USER_DATA_PATH}/quote_${Date.now()}.png`
-      Taro.getFileSystemManager().writeFileSync(
-        imagePath,
-        res.data as ArrayBuffer,
-        'binary'
-      )
+      // 缩放以支持高清屏
+      ctx.scale(2, 2)
 
-      console.log('临时文件路径:', imagePath)
+      // 配色方案
+      const overallBgColor = '#F5F5F5'
+      const cardBgColor = '#FFFFFF'
+      const blue800 = '#1E40AF'
+      const blue500 = '#3B82F6'
+      const lineColor = '#E5E7EB'
+      const textColor = '#111827'
+      const gray600 = '#4B5563'
+      const white = '#FFFFFF'
+
+      // 整体背景
+      ctx.fillStyle = overallBgColor
+      ctx.fillRect(0, 0, windowWidth, 1800)
+
+      let y = 20
+      const padding = 16
+      const cardWidth = windowWidth - padding * 2
+
+      // 标题栏（蓝色渐变）
+      const gradient = ctx.createLinearGradient(padding, y, padding + cardWidth, y)
+      gradient.addColorStop(0, blue800)
+      gradient.addColorStop(1, blue500)
+      ctx.fillStyle = gradient
+      ctx.fillRect(padding, y, cardWidth, 64)
+
+      // 标题文字
+      y += 42
+      ctx.fillStyle = white
+      ctx.font = 'bold 20px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText('报价单', windowWidth / 2, y)
+
+      y += 20
+
+      // 白色卡片
+      ctx.fillStyle = cardBgColor
+      ctx.fillRect(padding, y, cardWidth, 1500)
+
+      // 报价方信息
+      if (quote.company_name || quote.contact_person || quote.contact_phone) {
+        const infoHeight = 130
+        ctx.fillStyle = blue500
+        ctx.fillRect(padding, y, cardWidth, 35)
+        ctx.fillStyle = white
+        ctx.font = 'bold 16px sans-serif'
+        ctx.textAlign = 'left'
+        ctx.fillText('报价方信息', padding + 16, y + 22)
+
+        y += 35
+        ctx.fillStyle = textColor
+        ctx.font = '14px sans-serif'
+        let infoY = y + 16
+
+        if (quote.company_name) {
+          ctx.fillText(`公司名称：${quote.company_name}`, padding + 16, infoY)
+          infoY += 28
+        }
+        if (quote.contact_person) {
+          ctx.fillText(`联系人：${quote.contact_person}`, padding + 16, infoY)
+          infoY += 28
+        }
+        if (quote.contact_phone) {
+          ctx.fillText(`联系电话：${quote.contact_phone}`, padding + 16, infoY)
+          infoY += 28
+        }
+        y += 95
+      }
+
+      // 客户信息
+      if (quote.customers) {
+        ctx.fillStyle = gray600
+        ctx.fillRect(padding, y, cardWidth, 35)
+        ctx.fillStyle = white
+        ctx.font = 'bold 16px sans-serif'
+        ctx.textAlign = 'left'
+        ctx.fillText('客户信息', padding + 16, y + 22)
+
+        y += 35
+        ctx.fillStyle = textColor
+        ctx.font = '14px sans-serif'
+        let infoY = y + 16
+
+        if (quote.customers.name) {
+          ctx.fillText(`客户姓名：${quote.customers.name}`, padding + 16, infoY)
+          infoY += 28
+        }
+        if (quote.customers.phone) {
+          ctx.fillText(`联系电话：${quote.customers.phone}`, padding + 16, infoY)
+          infoY += 28
+        }
+        if (quote.customers.address) {
+          ctx.fillText(`地址：${quote.customers.address}`, padding + 16, infoY)
+          infoY += 28
+        }
+        y += 95
+      }
+
+      // 商品表格
+      ctx.fillStyle = blue500
+      ctx.fillRect(padding, y, cardWidth, 44)
+      ctx.fillStyle = white
+      ctx.font = 'bold 16px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText('商品名称', padding + 100, y + 28)
+      ctx.fillText('数量', padding + 280, y + 28)
+      ctx.fillText('单价', padding + 360, y + 28)
+      ctx.fillText('小计', padding + 440, y + 28)
+
+      y += 44
+      ctx.fillStyle = textColor
+      ctx.font = '14px sans-serif'
+
+      quote.items.forEach((item) => {
+        // 行背景（交替色）
+        const index = quote.items.indexOf(item)
+        if (index % 2 === 1) {
+          ctx.fillStyle = '#F9FAFB'
+          ctx.fillRect(padding, y, cardWidth, 44)
+        }
+
+        ctx.fillStyle = textColor
+        ctx.fillText(item.product_name.substring(0, 15), padding + 100, y + 28)
+        ctx.fillText(item.quantity, padding + 280, y + 28)
+        ctx.fillText(item.unit_price, padding + 360, y + 28)
+        ctx.fillText(item.amount, padding + 440, y + 28)
+
+        y += 44
+      })
+
+      // 合计信息
+      y += 20
+      ctx.fillStyle = gray600
+      ctx.font = '14px sans-serif'
+      ctx.textAlign = 'right'
+      ctx.fillText(`小计：¥${quote.subtotal}`, windowWidth - padding, y)
+      y += 28
+      if (parseFloat(quote.discount) > 0) {
+        ctx.fillText(`折扣：-¥${quote.discount}`, windowWidth - padding, y)
+        y += 28
+      }
+      ctx.fillStyle = blue800
+      ctx.font = 'bold 20px sans-serif'
+      ctx.fillText(`总计：¥${quote.total_amount}`, windowWidth - padding, y)
+
+      // 底部信息
+      y += 60
+      ctx.fillStyle = gray600
+      ctx.font = '12px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText(`报价单号：${quote.quote_no}`, windowWidth / 2, y)
+      y += 20
+      ctx.fillText(`有效期：${quote.valid_days}天`, windowWidth / 2, y)
+      y += 20
+      const createdDate = new Date(quote.created_at).toLocaleDateString('zh-CN')
+      ctx.fillText(`创建日期：${createdDate}`, windowWidth / 2, y)
+
+      // 导出为图片
+      const filePath = `${Taro.env.USER_DATA_PATH}/quote_${Date.now()}.png`
+      const { tempFilePath } = await Taro.canvasToTempFilePath({
+        canvas: canvas,
+        width: windowWidth * 2,
+        height: 1800 * 2,
+        destWidth: windowWidth * 2,
+        destHeight: 1800 * 2,
+        fileType: 'png',
+      })
+
+      console.log('图片生成成功:', tempFilePath)
 
       // 预览图片
       Taro.previewImage({
-        urls: [imagePath],
-        current: imagePath,
+        urls: [tempFilePath],
+        current: tempFilePath,
       })
 
-      // 显示操作提示
       Taro.showModal({
         title: '图片已生成',
-        content: '长按图片可保存到相册，或点击右上角分享给客户',
+        content: '长按图片可保存到相册',
         showCancel: false,
         confirmText: '知道了',
       })
@@ -198,216 +349,171 @@ const QuoteDetailPage: FC = () => {
 
   if (loading) {
     return (
-      <View className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-        <Text className="text-sm text-gray-400">加载中...</Text>
+      <View className="flex items-center justify-center h-full">
+        <Text>加载中...</Text>
       </View>
     )
   }
 
   if (!quote) {
     return (
-      <View className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-        <Text className="text-sm text-gray-400">表单不存在</Text>
+      <View className="flex items-center justify-center h-full">
+        <Text>报价单不存在</Text>
       </View>
     )
   }
 
-  const statusInfo = getStatusBadge(quote.status)
+  const statusBadge = getStatusBadge(quote.status)
 
   return (
-    <View className="flex flex-col min-h-screen bg-gray-50">
-      <ScrollView className="flex-1">
-        <View className="p-4 pb-32">
-          {/* 顶部蓝色标题区域 */}
-          <View className="bg-gradient-to-r from-blue-800 to-blue-500 px-4 py-4 rounded-t-lg mb-4">
-            <Text className="block text-2xl font-bold text-center text-white">产品报价单</Text>
+    <View className="flex flex-col h-full bg-gray-50">
+      <ScrollView className="flex-1" scrollY>
+        <View className="p-4 space-y-4">
+          {/* 状态卡片 */}
+          <View className="bg-white rounded-lg p-4 shadow-sm">
+            <View className="flex justify-between items-center mb-4">
+              <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+              <Text className="text-sm text-gray-500">报价单号：{quote.quote_no}</Text>
+            </View>
+            <View className="flex justify-between items-center">
+              <Text className="text-sm text-gray-500">创建日期：{new Date(quote.created_at).toLocaleDateString('zh-CN')}</Text>
+              <Text className="text-sm text-gray-500">有效期：{quote.valid_days}天</Text>
+            </View>
           </View>
 
-          {/* 白色卡片内容 */}
-          <View className="bg-white rounded-b-lg shadow-sm px-4 py-4 mb-4">
-            {/* 报价方信息 */}
-            {(quote.company_name || quote.contact_person || quote.contact_phone) && (
-              <View className="mb-4 pb-4 border-b border-gray-100">
-                <Text className="block text-base font-bold text-gray-900 mb-2">报价方信息</Text>
-                {quote.company_name && (
-                  <Text className="block text-sm text-gray-600 mb-1">{quote.company_name}</Text>
-                )}
-                {quote.contact_person && (
-                  <Text className="block text-sm text-gray-600 mb-1">联系人：{quote.contact_person}</Text>
-                )}
-                {quote.contact_phone && (
-                  <Text className="block text-sm text-gray-600 mb-1">电话：{quote.contact_phone}</Text>
-                )}
-                {quote.contact_address && (
-                  <Text className="block text-sm text-gray-600">地址：{quote.contact_address}</Text>
-                )}
-              </View>
-            )}
+          {/* 报价方信息 */}
+          {(quote.company_name || quote.contact_person || quote.contact_phone) && (
+            <View className="bg-white rounded-lg p-4 shadow-sm">
+              <Text className="text-lg font-bold text-blue-800 mb-3 block">报价方信息</Text>
+              {quote.company_name && (
+                <View className="mb-2">
+                  <Text className="text-sm text-gray-600 block">公司名称</Text>
+                  <Text className="text-base text-gray-900 block">{quote.company_name}</Text>
+                </View>
+              )}
+              {quote.contact_person && (
+                <View className="mb-2">
+                  <Text className="text-sm text-gray-600 block">联系人</Text>
+                  <Text className="text-base text-gray-900 block">{quote.contact_person}</Text>
+                </View>
+              )}
+              {quote.contact_phone && (
+                <View className="mb-2">
+                  <Text className="text-sm text-gray-600 block">联系电话</Text>
+                  <Text className="text-base text-gray-900 block">{quote.contact_phone}</Text>
+                </View>
+              )}
+              {quote.contact_address && (
+                <View className="mb-2">
+                  <Text className="text-sm text-gray-600 block">联系地址</Text>
+                  <Text className="text-base text-gray-900 block">{quote.contact_address}</Text>
+                </View>
+              )}
+            </View>
+          )}
 
-            {/* 两列信息布局 */}
-            <View className="flex flex-row gap-4 mb-4">
-              {/* 左列 - 客户方信息 */}
-              <View className="flex-1">
-                <Text className="block text-base font-bold text-gray-900 mb-2">
-                  客户方信息：{quote.customers?.name || '客户'}
-                </Text>
-                {quote.customers?.company && (
-                  <Text className="block text-sm text-gray-600 mb-1">{quote.customers.company}</Text>
-                )}
-                {quote.customers?.phone && (
-                  <View className="flex items-center">
-                    <Phone size={14} color="#1e40af" />
-                    <Text className="text-sm text-blue-700 ml-1">{quote.customers.phone}</Text>
+          {/* 客户信息 */}
+          {quote.customers && (
+            <View className="bg-white rounded-lg p-4 shadow-sm">
+              <Text className="text-lg font-bold text-blue-800 mb-3 block">客户信息</Text>
+              {quote.customers.name && (
+                <View className="mb-2">
+                  <Text className="text-sm text-gray-600 block">客户姓名</Text>
+                  <Text className="text-base text-gray-900 block">{quote.customers.name}</Text>
+                </View>
+              )}
+              {quote.customers.phone && (
+                <View className="mb-2">
+                  <Text className="text-sm text-gray-600 block">联系电话</Text>
+                  <Text className="text-base text-gray-900 block">{quote.customers.phone}</Text>
+                </View>
+              )}
+              {quote.customers.address && (
+                <View className="mb-2">
+                  <Text className="text-sm text-gray-600 block">地址</Text>
+                  <Text className="text-base text-gray-900 block">{quote.customers.address}</Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* 商品列表 */}
+          <View className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <View className="bg-blue-600 text-white p-3">
+              <Text className="font-bold block">商品列表</Text>
+            </View>
+            <View>
+              {quote.items.map((item, index) => (
+                <View
+                  key={item.id}
+                  className={`p-3 border-b border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+                >
+                  <View className="flex justify-between items-center">
+                    <Text className="flex-1 text-base text-gray-900">{item.product_name}</Text>
+                    <Text className="w-20 text-right text-sm text-gray-600">{item.quantity}{item.unit}</Text>
+                    <Text className="w-24 text-right text-sm text-gray-600">¥{item.unit_price}</Text>
+                    <Text className="w-24 text-right text-base font-bold text-blue-800">¥{item.amount}</Text>
                   </View>
-                )}
-              </View>
-
-              {/* 右列 - 表单信息 */}
-              <View className="flex-1 text-right">
-                <View className="mb-2">
-                  <Text className="text-sm text-gray-600">单号</Text>
-                  <Text className="block text-sm font-medium text-gray-900">{quote.quote_no}</Text>
+                  {item.remark && (
+                    <Text className="text-xs text-gray-500 mt-1 block">备注：{item.remark}</Text>
+                  )}
                 </View>
-                <View className="mb-2">
-                  <Text className="text-sm text-gray-600">日期</Text>
-                  <Text className="block text-sm font-medium text-gray-900">
-                    {quote.created_at ? new Date(quote.created_at).toLocaleDateString('zh-CN') : '-'}
-                  </Text>
-                </View>
-                <View className="mb-2">
-                  <Text className="text-sm text-gray-600">有效期</Text>
-                  <Text className="block text-sm font-medium text-gray-900">{quote.valid_days} 天</Text>
-                </View>
-              </View>
+              ))}
             </View>
+          </View>
 
-            {/* 水平分隔线 */}
-            <View className="h-1 bg-blue-800 rounded mb-4" />
-
-            {/* 商品明细表格 */}
-            <View className="mb-4">
-              <Text className="block text-base font-bold text-gray-900 mb-3">商品明细</Text>
-              
-              {/* 表头 */}
-              <View className="flex bg-blue-800 rounded-t">
-                <View className="flex-1 py-2 px-1">
-                  <Text className="block text-xs text-center text-white font-medium">序号</Text>
-                </View>
-                <View className="flex-2 py-2 px-2">
-                  <Text className="block text-xs text-center text-white font-medium">品名</Text>
-                </View>
-                <View className="flex-1 py-2 px-1">
-                  <Text className="block text-xs text-center text-white font-medium">单位</Text>
-                </View>
-                <View className="flex-1 py-2 px-1">
-                  <Text className="block text-xs text-center text-white font-medium">数量</Text>
-                </View>
-                <View className="flex-1 py-2 px-1">
-                  <Text className="block text-xs text-center text-white font-medium">单价</Text>
-                </View>
-                <View className="flex-1 py-2 px-1">
-                  <Text className="block text-xs text-center text-white font-medium">合计</Text>
-                </View>
-              </View>
-
-              {/* 表格内容 */}
-              {quote.items && quote.items.length > 0 ? (
-                <View className="border border-gray-200 border-t-0 rounded-b">
-                  {quote.items.map((item, index) => (
-                    <View 
-                      key={item.id || index} 
-                      className={`flex ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} border-b border-gray-200 last:border-0`}
-                    >
-                      <View className="flex-1 py-3 px-1">
-                        <Text className="block text-sm text-center text-gray-700">{index + 1}</Text>
-                      </View>
-                      <View className="flex-2 py-3 px-2">
-                        <Text className="block text-sm text-left text-gray-700">{item.product_name}</Text>
-                      </View>
-                      <View className="flex-1 py-3 px-1">
-                        <Text className="block text-sm text-center text-gray-700">{item.unit}</Text>
-                      </View>
-                      <View className="flex-1 py-3 px-1">
-                        <Text className="block text-sm text-center text-gray-700">{item.quantity}</Text>
-                      </View>
-                      <View className="flex-1 py-3 px-1">
-                        <Text className="block text-sm text-center text-gray-700">¥{Number(item.unit_price).toFixed(2)}</Text>
-                      </View>
-                      <View className="flex-1 py-3 px-1">
-                        <Text className="block text-sm text-center text-blue-700 font-medium">¥{Number(item.amount).toFixed(2)}</Text>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              ) : (
-                <Text className="text-sm text-gray-400 text-center py-4">暂无商品</Text>
-              )}
+          {/* 合计信息 */}
+          <View className="bg-white rounded-lg p-4 shadow-sm">
+            <View className="flex justify-between items-center mb-2">
+              <Text className="text-sm text-gray-600">小计</Text>
+              <Text className="text-base text-gray-900">¥{quote.subtotal}</Text>
             </View>
-
-            {/* 金额汇总 */}
-            <View className="border border-gray-200 rounded-lg p-4 mb-4">
+            {parseFloat(quote.discount) > 0 && (
               <View className="flex justify-between items-center mb-2">
-                <Text className="text-sm text-gray-600">商品金额</Text>
-                <Text className="text-sm text-gray-900">¥{Number(quote.subtotal).toFixed(2)}</Text>
-              </View>
-              {Number(quote.discount) > 0 && (
-                <View className="flex justify-between items-center mb-2">
-                  <Text className="text-sm text-gray-600">优惠金额</Text>
-                  <Text className="text-sm text-red-500">-¥{Number(quote.discount).toFixed(2)}</Text>
-                </View>
-              )}
-              <View className="border-t border-gray-200 pt-2 mt-2">
-                <View className="flex justify-between items-center">
-                  <Text className="text-base font-bold text-gray-900">合计金额</Text>
-                  <Text className="text-xl font-bold text-blue-700">¥{Number(quote.total_amount).toFixed(2)}</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* 备注 */}
-            {quote.remark && (
-              <View className="mb-2">
-                <Text className="block text-sm text-gray-600">备注：{quote.remark}</Text>
+                <Text className="text-sm text-gray-600">折扣</Text>
+                <Text className="text-base text-red-500">-¥{quote.discount}</Text>
               </View>
             )}
+            <View className="flex justify-between items-center pt-2 border-t border-gray-200">
+              <Text className="text-lg font-bold text-gray-900">总计</Text>
+              <Text className="text-2xl font-bold text-blue-800">¥{quote.total_amount}</Text>
+            </View>
           </View>
 
-          {/* 状态标签 */}
-          <View className="flex justify-center mb-4">
-            <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-          </View>
-
-          {/* 底部说明 */}
-          <Text className="block text-xs text-center text-gray-400">此报价单仅供参考，请以实际交易为准</Text>
+          {/* 备注 */}
+          {quote.remark && (
+            <View className="bg-white rounded-lg p-4 shadow-sm">
+              <Text className="text-lg font-bold text-gray-900 mb-2 block">备注</Text>
+              <Text className="text-base text-gray-600">{quote.remark}</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
 
-      {/* 底部操作栏 */}
-      <View className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100" style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
-        <View
-          style={{ flex: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '12px', borderRadius: '8px', backgroundColor: '#f3f4f6' }}
-          onClick={handleCopyLink}
-        >
-          <Copy size={16} color="#374151" />
-          <Text className="text-sm text-gray-700">复制</Text>
+      {/* 底部操作按钮 */}
+      <View className="p-4 bg-white border-t border-gray-200">
+        <View className="flex gap-3">
+          <Button
+            className="flex-1"
+            variant="outline"
+            onClick={handleCopyLink}
+          >
+            <View className="flex items-center justify-center gap-2">
+              <Copy size={20} color="#6B7280" />
+              <Text>复制链接</Text>
+            </View>
+          </Button>
+          <Button
+            className="flex-1"
+            onClick={handleGenerateImage}
+            disabled={generating}
+          >
+            <View className="flex items-center justify-center gap-2">
+              <ImageDown size={20} color={generating ? "#9CA3AF" : "#FFFFFF"} />
+              <Text>{generating ? '生成中...' : '生成图片'}</Text>
+            </View>
+          </Button>
         </View>
-        <View
-          style={{ flex: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '12px', borderRadius: '8px', backgroundColor: '#22c55e' }}
-          onClick={handleGenerateImage}
-        >
-          <ImageDown size={16} color="#ffffff" />
-          <Text className="text-sm text-white">{generating ? '生成中...' : '生成图片'}</Text>
-        </View>
-        <Button
-          openType="share"
-          className="flex-1"
-          style={{
-            backgroundColor: '#2563eb',
-          }}
-        >
-          <Share2 size={16} color="#ffffff" />
-          <Text className="text-white" style={{ color: '#ffffff' }}>分享</Text>
-        </Button>
       </View>
     </View>
   )
