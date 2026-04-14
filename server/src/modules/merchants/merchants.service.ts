@@ -20,15 +20,15 @@ export class MerchantsService {
     let query = client
       .from('merchants')
       .select('*')
-      .limit(1)
-      .single()
 
     // 添加用户过滤
     if (userId) {
       query = query.eq('user_id', userId)
     }
 
-    const { data, error } = await query
+    query = query.limit(1)
+
+    const { data, error } = await query.single()
 
     if (error) {
       console.error('获取商家信息失败:', error)
