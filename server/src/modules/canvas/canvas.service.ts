@@ -77,14 +77,14 @@ export class CanvasService {
     }
 
     // 如果需要商品列表，单独查询
-    let items = []
+    let items: QuoteItem[] = []
     const { data: itemsData } = await client
       .from('quote_items')
       .select('*')
       .eq('quote_id', quoteId)
 
     if (itemsData) {
-      items = itemsData
+      items = itemsData as QuoteItem[]
     }
 
     // 组装完整数据
