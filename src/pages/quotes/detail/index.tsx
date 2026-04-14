@@ -1,8 +1,8 @@
-import { View, Text, ScrollView, Canvas } from '@tarojs/components'
+import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow, useShareAppMessage, useShareTimeline } from '@tarojs/taro'
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import type { FC } from 'react'
-import { Phone, Share2, Copy, ImageDown } from 'lucide-react-taro'
+import { Phone, Share2, Copy, FileDown } from 'lucide-react-taro'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Network } from '@/network'
@@ -52,7 +52,6 @@ const QuoteDetailPage: FC = () => {
   const [quote, setQuote] = useState<Quote | null>(null)
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
-  const canvasRef = useRef<any>(null)
 
   const router = Taro.useRouter()
   const { id } = router.params
@@ -135,212 +134,50 @@ const QuoteDetailPage: FC = () => {
     })
   }
 
-  // 使用前端 Canvas 生成图片（解决中文乱码问题）
-  const handleGenerateImage = async () => {
+  // 生成 PDF
+  const handleGeneratePDF = async () => {
     if (!quote) return
 
     setGenerating(true)
     try {
-      console.log('开始生成图片（前端Canvas）')
+      console.log('开始生成PDF，报价单ID:', quote.id)
 
-      // 获取屏幕宽度
-      const { windowWidth } = Taro.getSystemInfoSync()
-
-      // 创建离屏 Canvas
-      const canvas = Taro.createOffscreenCanvas({
-        type: '2d',
-        width: windowWidth * 2, // 高清
-        height: 1800 * 2, // 高清
+      // 调用后端接口生成 PDF
+      const res = await Network.request({
+        url: `/api/canvas/quote/${quote.id}`,
+        method: 'GET',
       })
 
-      const ctx = canvas.getContext('2d')
+      console.log('生成PDF响应:', res.statusCode, res.data)
 
-      // 缩放以支持高清屏
-      ctx.scale(2, 2)
-
-      // 配色方案
-      const overallBgColor = '#F5F5F5'
-      const cardBgColor = '#FFFFFF'
-      const blue800 = '#1E40AF'
-      const blue500 = '#3B82F6'
-      const lineColor = '#E5E7EB'
-      const textColor = '#111827'
-      const gray600 = '#4B5563'
-      const white = '#FFFFFF'
-
-      // 整体背景
-      ctx.fillStyle = overallBgColor
-      ctx.fillRect(0, 0, windowWidth, 1800)
-
-      let y = 20
-      const padding = 16
-      const cardWidth = windowWidth - padding * 2
-
-      // 标题栏（蓝色渐变）
-      const gradient = ctx.createLinearGradient(padding, y, padding + cardWidth, y)
-      gradient.addColorStop(0, blue800)
-      gradient.addColorStop(1, blue500)
-      ctx.fillStyle = gradient
-      ctx.fillRect(padding, y, cardWidth, 64)
-
-      // 标题文字
-      y += 42
-      ctx.fillStyle = white
-      ctx.font = 'bold 20px sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText('报价单', windowWidth / 2, y)
-
-      y += 20
-
-      // 白色卡片
-      ctx.fillStyle = cardBgColor
-      ctx.fillRect(padding, y, cardWidth, 1500)
-
-      // 报价方信息
-      if (quote.company_name || quote.contact_person || quote.contact_phone) {
-        const infoHeight = 130
-        ctx.fillStyle = blue500
-        ctx.fillRect(padding, y, cardWidth, 35)
-        ctx.fillStyle = white
-        ctx.font = 'bold 16px sans-serif'
-        ctx.textAlign = 'left'
-        ctx.fillText('报价方信息', padding + 16, y + 22)
-
-        y += 35
-        ctx.fillStyle = textColor
-        ctx.font = '14px sans-serif'
-        let infoY = y + 16
-
-        if (quote.company_name) {
-          ctx.fillText(`公司名称：${quote.company_name}`, padding + 16, infoY)
-          infoY += 28
-        }
-        if (quote.contact_person) {
-          ctx.fillText(`联系人：${quote.contact_person}`, padding + 16, infoY)
-          infoY += 28
-        }
-        if (quote.contact_phone) {
-          ctx.fillText(`联系电话：${quote.contact_phone}`, padding + 16, infoY)
-          infoY += 28
-        }
-        y += 95
+      if (res.statusCode !== 200 || !res.data || !res.data.data) {
+        throw new Error('生成PDF失败')
       }
 
-      // 客户信息
-      if (quote.customers) {
-        ctx.fillStyle = gray600
-        ctx.fillRect(padding, y, cardWidth, 35)
-        ctx.fillStyle = white
-        ctx.font = 'bold 16px sans-serif'
-        ctx.textAlign = 'left'
-        ctx.fillText('客户信息', padding + 16, y + 22)
+      const { tempFilePath } = res.data.data as { tempFilePath: string; size: number }
+      console.log('PDF生成成功:', tempFilePath)
 
-        y += 35
-        ctx.fillStyle = textColor
-        ctx.font = '14px sans-serif'
-        let infoY = y + 16
+      // 下载 PDF 文件
+      const downloadRes = await Taro.downloadFile({
+        url: `${process.env.PROJECT_DOMAIN || 'https://yibao-pro-backend.onrender.com'}/api/canvas/download?path=${encodeURIComponent(tempFilePath)}`,
+      })
 
-        if (quote.customers.name) {
-          ctx.fillText(`客户姓名：${quote.customers.name}`, padding + 16, infoY)
-          infoY += 28
-        }
-        if (quote.customers.phone) {
-          ctx.fillText(`联系电话：${quote.customers.phone}`, padding + 16, infoY)
-          infoY += 28
-        }
-        if (quote.customers.address) {
-          ctx.fillText(`地址：${quote.customers.address}`, padding + 16, infoY)
-          infoY += 28
-        }
-        y += 95
+      console.log('PDF下载响应:', downloadRes.statusCode, downloadRes.tempFilePath)
+
+      if (downloadRes.statusCode !== 200 || !downloadRes.tempFilePath) {
+        throw new Error('下载PDF失败')
       }
 
-      // 商品表格
-      ctx.fillStyle = blue500
-      ctx.fillRect(padding, y, cardWidth, 44)
-      ctx.fillStyle = white
-      ctx.font = 'bold 16px sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText('商品名称', padding + 100, y + 28)
-      ctx.fillText('数量', padding + 280, y + 28)
-      ctx.fillText('单价', padding + 360, y + 28)
-      ctx.fillText('小计', padding + 440, y + 28)
-
-      y += 44
-      ctx.fillStyle = textColor
-      ctx.font = '14px sans-serif'
-
-      quote.items.forEach((item) => {
-        // 行背景（交替色）
-        const index = quote.items.indexOf(item)
-        if (index % 2 === 1) {
-          ctx.fillStyle = '#F9FAFB'
-          ctx.fillRect(padding, y, cardWidth, 44)
-        }
-
-        ctx.fillStyle = textColor
-        ctx.fillText(item.product_name.substring(0, 15), padding + 100, y + 28)
-        ctx.fillText(item.quantity, padding + 280, y + 28)
-        ctx.fillText(item.unit_price, padding + 360, y + 28)
-        ctx.fillText(item.amount, padding + 440, y + 28)
-
-        y += 44
+      // 打开文档
+      await Taro.openDocument({
+        filePath: downloadRes.tempFilePath,
+        fileType: 'pdf',
+        showMenu: true,
       })
 
-      // 合计信息
-      y += 20
-      ctx.fillStyle = gray600
-      ctx.font = '14px sans-serif'
-      ctx.textAlign = 'right'
-      ctx.fillText(`小计：¥${quote.subtotal}`, windowWidth - padding, y)
-      y += 28
-      if (parseFloat(quote.discount) > 0) {
-        ctx.fillText(`折扣：-¥${quote.discount}`, windowWidth - padding, y)
-        y += 28
-      }
-      ctx.fillStyle = blue800
-      ctx.font = 'bold 20px sans-serif'
-      ctx.fillText(`总计：¥${quote.total_amount}`, windowWidth - padding, y)
-
-      // 底部信息
-      y += 60
-      ctx.fillStyle = gray600
-      ctx.font = '12px sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText(`报价单号：${quote.quote_no}`, windowWidth / 2, y)
-      y += 20
-      ctx.fillText(`有效期：${quote.valid_days}天`, windowWidth / 2, y)
-      y += 20
-      const createdDate = new Date(quote.created_at).toLocaleDateString('zh-CN')
-      ctx.fillText(`创建日期：${createdDate}`, windowWidth / 2, y)
-
-      // 导出为图片
-      const filePath = `${Taro.env.USER_DATA_PATH}/quote_${Date.now()}.png`
-      const { tempFilePath } = await Taro.canvasToTempFilePath({
-        canvas: canvas,
-        width: windowWidth * 2,
-        height: 1800 * 2,
-        destWidth: windowWidth * 2,
-        destHeight: 1800 * 2,
-        fileType: 'png',
-      })
-
-      console.log('图片生成成功:', tempFilePath)
-
-      // 预览图片
-      Taro.previewImage({
-        urls: [tempFilePath],
-        current: tempFilePath,
-      })
-
-      Taro.showModal({
-        title: '图片已生成',
-        content: '长按图片可保存到相册',
-        showCancel: false,
-        confirmText: '知道了',
-      })
+      Taro.showToast({ title: 'PDF已生成', icon: 'success' })
     } catch (err) {
-      console.error('生成图片异常:', err)
+      console.error('生成PDF异常:', err)
       Taro.showToast({ title: '生成失败', icon: 'none' })
     } finally {
       setGenerating(false)
@@ -505,12 +342,12 @@ const QuoteDetailPage: FC = () => {
           </Button>
           <Button
             className="flex-1"
-            onClick={handleGenerateImage}
+            onClick={handleGeneratePDF}
             disabled={generating}
           >
             <View className="flex items-center justify-center gap-2">
-              <ImageDown size={20} color={generating ? "#9CA3AF" : "#FFFFFF"} />
-              <Text>{generating ? '生成中...' : '生成图片'}</Text>
+              <FileDown size={20} color={generating ? "#9CA3AF" : "#FFFFFF"} />
+              <Text>{generating ? '生成中...' : '生成PDF'}</Text>
             </View>
           </Button>
         </View>

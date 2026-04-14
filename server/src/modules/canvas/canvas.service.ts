@@ -1,9 +1,7 @@
-import { Injectable, BadRequestException, OnModuleInit } from '@nestjs/common'
-import { createCanvas, registerFont } from '@napi-rs/canvas'
+import { Injectable, BadRequestException } from '@nestjs/common'
 import { getSupabaseClient } from '@/storage/database/supabase-client'
+import PDFDocument from 'pdfkit'
 import * as path from 'path'
-import * as https from 'https'
-import * as http from 'http'
 import * as fs from 'fs'
 
 interface QuoteItem {
@@ -48,127 +46,9 @@ interface Quote {
 }
 
 @Injectable()
-export class CanvasService implements OnModuleInit {
-  private fontLoaded = false
-  private readonly fontDir = path.join(process.cwd(), 'fonts')
-  private readonly fontPath = path.join(this.fontDir, 'NotoSansSC-Regular.ttf')
-
-  async onModuleInit() {
-    await this.loadChineseFont()
-  }
-
+export class CanvasService {
   /**
-   * 下载并加载中文字体
-   */
-  private async loadChineseFont(): Promise<void> {
-    try {
-      // 创建字体目录
-      if (!fs.existsSync(this.fontDir)) {
-        fs.mkdirSync(this.fontDir, { recursive: true })
-      }
-
-      // 检查字体文件是否已存在
-      if (fs.existsSync(this.fontPath)) {
-        console.log('字体文件已存在，正在加载...')
-        try {
-          registerFont(this.fontPath, { family: 'NotoSansSC' })
-          this.fontLoaded = true
-          console.log('✅ 中文字体加载成功')
-          return
-        } catch (error) {
-          console.error('⚠️ 字体加载失败，尝试重新下载:', error)
-        }
-      }
-
-      // 下载字体文件
-      console.log('正在下载中文字体...')
-
-      try {
-        await this.downloadFont(
-          'https://github.com/notofonts/noto-cjk/raw/main/Sans/OTF/SimplifiedChinese/NotoSansSC-Regular.otf',
-          this.fontPath
-        )
-      } catch (error) {
-        console.error('从 GitHub 下载失败，尝试备用源...')
-        await this.downloadFont(
-          'https://raw.githubusercontent.com/notofonts/noto-cjk/main/Sans/OTF/SimplifiedChinese/NotoSansSC-Regular.otf',
-          this.fontPath
-        )
-      }
-
-      // 加载字体
-      registerFont(this.fontPath, { family: 'NotoSansSC' })
-      this.fontLoaded = true
-      console.log('✅ 中文字体下载并加载成功')
-    } catch (error) {
-      console.error('❌ 中文字体加载失败:', error)
-      console.log('将使用默认字体（可能不支持中文）')
-    }
-  }
-
-  /**
-   * 下载字体文件
-   */
-  private downloadFont(url: string, dest: string): Promise<void> {
-    const protocol = url.startsWith('https') ? https : http
-
-    return new Promise((resolve, reject) => {
-      const file = fs.createWriteStream(dest)
-
-      const request = protocol.get(url, (response) => {
-        // 检查响应状态码
-        if (response.statusCode === 302 || response.statusCode === 301) {
-          // 处理重定向
-          const redirectUrl = response.headers.location
-          if (redirectUrl) {
-            console.log('重定向到:', redirectUrl)
-            this.downloadFont(redirectUrl, dest)
-              .then(resolve)
-              .catch(reject)
-            return
-          }
-        }
-
-        if (response.statusCode !== 200) {
-          reject(new Error(`下载失败，状态码: ${response.statusCode}`))
-          return
-        }
-
-        response.pipe(file)
-
-        file.on('finish', () => {
-          file.close()
-          resolve()
-        })
-
-        file.on('error', (err) => {
-          fs.unlink(dest, () => {})
-          reject(err)
-        })
-      })
-
-      request.on('error', (err) => {
-        fs.unlink(dest, () => {})
-        reject(err)
-      })
-
-      request.setTimeout(30000, () => {
-        request.destroy()
-        fs.unlink(dest, () => {})
-        reject(new Error('下载超时'))
-      })
-    })
-  }
-
-  /**
-   * 获取中文字体名称
-   */
-  private getChineseFont(): string {
-    return this.fontLoaded ? 'NotoSansSC' : 'Arial'
-  }
-
-  /**
-   * 生成报价单图片
+   * 生成报价单 PDF
    */
   async generateQuoteImage(quoteId: string, userId?: string): Promise<{ tempFilePath: string; size: number }> {
     const client = getSupabaseClient()
@@ -194,185 +74,288 @@ export class CanvasService implements OnModuleInit {
       throw new BadRequestException('获取报价单详情失败')
     }
 
-    // 图片尺寸
-    const width = 1200
-    const height = 1800
+    // 创建 PDF 文档
+    const doc = new PDFDocument({
+      size: 'A4',
+      margins: {
+        top: 50,
+        bottom: 50,
+        left: 50,
+        right: 50,
+      },
+    })
 
-    // 创建 Canvas
-    const canvas = createCanvas(width, height)
-    const ctx = canvas.getContext('2d')
+    // 保存到内存
+    const chunks: Buffer[] = []
+    doc.on('data', (chunk) => chunks.push(chunk))
 
-    // 配色方案
-    const overallBgColor = '#F5F5F5'
-    const cardBgColor = '#FFFFFF'
-    const blue800 = '#1E40AF'
-    const blue500 = '#3B82F6'
-    const lineColor = '#E5E7EB'
-    const textColor = '#111827'
-    const gray600 = '#4B5563'
-    const white = '#FFFFFF'
+    // 生成 PDF 内容
+    this.generatePDFContent(doc, quote)
 
-    // 整体背景
-    ctx.fillStyle = overallBgColor
-    ctx.fillRect(0, 0, width, height)
+    doc.end()
 
-    let y = 20
-    const padding = 30
-    const cardWidth = width - padding * 2
+    // 等待 PDF 生成完成
+    return new Promise((resolve, reject) => {
+      doc.on('end', () => {
+        const buffer = Buffer.concat(chunks)
+        const size = buffer.length
 
-    // 标题栏（蓝色渐变）
-    const gradient = ctx.createLinearGradient(padding, y, padding + cardWidth, y)
-    gradient.addColorStop(0, blue800)
-    gradient.addColorStop(1, blue500)
-    ctx.fillStyle = gradient
-    ctx.fillRect(padding, y, cardWidth, 80)
+        // 保存临时文件
+        const tempDir = process.env.TEMP || '/tmp'
+        const tempFilePath = path.join(tempDir, `quote_${Date.now()}.pdf`)
 
-    // 标题文字
-    y += 50
-    ctx.fillStyle = white
-    ctx.font = `bold 32px ${this.getChineseFont()}`
-    ctx.textAlign = 'center'
-    ctx.fillText('报价单', width / 2, y)
+        try {
+          fs.writeFileSync(tempFilePath, buffer)
 
-    y += 30
+          console.log('PDF 生成成功，大小:', size, 'bytes')
 
-    // 白色卡片
-    ctx.fillStyle = cardBgColor
-    ctx.fillRect(padding, y, cardWidth, height - y - 20)
+          resolve({
+            tempFilePath,
+            size,
+          })
+        } catch (error) {
+          console.error('保存 PDF 失败:', error)
+          reject(new BadRequestException('保存 PDF 失败'))
+        }
+      })
+
+      doc.on('error', (error) => {
+        console.error('PDF 生成失败:', error)
+        reject(new BadRequestException('PDF 生成失败'))
+      })
+    })
+  }
+
+  /**
+   * 生成 PDF 内容
+   */
+  private generatePDFContent(doc: PDFDocument, quote: Quote): void {
+    const width = doc.page.width
+    const height = doc.page.height
+    const margin = 50
+
+    // 颜色定义
+    const colors = {
+      blue800: '#1E40AF',
+      blue500: '#3B82F6',
+      gray100: '#F3F4F6',
+      gray600: '#4B5563',
+      black: '#000000',
+      white: '#FFFFFF',
+    }
+
+    let y = margin
+
+    // 标题
+    doc.fontSize(24)
+    .fillColor(colors.blue800)
+    .font('Helvetica-Bold')
+    .text('报价单', { align: 'center' })
+    .moveDown(1)
+
+    y += 60
+
+    // 报价单号和日期
+    doc.fontSize(12)
+    .fillColor(colors.gray600)
+    .font('Helvetica')
+    .text(`报价单号：${quote.quote_no}`, { width: width - margin * 2 })
+    .text(`创建日期：${new Date(quote.created_at).toLocaleDateString('zh-CN')}`, { width: width - margin * 2 })
+    .text(`有效期：${quote.valid_days}天`, { width: width - margin * 2 })
+    .moveDown(1)
+
+    y += 40
+
+    // 绘制分隔线
+    doc.moveTo(margin, y)
+    .lineTo(width - margin, y)
+    .lineWidth(1)
+    .strokeColor(colors.gray100)
+    .stroke()
+
+    y += 20
 
     // 报价方信息
     if (quote.company_name || quote.contact_person || quote.contact_phone) {
-      const infoHeight = 150
-      ctx.fillStyle = blue500
-      ctx.fillRect(padding, y, cardWidth, 45)
-      ctx.fillStyle = white
-      ctx.font = `bold 24px ${this.getChineseFont()}`
-      ctx.textAlign = 'left'
-      ctx.fillText('报价方信息', padding + 20, y + 30)
+      doc.fontSize(14)
+      .fillColor(colors.blue800)
+      .font('Helvetica-Bold')
+      .text('报价方信息', { continued: false })
+      .moveDown(0.3)
 
-      y += 45
-      ctx.fillStyle = textColor
-      ctx.font = `20px ${this.getChineseFont()}`
-      let infoY = y + 20
+      doc.fontSize(11)
+      .fillColor(colors.black)
+      .font('Helvetica')
 
       if (quote.company_name) {
-        ctx.fillText(`公司名称：${quote.company_name}`, padding + 20, infoY)
-        infoY += 35
+        doc.text(`公司名称：${quote.company_name}`)
       }
       if (quote.contact_person) {
-        ctx.fillText(`联系人：${quote.contact_person}`, padding + 20, infoY)
-        infoY += 35
+        doc.text(`联系人：${quote.contact_person}`)
       }
       if (quote.contact_phone) {
-        ctx.fillText(`联系电话：${quote.contact_phone}`, padding + 20, infoY)
-        infoY += 35
+        doc.text(`联系电话：${quote.contact_phone}`)
       }
-      y += 110
+      if (quote.contact_address) {
+        doc.text(`联系地址：${quote.contact_address}`)
+      }
+
+      doc.moveDown(1)
     }
+
+    y = doc.y
+
+    // 绘制分隔线
+    doc.moveTo(margin, y)
+    .lineTo(width - margin, y)
+    .lineWidth(1)
+    .strokeColor(colors.gray100)
+    .stroke()
+
+    y += 20
 
     // 客户信息
     if (quote.customers) {
-      ctx.fillStyle = gray600
-      ctx.fillRect(padding, y, cardWidth, 45)
-      ctx.fillStyle = white
-      ctx.font = `bold 24px ${this.getChineseFont()}`
-      ctx.textAlign = 'left'
-      ctx.fillText('客户信息', padding + 20, y + 30)
+      doc.fontSize(14)
+      .fillColor(colors.blue800)
+      .font('Helvetica-Bold')
+      .text('客户信息', { continued: false })
+      .moveDown(0.3)
 
-      y += 45
-      ctx.fillStyle = textColor
-      ctx.font = `20px ${this.getChineseFont()}`
-      let infoY = y + 20
+      doc.fontSize(11)
+      .fillColor(colors.black)
+      .font('Helvetica')
 
       if (quote.customers.name) {
-        ctx.fillText(`客户姓名：${quote.customers.name}`, padding + 20, infoY)
-        infoY += 35
+        doc.text(`客户姓名：${quote.customers.name}`)
       }
       if (quote.customers.phone) {
-        ctx.fillText(`联系电话：${quote.customers.phone}`, padding + 20, infoY)
-        infoY += 35
+        doc.text(`联系电话：${quote.customers.phone}`)
       }
       if (quote.customers.address) {
-        ctx.fillText(`地址：${quote.customers.address}`, padding + 20, infoY)
-        infoY += 35
+        doc.text(`地址：${quote.customers.address}`)
       }
-      y += 110
+      if (quote.customers.company) {
+        doc.text(`公司：${quote.customers.company}`)
+      }
+
+      doc.moveDown(1)
     }
 
-    // 商品表格
-    ctx.fillStyle = blue500
-    ctx.fillRect(padding, y, cardWidth, 60)
-    ctx.fillStyle = white
-    ctx.font = `bold 22px ${this.getChineseFont()}`
-    ctx.textAlign = 'center'
-    ctx.fillText('商品名称', padding + 150, y + 38)
-    ctx.fillText('数量', padding + 420, y + 38)
-    ctx.fillText('单价', padding + 540, y + 38)
-    ctx.fillText('小计', padding + 660, y + 38)
+    y = doc.y
 
-    y += 60
-    ctx.fillStyle = textColor
-    ctx.font = `20px ${this.getChineseFont()}`
+    // 绘制分隔线
+    doc.moveTo(margin, y)
+    .lineTo(width - margin, y)
+    .lineWidth(1)
+    .strokeColor(colors.gray100)
+    .stroke()
 
-    quote.items.forEach((item: QuoteItem) => {
-      // 行背景（交替色）
-      const index = quote.items.indexOf(item)
+    y += 20
+
+    // 商品列表标题
+    doc.fontSize(14)
+    .fillColor(colors.blue800)
+    .font('Helvetica-Bold')
+    .text('商品列表', { continued: false })
+    .moveDown(0.3)
+
+    // 表格头
+    const tableY = doc.y
+    const colWidths = [200, 80, 100, 120]
+    const startX = margin
+
+    doc.fontSize(10)
+    .fillColor(colors.white)
+    .rect(startX, tableY, width - margin * 2, 20)
+    .fill(colors.blue500)
+
+    doc.fillColor(colors.white)
+    .text('商品名称', startX + 5, tableY + 5)
+    .text('数量', startX + colWidths[0] + 5, tableY + 5)
+    .text('单价', startX + colWidths[0] + colWidths[1] + 5, tableY + 5)
+    .text('小计', startX + colWidths[0] + colWidths[1] + colWidths[2] + 5, tableY + 5)
+
+    // 商品列表
+    doc.fontSize(10)
+    .fillColor(colors.black)
+    .font('Helvetica')
+
+    quote.items.forEach((item: QuoteItem, index: number) => {
+      const itemY = tableY + 25 + index * 20
+
+      // 交替背景色
       if (index % 2 === 1) {
-        ctx.fillStyle = '#F9FAFB'
-        ctx.fillRect(padding, y, cardWidth, 60)
+        doc.rect(startX, itemY - 2, width - margin * 2, 20)
+        .fill(colors.gray100)
       }
 
-      ctx.fillStyle = textColor
-      ctx.fillText(item.product_name.substring(0, 20), padding + 150, y + 38)
-      ctx.fillText(item.quantity, padding + 420, y + 38)
-      ctx.fillText(item.unit_price, padding + 540, y + 38)
-      ctx.fillText(item.amount, padding + 660, y + 38)
+      doc.text(item.product_name, startX + 5, itemY + 5)
+      .text(`${item.quantity}${item.unit}`, startX + colWidths[0] + 5, itemY + 5)
+      .text(`¥${item.unit_price}`, startX + colWidths[0] + colWidths[1] + 5, itemY + 5)
+      .text(`¥${item.amount}`, startX + colWidths[0] + colWidths[1] + colWidths[2] + 5, itemY + 5)
 
-      y += 60
+      if (item.remark) {
+        doc.fontSize(9)
+        .fillColor(colors.gray600)
+        .text(`备注：${item.remark}`, startX + 5, itemY + 25)
+        .fontSize(10)
+        .fillColor(colors.black)
+      }
     })
 
+    y = doc.y + 10
+
+    // 绘制分隔线
+    doc.moveTo(margin, y)
+    .lineTo(width - margin, y)
+    .lineWidth(1)
+    .strokeColor(colors.gray100)
+    .stroke()
+
+    y += 20
+
     // 合计信息
-    y += 30
-    ctx.fillStyle = gray600
-    ctx.font = `20px ${this.getChineseFont()}`
-    ctx.textAlign = 'right'
-    ctx.fillText(`小计：¥${quote.subtotal}`, width - padding, y)
-    y += 35
-    if (parseFloat(quote.discount) > 0) {
-      ctx.fillText(`折扣：-¥${quote.discount}`, width - padding, y)
-      y += 35
+    doc.fontSize(11)
+    .fillColor(colors.gray600)
+    .font('Helvetica')
+    .text(`小计：¥${quote.subtotal}`, { width: width - margin * 2, align: 'right' })
+    .text(`折扣：-¥${quote.discount}`, { width: width - margin * 2, align: 'right' })
+    .fontSize(16)
+    .fillColor(colors.blue800)
+    .font('Helvetica-Bold')
+    .text(`总计：¥${quote.total_amount}`, { width: width - margin * 2, align: 'right' })
+    .moveDown(1)
+
+    y = doc.y
+
+    // 备注
+    if (quote.remark) {
+      doc.fontSize(14)
+      .fillColor(colors.blue800)
+      .font('Helvetica-Bold')
+      .text('备注', { continued: false })
+      .moveDown(0.3)
+
+      doc.fontSize(11)
+      .fillColor(colors.black)
+      .font('Helvetica')
+      .text(quote.remark, { width: width - margin * 2 })
+      .moveDown(1)
     }
-    ctx.fillStyle = blue800
-    ctx.font = `bold 32px ${this.getChineseFont()}`
-    ctx.fillText(`总计：¥${quote.total_amount}`, width - padding, y)
 
     // 底部信息
-    y += 80
-    ctx.fillStyle = gray600
-    ctx.font = `18px ${this.getChineseFont()}`
-    ctx.textAlign = 'center'
-    ctx.fillText(`报价单号：${quote.quote_no}`, width / 2, y)
-    y += 30
-    ctx.fillText(`有效期：${quote.valid_days}天`, width / 2, y)
-    y += 30
-    const createdDate = new Date(quote.created_at).toLocaleDateString('zh-CN')
-    ctx.fillText(`创建日期：${createdDate}`, width / 2, y)
+    y = doc.page.height - margin - 30
 
-    // 生成图片
-    const buffer = canvas.toBuffer('image/png')
-    const size = buffer.length
+    doc.moveTo(margin, y)
+    .lineTo(width - margin, y)
+    .lineWidth(1)
+    .strokeColor(colors.gray100)
+    .stroke()
 
-    console.log('图片生成成功，大小:', size, 'bytes')
-
-    // 保存临时文件
-    const tempDir = process.env.TEMP || '/tmp'
-    const tempFilePath = path.join(tempDir, `quote_${Date.now()}.png`)
-
-    fs.writeFileSync(tempFilePath, buffer)
-
-    return {
-      tempFilePath,
-      size,
-    }
+    doc.fontSize(9)
+    .fillColor(colors.gray600)
+    .font('Helvetica')
+    .text('此报价单仅供参考，具体以实际合同为准', { align: 'center' })
   }
 }
