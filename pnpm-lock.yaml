@@ -188,6 +188,9 @@ importers:
       '@napi-rs/canvas':
         specifier: ^0.1.97
         version: 0.1.97
+      '@nestjs/cli':
+        specifier: ^10.4.9
+        version: 10.4.9(@swc/core@1.4.14(@swc/helpers@0.5.21))(esbuild@0.25.12)
       '@nestjs/common':
         specifier: ^10.4.15
         version: 10.4.20(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -240,9 +243,6 @@ importers:
         specifier: ^4.3.5
         version: 4.3.5
     devDependencies:
-      '@nestjs/cli':
-        specifier: ^10.4.9
-        version: 10.4.9(@swc/core@1.4.14(@swc/helpers@0.5.21))(esbuild@0.25.12)
       '@nestjs/schematics':
         specifier: ^10.2.3
         version: 10.2.3(chokidar@3.6.0)(typescript@5.9.3)
