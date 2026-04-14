@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common'
 import { getSupabaseClient } from '@/storage/database/supabase-client'
-import PDFDocument from 'pdfkit'
+// 使用 CommonJS 导入方式
+const PDFDocument = require('pdfkit')
 import * as path from 'path'
 import * as fs from 'fs'
 
