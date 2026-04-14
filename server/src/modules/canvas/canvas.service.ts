@@ -53,26 +53,45 @@ export class CanvasService {
   async generateQuoteImage(quoteId: string, userId?: string): Promise<{ tempFilePath: string; size: number }> {
     const client = getSupabaseClient()
 
-    // 获取报价单详情（临时：暂时禁用用户验证，用于测试 PDF 功能）
-    let query = client
+    // 获取报价单详情（简化查询，避免关联查询失败）
+    const { data: quote, error } = await client
       .from('quotes')
-      .select(`
-        *,
-        customers (*),
-        items (*)
-      `)
+      .select('*')
       .eq('id', quoteId)
-
-    // TODO: 临时注释掉用户验证，测试完成后需要恢复
-    // if (userId) {
-    //   query = query.eq('user_id', userId)
-    // }
-
-    const { data: quote, error } = await query.single()
+      .single()
 
     if (error || !quote) {
       console.error('获取报价单详情失败:', error)
       throw new BadRequestException('获取报价单详情失败')
+    }
+
+    // 如果需要客户信息，单独查询
+    let customer = null
+    if (quote.customer_id) {
+      const { data: customerData } = await client
+        .from('customers')
+        .select('*')
+        .eq('id', quote.customer_id)
+        .single()
+      customer = customerData
+    }
+
+    // 如果需要商品列表，单独查询
+    let items = []
+    const { data: itemsData } = await client
+      .from('quote_items')
+      .select('*')
+      .eq('quote_id', quoteId)
+
+    if (itemsData) {
+      items = itemsData
+    }
+
+    // 组装完整数据
+    const fullQuote = {
+      ...quote,
+      customers: customer,
+      items: items
     }
 
     // 创建 PDF 文档
@@ -91,7 +110,7 @@ export class CanvasService {
     doc.on('data', (chunk) => chunks.push(chunk))
 
     // 生成 PDF 内容
-    this.generatePDFContent(doc, quote)
+    this.generatePDFContent(doc, fullQuote)
 
     doc.end()
 
