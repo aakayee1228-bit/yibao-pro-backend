@@ -14,7 +14,7 @@ export default defineAppConfig({
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#fff',
-    navigationBarTitleText: '易表单Pro',
+    navigationBarTitleText: '易表单Pro v3-PDF',
     navigationBarTextStyle: 'black',
   },
   // 全局分享配置
