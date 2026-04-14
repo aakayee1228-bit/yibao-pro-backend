@@ -79,14 +79,20 @@ export class QuotesService {
   /**
    * 获取单个报价单详情
    */
-  async getById(id: string) {
+  async getById(id: string, userId?: string) {
     const client = getSupabaseClient()
 
-    const { data: quote, error: quoteError } = await client
+    let query = client
       .from('quotes')
       .select('*')
       .eq('id', id)
-      .single()
+
+    // 添加用户过滤
+    if (userId) {
+      query = query.eq('user_id', userId)
+    }
+
+    const { data: quote, error: quoteError } = await query.single()
 
     if (quoteError) {
       throw new NotFoundException('报价单不存在')
