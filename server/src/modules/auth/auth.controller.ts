@@ -28,7 +28,10 @@ export class AuthController {
   async login(@Body() loginRequest: LoginRequest, @Req() req: Request) {
     const { code } = loginRequest
 
+    console.log('收到登录请求，code:', code)
+
     if (!code) {
+      console.error('缺少 code 参数')
       return {
         code: 400,
         msg: '缺少 code 参数',
@@ -40,7 +43,12 @@ export class AuthController {
       const appId = process.env.WECHAT_MINI_APP_ID || ''
       const appSecret = process.env.WECHAT_MINI_APP_SECRET || ''
 
+      console.log('环境变量配置:')
+      console.log('- WECHAT_MINI_APP_ID:', appId ? '已配置' : '未配置')
+      console.log('- WECHAT_MINI_APP_SECRET:', appSecret ? '已配置' : '未配置')
+
       if (!appId || !appSecret) {
+        console.error('未配置小程序 AppID 或 AppSecret')
         return {
           code: 500,
           msg: '未配置小程序 AppID 或 AppSecret',
@@ -48,18 +56,23 @@ export class AuthController {
       }
 
       // 调用微信接口，用 code 换取 openid
-      const wechatResponse = await axios.get<WechatLoginResponse>(
-        `https://api.weixin.qq.com/sns/jscode2session?appid=${appId}&secret=${appSecret}&js_code=${code}&grant_type=authorization_code`
-      )
+      const wechatUrl = `https://api.weixin.qq.com/sns/jscode2session?appid=${appId}&secret=${appSecret}&js_code=${code}&grant_type=authorization_code`
+      console.log('调用微信接口:', wechatUrl.replace(appSecret, '***'))
+
+      const wechatResponse = await axios.get<WechatLoginResponse>(wechatUrl)
 
       const wechatData = wechatResponse.data
+      console.log('微信接口返回:', JSON.stringify(wechatData, null, 2))
 
       if (wechatData.errcode) {
+        console.error('微信登录失败，errcode:', wechatData.errcode, 'errmsg:', wechatData.errmsg)
         return {
           code: 400,
           msg: `微信登录失败: ${wechatData.errmsg}`,
         }
       }
+
+      console.log('登录成功，openid:', wechatData.openid)
 
       // 返回 openid
       return {

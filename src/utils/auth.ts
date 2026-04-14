@@ -106,8 +106,10 @@ export async function login(): Promise<LoginResult> {
     })
 
     console.log('登录响应:', response)
+    console.log('响应数据详情:', JSON.stringify(response.data, null, 2))
 
     if (response.statusCode !== 200 || !response.data || response.data.code !== 0) {
+      console.error('登录失败，后端返回:', response.data)
       throw new Error('登录失败')
     }
 
