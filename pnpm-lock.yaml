@@ -4,11 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  '@tarojs/plugin-mini-ci@4.1.9':
-    hash: j6dgmq33tuqqgowk7tjyyinctm
-    path: patches/@tarojs__plugin-mini-ci@4.1.9.patch
-
 importers:
 
   .:
@@ -97,7 +92,7 @@ importers:
         version: 4.1.9(@swc/helpers@0.5.21)(@types/node@22.19.6)
       '@tarojs/plugin-mini-ci':
         specifier: ^4.1.9
-        version: 4.1.9(patch_hash=j6dgmq33tuqqgowk7tjyyinctm)(miniprogram-ci@2.1.26(@swc/helpers@0.5.21)(eslint@8.57.1))(tt-ide-cli@0.1.31(@types/node@22.19.6))
+        version: 4.1.9(miniprogram-ci@2.1.26(@swc/helpers@0.5.21)(eslint@8.57.1))(tt-ide-cli@0.1.31(@types/node@22.19.6))
       '@tarojs/vite-runner':
         specifier: 4.1.9
         version: 4.1.9(@swc/helpers@0.5.21)(@tarojs/runtime@4.1.9)(@types/babel__core@7.20.5)(jiti@2.6.1)(postcss@8.5.6)(rollup@3.29.5)(terser@5.44.1)(typescript@5.9.3)(vite@4.5.14(@types/node@22.19.6)(less@4.5.1)(lightningcss@1.31.1)(sass@1.97.2)(terser@5.44.1))
@@ -15573,7 +15568,7 @@ snapshots:
       - babel-plugin-macros
       - supports-color
 
-  '@tarojs/plugin-mini-ci@4.1.9(patch_hash=j6dgmq33tuqqgowk7tjyyinctm)(miniprogram-ci@2.1.26(@swc/helpers@0.5.21)(eslint@8.57.1))(tt-ide-cli@0.1.31(@types/node@22.19.6))':
+  '@tarojs/plugin-mini-ci@4.1.9(miniprogram-ci@2.1.26(@swc/helpers@0.5.21)(eslint@8.57.1))(tt-ide-cli@0.1.31(@types/node@22.19.6))':
     dependencies:
       axios: 1.13.2
       jimp: 0.22.12
