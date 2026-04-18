@@ -279,51 +279,77 @@ export class CanvasService {
     row += 1
 
     // 8. 汇总信息 - 与商品表格列精确对齐
-    // 商品表格列：序号、商品名称、型号规格、单位、数量、单价、折扣、小计、备注
-    // 汇总信息列：合并前5列为标题、数量列、数量值列、折扣列放标签、小计列放数值
+    // 商品表格列：序号(1) 商品名称(2) 型号规格(3) 单位(4) 数量(5) 单价(6) 折扣(7) 小计(8) 备注(9)
     const summaryData = [
-      ['汇总信息', '', '', '', '', '商品数量', fullQuote.items.length, '', '', ''],
-      ['', '', '', '', '', '', '小计（元）', parseFloat(fullQuote.subtotal), '', ''],
-      ['', '', '', '', '', '', '折扣（元）', -parseFloat(fullQuote.discount), '', ''],
-      ['', '', '', '', '', '', '总计（元）', parseFloat(fullQuote.total_amount), '', ''],
+      ['汇总信息', '', '', '', '', '', '', '', ''],  // 第一行：合并前5列为"汇总信息"
+      ['', '', '', '', '', '', '', '', ''],            // 第二行：空
+      ['', '', '', '', '', '', '', '', ''],            // 第三行：空
+      ['', '', '', '', '', '', '', '', ''],            // 第四行：空
     ]
 
     summaryData.forEach((rowData, index) => {
       const summaryRow = worksheet.getRow(row)
       summaryRow.values = rowData
 
+      // 统一字体
       summaryRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-        // 统一字体大小，避免行高不一致
         cell.font = { size: 11, name: '微软雅黑' }
         cell.border = borderStyle
-
-        // 第一列：汇总信息标题（只第一行）
-        if (colNumber === 1 && index === 0) {
-          cell.alignment = { vertical: 'middle', horizontal: 'center' }
-          cell.font = { bold: true, name: '微软雅黑' }
-          // 合并第一行前5列（序号、商品名称、型号规格、单位、数量）
-          worksheet.mergeCells(row, 1, row, 5)
-        }
-        // 第6列：数量值列（只第一行）- 与商品表格的数量列对齐
-        else if (colNumber === 6 && index === 0) {
-          cell.alignment = { vertical: 'middle', horizontal: 'center' }
-          cell.numFmt = '0'
-        }
-        // 第7列：折扣列 - 放标签（小计、折扣、总计）
-        else if (colNumber === 7 && index > 0) {
-          cell.alignment = { vertical: 'middle', horizontal: 'right' }
-          cell.font = { bold: true, name: '微软雅黑' }
-        }
-        // 第8列：小计列 - 放数值（小计、折扣、总计）- 与商品表格的小计列对齐
-        else if (colNumber === 8 && index > 0) {
-          cell.numFmt = '0.00'
-          cell.alignment = { vertical: 'middle', horizontal: 'center' }
-          // 总计行突出显示（只用加粗和颜色，不改字体大小）
-          if (index === 3) {
-            cell.font = { bold: true, color: { argb: 'FFFF0000' }, name: '微软雅黑' }
-          }
-        }
       })
+
+      // 第一行：合并前5列为"汇总信息"
+      if (index === 0) {
+        worksheet.mergeCells(row, 1, row, 5)
+        worksheet.getCell(row, 1).value = '汇总信息'
+        worksheet.getCell(row, 1).alignment = { vertical: 'middle', horizontal: 'center' }
+        worksheet.getCell(row, 1).font = { bold: true, name: '微软雅黑' }
+
+        // 列5（数量列）：显示"商品数量"
+        worksheet.getCell(row, 5).value = '商品数量'
+        worksheet.getCell(row, 5).alignment = { vertical: 'middle', horizontal: 'right' }
+        worksheet.getCell(row, 5).font = { bold: true, name: '微软雅黑' }
+
+        // 列6（单价列）：显示商品数量值
+        worksheet.getCell(row, 6).value = fullQuote.items.length
+        worksheet.getCell(row, 6).alignment = { vertical: 'middle', horizontal: 'center' }
+      }
+      // 第二行：小计
+      else if (index === 1) {
+        // 列7（折扣列）：显示"小计（元）"标签
+        worksheet.getCell(row, 7).value = '小计（元）'
+        worksheet.getCell(row, 7).alignment = { vertical: 'middle', horizontal: 'right' }
+        worksheet.getCell(row, 7).font = { bold: true, name: '微软雅黑' }
+
+        // 列8（小计列）：显示小计值
+        worksheet.getCell(row, 8).value = parseFloat(fullQuote.subtotal)
+        worksheet.getCell(row, 8).numFmt = '0.00'
+        worksheet.getCell(row, 8).alignment = { vertical: 'middle', horizontal: 'center' }
+      }
+      // 第三行：折扣
+      else if (index === 2) {
+        // 列7（折扣列）：显示"折扣（元）"标签
+        worksheet.getCell(row, 7).value = '折扣（元）'
+        worksheet.getCell(row, 7).alignment = { vertical: 'middle', horizontal: 'right' }
+        worksheet.getCell(row, 7).font = { bold: true, name: '微软雅黑' }
+
+        // 列8（小计列）：显示折扣值
+        worksheet.getCell(row, 8).value = -parseFloat(fullQuote.discount)
+        worksheet.getCell(row, 8).numFmt = '0.00'
+        worksheet.getCell(row, 8).alignment = { vertical: 'middle', horizontal: 'center' }
+      }
+      // 第四行：总计
+      else if (index === 3) {
+        // 列7（折扣列）：显示"总计（元）"标签
+        worksheet.getCell(row, 7).value = '总计（元）'
+        worksheet.getCell(row, 7).alignment = { vertical: 'middle', horizontal: 'right' }
+        worksheet.getCell(row, 7).font = { bold: true, name: '微软雅黑' }
+
+        // 列8（小计列）：显示总计值（红色加粗）
+        worksheet.getCell(row, 8).value = parseFloat(fullQuote.total_amount)
+        worksheet.getCell(row, 8).numFmt = '0.00'
+        worksheet.getCell(row, 8).alignment = { vertical: 'middle', horizontal: 'center' }
+        worksheet.getCell(row, 8).font = { bold: true, color: { argb: 'FFFF0000' }, name: '微软雅黑' }
+      }
 
       row++
     })
