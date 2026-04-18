@@ -278,12 +278,14 @@ export class CanvasService {
 
     row += 1
 
-    // 8. 汇总信息 - 与商品表格列对齐
+    // 8. 汇总信息 - 与商品表格列精确对齐
+    // 商品表格列：序号、商品名称、型号规格、单位、数量、单价、折扣、小计、备注
+    // 汇总信息列：合并前5列为标题、数量列、数量值列、折扣列放标签、小计列放数值
     const summaryData = [
       ['汇总信息', '', '', '', '', '商品数量', fullQuote.items.length, '', '', ''],
-      ['', '', '', '', '', '小计（元）', '', parseFloat(fullQuote.subtotal), '', ''],
-      ['', '', '', '', '', '折扣（元）', '', -parseFloat(fullQuote.discount), '', ''],
-      ['', '', '', '', '', '总计（元）', '', parseFloat(fullQuote.total_amount), '', ''],
+      ['', '', '', '', '', '', '小计（元）', parseFloat(fullQuote.subtotal), '', ''],
+      ['', '', '', '', '', '', '折扣（元）', -parseFloat(fullQuote.discount), '', ''],
+      ['', '', '', '', '', '', '总计（元）', parseFloat(fullQuote.total_amount), '', ''],
     ]
 
     summaryData.forEach((rowData, index) => {
@@ -291,6 +293,7 @@ export class CanvasService {
       summaryRow.values = rowData
 
       summaryRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        // 统一字体大小，避免行高不一致
         cell.font = { size: 11, name: '微软雅黑' }
         cell.border = borderStyle
 
@@ -298,24 +301,26 @@ export class CanvasService {
         if (colNumber === 1 && index === 0) {
           cell.alignment = { vertical: 'middle', horizontal: 'center' }
           cell.font = { bold: true, name: '微软雅黑' }
+          // 合并第一行前5列（序号、商品名称、型号规格、单位、数量）
           worksheet.mergeCells(row, 1, row, 5)
         }
-        // 第6列：标签（商品数量、小计、折扣、总计）
-        else if (colNumber === 6) {
+        // 第6列：数量值列（只第一行）- 与商品表格的数量列对齐
+        else if (colNumber === 6 && index === 0) {
+          cell.alignment = { vertical: 'middle', horizontal: 'center' }
+          cell.numFmt = '0'
+        }
+        // 第7列：折扣列 - 放标签（小计、折扣、总计）
+        else if (colNumber === 7 && index > 0) {
           cell.alignment = { vertical: 'middle', horizontal: 'right' }
           cell.font = { bold: true, name: '微软雅黑' }
         }
-        // 第7列：商品数量
-        else if (colNumber === 7 && index === 0) {
-          cell.alignment = { vertical: 'middle', horizontal: 'center' }
-        }
-        // 第8列：数值（小计、折扣、总计）- 与商品表格的小计列对齐
+        // 第8列：小计列 - 放数值（小计、折扣、总计）- 与商品表格的小计列对齐
         else if (colNumber === 8 && index > 0) {
           cell.numFmt = '0.00'
           cell.alignment = { vertical: 'middle', horizontal: 'center' }
-          // 总计行突出显示
+          // 总计行突出显示（只用加粗和颜色，不改字体大小）
           if (index === 3) {
-            cell.font = { bold: true, size: 12, color: { argb: 'FFFF0000' }, name: '微软雅黑' }
+            cell.font = { bold: true, color: { argb: 'FFFF0000' }, name: '微软雅黑' }
           }
         }
       })
