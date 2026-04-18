@@ -2,11 +2,11 @@ import { Injectable, BadRequestException } from '@nestjs/common'
 import { getSupabaseClient } from '@/storage/database/supabase-client'
 
 interface MerchantInfo {
-  company_name: string
-  contact_person: string
-  contact_phone: string
-  contact_address?: string
-  contact_email?: string
+  shop_name: string
+  contact_name: string
+  phone: string
+  address?: string
+  email?: string
 }
 
 @Injectable()
@@ -40,8 +40,17 @@ export class MerchantsService {
   /**
    * 更新或创建商家信息
    */
-  async upsert(userId: string | undefined, dto: MerchantInfo) {
+  async upsert(userId: string | undefined, dto: any) {
     const client = getSupabaseClient()
+
+    // 转换前端字段名到数据库字段名
+    const dbData = {
+      shop_name: dto.company_name || dto.shop_name,
+      contact_name: dto.contact_person || dto.contact_name,
+      phone: dto.contact_phone || dto.phone,
+      address: dto.contact_address || dto.address,
+      email: dto.contact_email || dto.email,
+    }
 
     // 先查询是否已有商家信息
     const { data: existing } = await client
@@ -54,7 +63,7 @@ export class MerchantsService {
       // 更新
       const { data, error } = await client
         .from('merchant_info')
-        .update(dto)
+        .update(dbData)
         .eq('id', existing.id)
         .select()
         .single()
@@ -69,7 +78,7 @@ export class MerchantsService {
       // 创建
       const { data, error } = await client
         .from('merchant_info')
-        .insert(dto)
+        .insert(dbData)
         .select()
         .single()
 
