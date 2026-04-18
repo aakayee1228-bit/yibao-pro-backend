@@ -1,5 +1,4 @@
-import { Controller, Get, Query, Param, Headers, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { Controller, Get, Headers } from '@nestjs/common';
 import { CanvasService } from './canvas.service';
 
 @Controller('canvas')
@@ -7,26 +6,57 @@ export class CanvasController {
   constructor(private readonly canvasService: CanvasService) {}
 
   /**
-   * 生成报价单 PDF（Base64 格式）
-   * GET /api/canvas/quote/:id
+   * 生成报价单 Excel
+   * GET /api/canvas/excel/:id
    */
-  @Get('quote/:id')
-  async generateQuotePDF(
-    @Param('id') id: string,
+  @Get('excel/:id')
+  async generateExcel(
     @Headers('x-openid') userId: string,
+    @Headers('x-open-id') userIdAlt: string,
+    @Headers('x-open-id') userIdAlt2: string,
+    @Headers('x-open-id') userIdAlt3: string,
   ) {
     try {
-      const result = await this.canvasService.generateQuoteImage(id, userId);
+      const userIdToUse = userId || userIdAlt || userIdAlt2 || userIdAlt3;
+      const result = await this.canvasService.generateExcel(userIdToUse);
       return {
         code: 0,
         msg: 'success',
         data: result,
       };
     } catch (error) {
-      console.error('生成PDF失败:', error);
+      console.error('生成Excel失败:', error);
       return {
         code: 500,
-        msg: '生成PDF失败: ' + (error as Error).message,
+        msg: '生成Excel失败: ' + (error as Error).message,
+      };
+    }
+  }
+
+  /**
+   * 生成报价单 Word
+   * GET /api/canvas/word/:id
+   */
+  @Get('word/:id')
+  async generateWord(
+    @Headers('x-openid') userId: string,
+    @Headers('x-open-id') userIdAlt: string,
+    @Headers('x-open-id') userIdAlt2: string,
+    @Headers('x-open-id') userIdAlt3: string,
+  ) {
+    try {
+      const userIdToUse = userId || userIdAlt || userIdAlt2 || userIdAlt3;
+      const result = await this.canvasService.generateWord(userIdToUse);
+      return {
+        code: 0,
+        msg: 'success',
+        data: result,
+      };
+    } catch (error) {
+      console.error('生成Word失败:', error);
+      return {
+        code: 500,
+        msg: '生成Word失败: ' + (error as Error).message,
       };
     }
   }

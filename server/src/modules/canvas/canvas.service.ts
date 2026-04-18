@@ -1,9 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common'
 import { getSupabaseClient } from '@/storage/database/supabase-client'
-// 使用 CommonJS 导入方式
-const PDFDocument = require('pdfkit')
-import * as path from 'path'
-import * as fs from 'fs'
+import * as XLSX from 'xlsx'
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle } from 'docx'
 
 interface QuoteItem {
   id: string
@@ -29,19 +27,19 @@ interface Customer {
 interface Quote {
   id: string
   quote_no: string
-  customer_id: string
+  customer_id: string | null
   status: string
   subtotal: string
   discount: string
   total_amount: string
-  remark: string
-  valid_days: number
+  remark: string | null
+  valid_days: string
   created_at: string
-  company_name?: string
-  contact_person?: string
-  contact_phone?: string
-  contact_address?: string
-  contact_email?: string
+  company_name: string
+  contact_person: string
+  contact_phone: string
+  contact_address: string
+  contact_email: string
   customers: Customer | null
   items: QuoteItem[]
 }
@@ -49,12 +47,12 @@ interface Quote {
 @Injectable()
 export class CanvasService {
   /**
-   * 生成报价单 PDF（Base64 格式）
+   * 生成报价单 Excel（Base64 格式）
    */
-  async generateQuoteImage(quoteId: string, userId?: string): Promise<{ base64: string; size: number }> {
+  async generateExcel(quoteId: string, userId?: string): Promise<{ base64: string; size: number }> {
     const client = getSupabaseClient()
 
-    // 获取报价单详情（简化查询，避免关联查询失败）
+    // 获取报价单详情
     const { data: quote, error } = await client
       .from('quotes')
       .select('*')
@@ -66,7 +64,7 @@ export class CanvasService {
       throw new BadRequestException('获取报价单详情失败')
     }
 
-    // 如果需要客户信息，单独查询
+    // 获取客户信息
     let customer = null
     if (quote.customer_id) {
       const { data: customerData } = await client
@@ -77,7 +75,7 @@ export class CanvasService {
       customer = customerData
     }
 
-    // 如果需要商品列表，单独查询
+    // 获取商品列表
     let items: QuoteItem[] = []
     const { data: itemsData } = await client
       .from('quote_items')
@@ -95,280 +93,474 @@ export class CanvasService {
       items: items
     }
 
-    // 创建 PDF 文档
-    const doc = new PDFDocument({
-      size: 'A4',
-      margins: {
-        top: 50,
-        bottom: 50,
-        left: 50,
-        right: 50,
-      },
-    })
+    // 创建工作簿
+    const workbook = XLSX.utils.book_new()
 
-    // 保存到内存
-    const chunks: Buffer[] = []
-    doc.on('data', (chunk) => chunks.push(chunk))
+    // 报价单信息
+    const quoteInfoData = [
+      ['报价单信息'],
+      ['报价单号', fullQuote.quote_no],
+      ['创建日期', new Date(fullQuote.created_at).toLocaleDateString('zh-CN')],
+      ['有效期', fullQuote.valid_days + '天'],
+      [],
+      ['报价方信息'],
+      ['公司名称', fullQuote.company_name || ''],
+      ['联系人', fullQuote.contact_person || ''],
+      ['联系电话', fullQuote.contact_phone || ''],
+      ['联系地址', fullQuote.contact_address || ''],
+      [],
+    ]
 
-    // 生成 PDF 内容
-    this.generatePDFContent(doc, fullQuote)
+    if (fullQuote.customers) {
+      quoteInfoData.push(['客户信息'])
+      quoteInfoData.push(['客户姓名', fullQuote.customers.name || ''])
+      quoteInfoData.push(['联系电话', fullQuote.customers.phone || ''])
+      quoteInfoData.push(['地址', fullQuote.customers.address || ''])
+      quoteInfoData.push(['公司', fullQuote.customers.company || ''])
+      quoteInfoData.push([])
+    }
 
-    doc.end()
+    // 添加报价单信息 sheet
+    const quoteInfoSheet = XLSX.utils.aoa_to_sheet(quoteInfoData)
+    quoteInfoSheet['!cols'] = [
+      { wch: 15 },
+      { wch: 30 },
+    ]
+    XLSX.utils.book_append_sheet(workbook, quoteInfoSheet, '报价单信息')
 
-    // 等待 PDF 生成完成
-    return new Promise((resolve, reject) => {
-      doc.on('end', () => {
-        const buffer = Buffer.concat(chunks)
-        const size = buffer.length
+    // 商品列表
+    const itemsData = [
+      ['商品名称', '数量', '单位', '单价', '折扣', '小计', '备注'],
+      ...fullQuote.items.map(item => [
+        item.product_name,
+        item.quantity,
+        item.unit,
+        item.unit_price,
+        item.discount,
+        item.amount,
+        item.remark || ''
+      ]),
+      [],
+      ['小计', '', '', '', '', fullQuote.subtotal, ''],
+      ['折扣', '', '', '', '-', fullQuote.discount, ''],
+      ['总计', '', '', '', '', fullQuote.total_amount, ''],
+    ]
 
-        // 转换为 Base64
-        const base64 = buffer.toString('base64')
+    // 添加商品列表 sheet
+    const itemsSheet = XLSX.utils.aoa_to_sheet(itemsData)
+    itemsSheet['!cols'] = [
+      { wch: 30 },
+      { wch: 10 },
+      { wch: 8 },
+      { wch: 12 },
+      { wch: 10 },
+      { wch: 12 },
+      { wch: 20 },
+    ]
+    XLSX.utils.book_append_sheet(workbook, itemsSheet, '商品列表')
 
-        console.log('PDF 生成成功，大小:', size, 'bytes')
+    // 备注信息
+    if (fullQuote.remark) {
+      const remarkData = [
+        ['备注'],
+        [fullQuote.remark],
+      ]
+      const remarkSheet = XLSX.utils.aoa_to_sheet(remarkData)
+      remarkSheet['!cols'] = [{ wch: 80 }]
+      XLSX.utils.book_append_sheet(workbook, remarkSheet, '备注')
+    }
 
-        resolve({
-          base64,
-          size,
-        })
-      })
+    // 生成 Excel buffer
+    const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
+    const size = excelBuffer.length
+    const base64 = excelBuffer.toString('base64')
 
-      doc.on('error', (error) => {
-        console.error('PDF 生成失败:', error)
-        reject(new BadRequestException('PDF 生成失败'))
-      })
-    })
+    console.log('Excel 生成成功，大小:', size, 'bytes')
+
+    return {
+      base64,
+      size,
+    }
   }
 
   /**
-   * 生成 PDF 内容
+   * 生成报价单 Word（Base64 格式）
    */
-  private generatePDFContent(doc: any, quote: any): void {
-    const width = doc.page.width
-    const height = doc.page.height
-    const margin = 50
+  async generateWord(quoteId: string, userId?: string): Promise<{ base64: string; size: number }> {
+    const client = getSupabaseClient()
 
-    // 颜色定义
-    const colors = {
-      blue800: '#1E40AF',
-      blue500: '#3B82F6',
-      gray100: '#F3F4F6',
-      gray600: '#4B5563',
-      black: '#000000',
-      white: '#FFFFFF',
+    // 获取报价单详情
+    const { data: quote, error } = await client
+      .from('quotes')
+      .select('*')
+      .eq('id', quoteId)
+      .single()
+
+    if (error || !quote) {
+      console.error('获取报价单详情失败:', error)
+      throw new BadRequestException('获取报价单详情失败')
     }
 
-    let y = margin
+    // 获取客户信息
+    let customer = null
+    if (quote.customer_id) {
+      const { data: customerData } = await client
+        .from('customers')
+        .select('*')
+        .eq('id', quote.customer_id)
+        .single()
+      customer = customerData
+    }
+
+    // 获取商品列表
+    let items: QuoteItem[] = []
+    const { data: itemsData } = await client
+      .from('quote_items')
+      .select('*')
+      .eq('quote_id', quoteId)
+
+    if (itemsData) {
+      items = itemsData as QuoteItem[]
+    }
+
+    // 组装完整数据
+    const fullQuote = {
+      ...quote,
+      customers: customer,
+      items: items
+    }
+
+    // 创建 Word 文档
+    const children: Paragraph[] = []
 
     // 标题
-    doc.fontSize(24)
-    .fillColor(colors.blue800)
-    .font('Helvetica-Bold')
-    .text('报价单', { align: 'center' })
-    .moveDown(1)
+    children.push(
+      new Paragraph({
+        text: '报价单',
+        heading: 'Heading1',
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 200, after: 200 },
+      })
+    )
 
-    y += 60
-
-    // 报价单号和日期
-    doc.fontSize(12)
-    .fillColor(colors.gray600)
-    .font('Helvetica')
-    .text(`报价单号：${quote.quote_no}`, { width: width - margin * 2 })
-    .text(`创建日期：${new Date(quote.created_at).toLocaleDateString('zh-CN')}`, { width: width - margin * 2 })
-    .text(`有效期：${quote.valid_days}天`, { width: width - margin * 2 })
-    .moveDown(1)
-
-    y += 40
-
-    // 绘制分隔线
-    doc.moveTo(margin, y)
-    .lineTo(width - margin, y)
-    .lineWidth(1)
-    .strokeColor(colors.gray100)
-    .stroke()
-
-    y += 20
+    // 报价单信息
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: '报价单号：',
+            bold: true,
+          }),
+          new TextRun(fullQuote.quote_no),
+        ],
+        spacing: { after: 100 },
+      }),
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: '创建日期：',
+            bold: true,
+          }),
+          new TextRun(new Date(fullQuote.created_at).toLocaleDateString('zh-CN')),
+        ],
+        spacing: { after: 100 },
+      }),
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: '有效期：',
+            bold: true,
+          }),
+          new TextRun(fullQuote.valid_days + '天'),
+        ],
+        spacing: { after: 200 },
+      })
+    )
 
     // 报价方信息
-    if (quote.company_name || quote.contact_person || quote.contact_phone) {
-      doc.fontSize(14)
-      .fillColor(colors.blue800)
-      .font('Helvetica-Bold')
-      .text('报价方信息', { continued: false })
-      .moveDown(0.3)
+    if (fullQuote.company_name || fullQuote.contact_person || fullQuote.contact_phone) {
+      children.push(
+        new Paragraph({
+          text: '报价方信息',
+          heading: 'Heading2',
+          spacing: { before: 200, after: 100 },
+        })
+      )
 
-      doc.fontSize(11)
-      .fillColor(colors.black)
-      .font('Helvetica')
-
-      if (quote.company_name) {
-        doc.text(`公司名称：${quote.company_name}`)
+      if (fullQuote.company_name) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: '公司名称：', bold: true }),
+              new TextRun(fullQuote.company_name),
+            ],
+            spacing: { after: 100 },
+          })
+        )
       }
-      if (quote.contact_person) {
-        doc.text(`联系人：${quote.contact_person}`)
+      if (fullQuote.contact_person) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: '联系人：', bold: true }),
+              new TextRun(fullQuote.contact_person),
+            ],
+            spacing: { after: 100 },
+          })
+        )
       }
-      if (quote.contact_phone) {
-        doc.text(`联系电话：${quote.contact_phone}`)
+      if (fullQuote.contact_phone) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: '联系电话：', bold: true }),
+              new TextRun(fullQuote.contact_phone),
+            ],
+            spacing: { after: 100 },
+          })
+        )
       }
-      if (quote.contact_address) {
-        doc.text(`联系地址：${quote.contact_address}`)
+      if (fullQuote.contact_address) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: '联系地址：', bold: true }),
+              new TextRun(fullQuote.contact_address),
+            ],
+            spacing: { after: 200 },
+          })
+        )
       }
-
-      doc.moveDown(1)
     }
-
-    y = doc.y
-
-    // 绘制分隔线
-    doc.moveTo(margin, y)
-    .lineTo(width - margin, y)
-    .lineWidth(1)
-    .strokeColor(colors.gray100)
-    .stroke()
-
-    y += 20
 
     // 客户信息
-    if (quote.customers) {
-      doc.fontSize(14)
-      .fillColor(colors.blue800)
-      .font('Helvetica-Bold')
-      .text('客户信息', { continued: false })
-      .moveDown(0.3)
+    if (fullQuote.customers) {
+      children.push(
+        new Paragraph({
+          text: '客户信息',
+          heading: 'Heading2',
+          spacing: { before: 200, after: 100 },
+        })
+      )
 
-      doc.fontSize(11)
-      .fillColor(colors.black)
-      .font('Helvetica')
-
-      if (quote.customers.name) {
-        doc.text(`客户姓名：${quote.customers.name}`)
+      if (fullQuote.customers.name) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: '客户姓名：', bold: true }),
+              new TextRun(fullQuote.customers.name),
+            ],
+            spacing: { after: 100 },
+          })
+        )
       }
-      if (quote.customers.phone) {
-        doc.text(`联系电话：${quote.customers.phone}`)
+      if (fullQuote.customers.phone) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: '联系电话：', bold: true }),
+              new TextRun(fullQuote.customers.phone),
+            ],
+            spacing: { after: 100 },
+          })
+        )
       }
-      if (quote.customers.address) {
-        doc.text(`地址：${quote.customers.address}`)
+      if (fullQuote.customers.address) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: '地址：', bold: true }),
+              new TextRun(fullQuote.customers.address),
+            ],
+            spacing: { after: 100 },
+          })
+        )
       }
-      if (quote.customers.company) {
-        doc.text(`公司：${quote.customers.company}`)
+      if (fullQuote.customers.company) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: '公司：', bold: true }),
+              new TextRun(fullQuote.customers.company),
+            ],
+            spacing: { after: 200 },
+          })
+        )
       }
-
-      doc.moveDown(1)
     }
 
-    y = doc.y
-
-    // 绘制分隔线
-    doc.moveTo(margin, y)
-    .lineTo(width - margin, y)
-    .lineWidth(1)
-    .strokeColor(colors.gray100)
-    .stroke()
-
-    y += 20
-
-    // 商品列表标题
-    doc.fontSize(14)
-    .fillColor(colors.blue800)
-    .font('Helvetica-Bold')
-    .text('商品列表', { continued: false })
-    .moveDown(0.3)
-
-    // 表格头
-    const tableY = doc.y
-    const colWidths = [200, 80, 100, 120]
-    const startX = margin
-
-    doc.fontSize(10)
-    .fillColor(colors.white)
-    .rect(startX, tableY, width - margin * 2, 20)
-    .fill(colors.blue500)
-
-    doc.fillColor(colors.white)
-    .text('商品名称', startX + 5, tableY + 5)
-    .text('数量', startX + colWidths[0] + 5, tableY + 5)
-    .text('单价', startX + colWidths[0] + colWidths[1] + 5, tableY + 5)
-    .text('小计', startX + colWidths[0] + colWidths[1] + colWidths[2] + 5, tableY + 5)
-
     // 商品列表
-    doc.fontSize(10)
-    .fillColor(colors.black)
-    .font('Helvetica')
+    children.push(
+      new Paragraph({
+        text: '商品列表',
+        heading: 'Heading2',
+        spacing: { before: 200, after: 100 },
+      })
+    )
 
-    quote.items.forEach((item: QuoteItem, index: number) => {
-      const itemY = tableY + 25 + index * 20
+    // 商品表格
+    const tableRows = [
+      // 表头
+      new TableRow({
+        children: [
+          new TableCell({
+            width: { size: 40, type: WidthType.PERCENTAGE },
+            shading: { fill: '3B82F6' },
+            children: [new Paragraph({ children: [new TextRun({ text: '商品名称', bold: true, color: 'FFFFFF' })], alignment: AlignmentType.CENTER })],
+          }),
+          new TableCell({
+            width: { size: 15, type: WidthType.PERCENTAGE },
+            shading: { fill: '3B82F6' },
+            children: [new Paragraph({ children: [new TextRun({ text: '数量', bold: true, color: 'FFFFFF' })], alignment: AlignmentType.CENTER })],
+          }),
+          new TableCell({
+            width: { size: 15, type: WidthType.PERCENTAGE },
+            shading: { fill: '3B82F6' },
+            children: [new Paragraph({ children: [new TextRun({ text: '单价', bold: true, color: 'FFFFFF' })], alignment: AlignmentType.CENTER })],
+          }),
+          new TableCell({
+            width: { size: 15, type: WidthType.PERCENTAGE },
+            shading: { fill: '3B82F6' },
+            children: [new Paragraph({ children: [new TextRun({ text: '折扣', bold: true, color: 'FFFFFF' })], alignment: AlignmentType.CENTER })],
+          }),
+          new TableCell({
+            width: { size: 15, type: WidthType.PERCENTAGE },
+            shading: { fill: '3B82F6' },
+            children: [new Paragraph({ children: [new TextRun({ text: '小计', bold: true, color: 'FFFFFF' })], alignment: AlignmentType.CENTER })],
+          }),
+        ],
+      }),
+      // 商品数据
+      ...fullQuote.items.map(item =>
+        new TableRow({
+          children: [
+            new TableCell({
+              width: { size: 40, type: WidthType.PERCENTAGE },
+              children: [new Paragraph(item.product_name)],
+            }),
+            new TableCell({
+              width: { size: 15, type: WidthType.PERCENTAGE },
+              children: [new Paragraph(`${item.quantity}${item.unit}`), item.remark ? new Paragraph({ children: [new TextRun({ text: `备注：${item.remark}`, size: 20, color: '666666' })] }) : undefined].filter(Boolean) as Paragraph[],
+            }),
+            new TableCell({
+              width: { size: 15, type: WidthType.PERCENTAGE },
+              children: [new Paragraph(`¥${item.unit_price}`)],
+            }),
+            new TableCell({
+              width: { size: 15, type: WidthType.PERCENTAGE },
+              children: [new Paragraph(`¥${item.discount}`)],
+            }),
+            new TableCell({
+              width: { size: 15, type: WidthType.PERCENTAGE },
+              children: [new Paragraph(`¥${item.amount}`)],
+            }),
+          ],
+        })
+      ),
+      // 合计行
+      new TableRow({
+        children: [
+          new TableCell({
+            width: { size: 40, type: WidthType.PERCENTAGE },
+            columnSpan: 4,
+            children: [new Paragraph({ children: [new TextRun({ text: '小计：¥' + fullQuote.subtotal, bold: true })], alignment: AlignmentType.RIGHT })],
+          }),
+          new TableCell({
+            width: { size: 15, type: WidthType.PERCENTAGE },
+            children: [new Paragraph(`¥${fullQuote.subtotal}`)],
+          }),
+        ],
+      }),
+      new TableRow({
+        children: [
+          new TableCell({
+            width: { size: 40, type: WidthType.PERCENTAGE },
+            columnSpan: 4,
+            children: [new Paragraph({ children: [new TextRun({ text: '折扣：-¥' + fullQuote.discount, bold: true })], alignment: AlignmentType.RIGHT })],
+          }),
+          new TableCell({
+            width: { size: 15, type: WidthType.PERCENTAGE },
+            children: [new Paragraph(`-¥${fullQuote.discount}`)],
+          }),
+        ],
+      }),
+      new TableRow({
+        children: [
+          new TableCell({
+            width: { size: 40, type: WidthType.PERCENTAGE },
+            columnSpan: 4,
+            shading: { fill: '1E40AF' },
+            children: [new Paragraph({ children: [new TextRun({ text: '总计：¥' + fullQuote.total_amount, bold: true, size: 28, color: 'FFFFFF' })], alignment: AlignmentType.RIGHT })],
+          }),
+          new TableCell({
+            width: { size: 15, type: WidthType.PERCENTAGE },
+            shading: { fill: '1E40AF' },
+            children: [new Paragraph({ children: [new TextRun({ text: '¥' + fullQuote.total_amount, bold: true, size: 28, color: 'FFFFFF' })] })],
+          }),
+        ],
+      }),
+    ]
 
-      // 交替背景色
-      if (index % 2 === 1) {
-        doc.rect(startX, itemY - 2, width - margin * 2, 20)
-        .fill(colors.gray100)
-      }
-
-      doc.text(item.product_name, startX + 5, itemY + 5)
-      .text(`${item.quantity}${item.unit}`, startX + colWidths[0] + 5, itemY + 5)
-      .text(`¥${item.unit_price}`, startX + colWidths[0] + colWidths[1] + 5, itemY + 5)
-      .text(`¥${item.amount}`, startX + colWidths[0] + colWidths[1] + colWidths[2] + 5, itemY + 5)
-
-      if (item.remark) {
-        doc.fontSize(9)
-        .fillColor(colors.gray600)
-        .text(`备注：${item.remark}`, startX + 5, itemY + 25)
-        .fontSize(10)
-        .fillColor(colors.black)
-      }
-    })
-
-    y = doc.y + 10
-
-    // 绘制分隔线
-    doc.moveTo(margin, y)
-    .lineTo(width - margin, y)
-    .lineWidth(1)
-    .strokeColor(colors.gray100)
-    .stroke()
-
-    y += 20
-
-    // 合计信息
-    doc.fontSize(11)
-    .fillColor(colors.gray600)
-    .font('Helvetica')
-    .text(`小计：¥${quote.subtotal}`, { width: width - margin * 2, align: 'right' })
-    .text(`折扣：-¥${quote.discount}`, { width: width - margin * 2, align: 'right' })
-    .fontSize(16)
-    .fillColor(colors.blue800)
-    .font('Helvetica-Bold')
-    .text(`总计：¥${quote.total_amount}`, { width: width - margin * 2, align: 'right' })
-    .moveDown(1)
-
-    y = doc.y
+    children.push(
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: tableRows,
+      })
+    )
 
     // 备注
-    if (quote.remark) {
-      doc.fontSize(14)
-      .fillColor(colors.blue800)
-      .font('Helvetica-Bold')
-      .text('备注', { continued: false })
-      .moveDown(0.3)
-
-      doc.fontSize(11)
-      .fillColor(colors.black)
-      .font('Helvetica')
-      .text(quote.remark, { width: width - margin * 2 })
-      .moveDown(1)
+    if (fullQuote.remark) {
+      children.push(
+        new Paragraph({
+          text: '备注',
+          heading: 'Heading2',
+          spacing: { before: 300, after: 100 },
+        }),
+        new Paragraph({
+          children: [new TextRun(fullQuote.remark)],
+          spacing: { after: 300 },
+        })
+      )
     }
 
     // 底部信息
-    y = doc.page.height - margin - 30
+    children.push(
+      new Paragraph({
+        children: [new TextRun({ text: '此报价单仅供参考，具体以实际合同为准', size: 20, color: '666666' })],
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 400, after: 200 },
+      })
+    )
 
-    doc.moveTo(margin, y)
-    .lineTo(width - margin, y)
-    .lineWidth(1)
-    .strokeColor(colors.gray100)
-    .stroke()
+    // 创建文档
+    const doc = new Document({
+      sections: [
+        {
+          children,
+          properties: {
+            page: {
+              margin: {
+                top: 720,
+                bottom: 720,
+                left: 720,
+                right: 720,
+              },
+            },
+          },
+        },
+      ],
+    })
 
-    doc.fontSize(9)
-    .fillColor(colors.gray600)
-    .font('Helvetica')
-    .text('此报价单仅供参考，具体以实际合同为准', { align: 'center' })
+    // 生成 Word buffer
+    const wordBuffer = await Packer.toBuffer(doc)
+    const size = wordBuffer.length
+    const base64 = wordBuffer.toString('base64')
+
+    console.log('Word 生成成功，大小:', size, 'bytes')
+
+    return {
+      base64,
+      size,
+    }
   }
 }

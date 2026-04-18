@@ -134,28 +134,28 @@ const QuoteDetailPage: FC = () => {
     })
   }
 
-  // 生成 PDF
-  const handleGeneratePDF = async () => {
+  // 生成 Excel
+  const handleGenerateExcel = async () => {
     if (!quote) return
 
     setGenerating(true)
     try {
-      console.log('开始生成PDF，报价单ID:', quote.id)
+      console.log('开始生成Excel，报价单ID:', quote.id)
 
-      // 调用后端接口生成 PDF
+      // 调用后端接口生成 Excel
       const res = await Network.request({
-        url: `/api/canvas/quote/${quote.id}`,
+        url: `/api/canvas/excel/${quote.id}`,
         method: 'GET',
       })
 
-      console.log('生成PDF响应:', res.statusCode, res.data)
+      console.log('生成Excel响应:', res.statusCode, res.data)
 
       if (res.statusCode !== 200 || !res.data || !res.data.data) {
-        throw new Error('生成PDF失败')
+        throw new Error('生成Excel失败')
       }
 
       const { base64 } = res.data.data as { base64: string; size: number }
-      console.log('PDF生成成功，Base64长度:', base64.length)
+      console.log('Excel生成成功，Base64长度:', base64.length)
 
       // 转换 Base64 为 ArrayBuffer
       const arrayBuffer = Taro.base64ToArrayBuffer(base64)
@@ -163,7 +163,7 @@ const QuoteDetailPage: FC = () => {
       // 写入临时文件
       const tempFilePath = await new Promise<string>((resolve, reject) => {
         const fs = Taro.getFileSystemManager()
-        const tempPath = `${Taro.env.USER_DATA_PATH}/quote_${quote.id}_${Date.now()}.pdf`
+        const tempPath = `${Taro.env.USER_DATA_PATH}/quote_${quote.id}_${Date.now()}.xlsx`
 
         try {
           fs.writeFile({
@@ -171,16 +171,16 @@ const QuoteDetailPage: FC = () => {
             data: arrayBuffer,
             encoding: 'binary',
             success: () => {
-              console.log('PDF写入成功:', tempPath)
+              console.log('Excel写入成功:', tempPath)
               resolve(tempPath)
             },
             fail: (err) => {
-              console.error('PDF写入失败:', err)
+              console.error('Excel写入失败:', err)
               reject(err)
             },
           })
         } catch (err) {
-          console.error('PDF写入异常:', err)
+          console.error('Excel写入异常:', err)
           reject(err)
         }
       })
@@ -188,18 +188,86 @@ const QuoteDetailPage: FC = () => {
       // 打开文档
       await Taro.openDocument({
         filePath: tempFilePath,
-        fileType: 'pdf',
+        fileType: 'xlsx',
         showMenu: true,
       })
 
-      Taro.showToast({ title: 'PDF已生成', icon: 'success' })
+      Taro.showToast({ title: 'Excel已生成', icon: 'success' })
     } catch (err) {
-      console.error('生成PDF异常:', err)
+      console.error('生成Excel异常:', err)
       Taro.showToast({ title: '生成失败', icon: 'none' })
     } finally {
       setGenerating(false)
     }
   }
+
+  // 生成 Word
+  const handleGenerateWord = async () => {
+    if (!quote) return
+
+    setGenerating(true)
+    try {
+      console.log('开始生成Word，报价单ID:', quote.id)
+
+      // 调用后端接口生成 Word
+      const res = await Network.request({
+        url: `/api/canvas/word/${quote.id}`,
+        method: 'GET',
+      })
+
+      console.log('生成Word响应:', res.statusCode, res.data)
+
+      if (res.statusCode !== 200 || !res.data || !res.data.data) {
+        throw new Error('生成Word失败')
+      }
+
+      const { base64 } = res.data.data as { base64: string; size: number }
+      console.log('Word生成成功，Base64长度:', base64.length)
+
+      // 转换 Base64 为 ArrayBuffer
+      const arrayBuffer = Taro.base64ToArrayBuffer(base64)
+
+      // 写入临时文件
+      const tempFilePath = await new Promise<string>((resolve, reject) => {
+        const fs = Taro.getFileSystemManager()
+        const tempPath = `${Taro.env.USER_DATA_PATH}/quote_${quote.id}_${Date.now()}.docx`
+
+        try {
+          fs.writeFile({
+            filePath: tempPath,
+            data: arrayBuffer,
+            encoding: 'binary',
+            success: () => {
+              console.log('Word写入成功:', tempPath)
+              resolve(tempPath)
+            },
+            fail: (err) => {
+              console.error('Word写入失败:', err)
+              reject(err)
+            },
+          })
+        } catch (err) {
+          console.error('Word写入异常:', err)
+          reject(err)
+        }
+      })
+
+      // 打开文档
+      await Taro.openDocument({
+        filePath: tempFilePath,
+        fileType: 'docx',
+        showMenu: true,
+      })
+
+      Taro.showToast({ title: 'Word已生成', icon: 'success' })
+    } catch (err) {
+      console.error('生成Word异常:', err)
+      Taro.showToast({ title: '生成失败', icon: 'none' })
+    } finally {
+      setGenerating(false)
+    }
+  }
+
 
   if (loading) {
     return (
@@ -346,25 +414,35 @@ const QuoteDetailPage: FC = () => {
 
       {/* 底部操作按钮 */}
       <View className="p-4 bg-white border-t border-gray-200">
-        <View className="flex gap-3">
+        <View className="flex gap-2">
           <Button
             className="flex-1"
             variant="outline"
             onClick={handleCopyLink}
           >
-            <View className="flex items-center justify-center gap-2">
-              <Copy size={20} color="#6B7280" />
-              <Text>复制链接</Text>
+            <View className="flex items-center justify-center gap-1">
+              <Copy size={18} color="#6B7280" />
+              <Text className="text-sm">复制</Text>
             </View>
           </Button>
           <Button
             className="flex-1"
-            onClick={handleGeneratePDF}
+            onClick={handleGenerateExcel}
             disabled={generating}
           >
-            <View className="flex items-center justify-center gap-2">
-              <FileDown size={20} color={generating ? "#9CA3AF" : "#FFFFFF"} />
-              <Text>{generating ? '生成中...' : '生成PDF'}</Text>
+            <View className="flex items-center justify-center gap-1">
+              <FileDown size={18} color={generating ? "#9CA3AF" : "#FFFFFF"} />
+              <Text className="text-sm">{generating ? '生成中...' : 'Excel'}</Text>
+            </View>
+          </Button>
+          <Button
+            className="flex-1"
+            onClick={handleGenerateWord}
+            disabled={generating}
+          >
+            <View className="flex items-center justify-center gap-1">
+              <FileDown size={18} color={generating ? "#9CA3AF" : "#FFFFFF"} />
+              <Text className="text-sm">{generating ? '生成中...' : 'Word'}</Text>
             </View>
           </Button>
         </View>
