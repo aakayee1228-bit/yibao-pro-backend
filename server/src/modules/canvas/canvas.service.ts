@@ -114,9 +114,11 @@ export class CanvasService {
 
     // 边框样式
     const borderStyle = {
-      style: 'thin',
-      color: { argb: 'FF000000' }
-    }
+      top: { style: 'thin' as any, color: { argb: 'FF000000' } },
+      left: { style: 'thin' as any, color: { argb: 'FF000000' } },
+      bottom: { style: 'thin' as any, color: { argb: 'FF000000' } },
+      right: { style: 'thin' as any, color: { argb: 'FF000000' } }
+    } as any
 
     // 行号
     let row = 1
@@ -360,8 +362,8 @@ export class CanvasService {
     })
 
     // 生成 Excel buffer
-    const excelBuffer = await workbook.xlsx.writeBuffer()
-    const size = excelBuffer.length
+    const excelBuffer = await workbook.xlsx.writeBuffer() as Buffer
+    const size = excelBuffer.byteLength
     const base64 = excelBuffer.toString('base64')
 
     console.log('Excel 生成成功，大小:', size, 'bytes，商品数量:', fullQuote.items.length)
@@ -902,8 +904,8 @@ export class CanvasService {
     })
 
     // 生成 Word buffer
-    const wordBuffer = await Packer.toBuffer(doc)
-    const size = wordBuffer.length
+    const wordBuffer = await Packer.toBuffer(doc) as Buffer
+    const size = wordBuffer.byteLength
     const base64 = wordBuffer.toString('base64')
 
     console.log('Word 生成成功，大小:', size, 'bytes，商品数量:', fullQuote.items.length)
