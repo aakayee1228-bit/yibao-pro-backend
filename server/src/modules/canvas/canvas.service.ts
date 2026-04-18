@@ -99,7 +99,7 @@ export class CanvasService {
     const workbook = XLSX.utils.book_new()
 
     // 报价单主表（单一表格格式）
-    const excelData = []
+    const excelData: (string | number)[][] = []
 
     // 标题行（跨列）
     excelData.push(['报价单'])
