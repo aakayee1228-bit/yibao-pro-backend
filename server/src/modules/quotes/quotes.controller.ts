@@ -14,8 +14,10 @@ export class QuotesController {
     @Headers('x-openid') userId: string,
     @Query('status') status?: string,
     @Query('customer_id') customerId?: string,
+    @Query('limit') limit?: string,
   ) {
-    const data = await this.quotesService.getAll(userId, { status, customer_id: customerId })
+    const limitNum = limit ? parseInt(limit, 10) : undefined
+    const data = await this.quotesService.getAll(userId, { status, customer_id: customerId, limit: limitNum })
     return {
       code: 0,
       msg: 'success',

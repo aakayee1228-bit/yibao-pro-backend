@@ -30,7 +30,7 @@ export class QuotesService {
   /**
    * 获取报价单列表
    */
-  async getAll(userId?: string, filters?: { status?: string; customer_id?: string }) {
+  async getAll(userId?: string, filters?: { status?: string; customer_id?: string; limit?: number }) {
     const client = getSupabaseClient()
 
     let query = client
@@ -48,6 +48,11 @@ export class QuotesService {
     }
     if (filters?.customer_id) {
       query = query.eq('customer_id', filters.customer_id)
+    }
+
+    // 添加 limit 限制
+    if (filters?.limit) {
+      query = query.limit(filters.limit)
     }
 
     const { data: quotes, error } = await query
