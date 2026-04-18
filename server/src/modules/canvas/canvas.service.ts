@@ -49,7 +49,7 @@ interface Quote {
 export class CanvasService {
   /**
    * 生成报价单 Excel（Base64 格式）
-   * 采用通用报价单模板格式
+   * 采用通用报价单模板格式，带样式
    */
   async generateExcel(quoteId: string, userId?: string): Promise<{ base64: string; size: number }> {
     const client = getSupabaseClient()
@@ -98,32 +98,43 @@ export class CanvasService {
     // 创建工作簿
     const workbook = XLSX.utils.book_new()
 
-    // 报价单主表（单一表格格式）
+    // 报价单主表（使用数组数组格式）
     const excelData: (string | number)[][] = []
 
-    // 标题行（跨列）
+    // 1. 标题行
+    excelData.push([])
+    excelData.push([])
     excelData.push(['报价单'])
     excelData.push([])
 
-    // 编号信息区（两列布局）
-    excelData.push(['报价单号：', fullQuote.quote_no])
-    excelData.push(['报价日期：', new Date(fullQuote.created_at).toLocaleDateString('zh-CN')])
-    excelData.push(['有效期：', fullQuote.valid_days + '天'])
+    // 2. 报价单基本信息
+    excelData.push(['报价单号', fullQuote.quote_no, '', '报价日期', new Date(fullQuote.created_at).toLocaleDateString('zh-CN')])
+    excelData.push(['有效期', fullQuote.valid_days + '天', '', '', ''])
 
-    // 客户信息
-    if (fullQuote.customers) {
-      excelData.push(['客户名称：', fullQuote.customers.company || fullQuote.customers.name || ''])
-      excelData.push(['联系人：', fullQuote.customers.name || ''])
-      excelData.push(['联系电话：', fullQuote.customers.phone || ''])
-      excelData.push(['客户地址：', fullQuote.customers.address || ''])
-    }
+    // 3. 报价方信息
     excelData.push([])
+    excelData.push(['报价方'])
+    excelData.push(['公司名称', fullQuote.company_name || ''])
+    excelData.push(['联系人', fullQuote.contact_person || ''])
+    excelData.push(['联系电话', fullQuote.contact_phone || ''])
+    excelData.push(['联系地址', fullQuote.contact_address || ''])
 
-    // 商品表格标题
+    // 4. 客户信息
+    if (fullQuote.customers) {
+      excelData.push([])
+      excelData.push(['客户信息'])
+      excelData.push(['客户名称', fullQuote.customers.company || fullQuote.customers.name || ''])
+      excelData.push(['联系人', fullQuote.customers.name || ''])
+      excelData.push(['联系电话', fullQuote.customers.phone || ''])
+      excelData.push(['客户地址', fullQuote.customers.address || ''])
+    }
+
+    excelData.push([])
+    excelData.push([])
     excelData.push(['商品明细'])
     excelData.push([])
 
-    // 商品表格表头
+    // 5. 商品表格表头
     excelData.push([
       '序号',
       '商品名称',
@@ -136,7 +147,7 @@ export class CanvasService {
       '备注'
     ])
 
-    // 商品数据
+    // 6. 商品数据
     fullQuote.items.forEach((item, index) => {
       excelData.push([
         index + 1,
@@ -153,34 +164,57 @@ export class CanvasService {
 
     excelData.push([])
 
-    // 汇总信息
-    excelData.push(['商品数量：', fullQuote.items.length + ' 种'])
-    excelData.push(['小计金额：', parseFloat(fullQuote.subtotal).toFixed(2) + ' 元'])
-    excelData.push(['折扣金额：', '-' + parseFloat(fullQuote.discount).toFixed(2) + ' 元'])
-    excelData.push(['总计金额：', parseFloat(fullQuote.total_amount).toFixed(2) + ' 元'])
+    // 7. 汇总信息（两列布局）
+    excelData.push([
+      '商品数量',
+      fullQuote.items.length + ' 种',
+      '',
+      '',
+      '小计金额',
+      parseFloat(fullQuote.subtotal).toFixed(2) + ' 元'
+    ])
+    excelData.push([
+      '',
+      '',
+      '',
+      '',
+      '折扣金额',
+      '-' + parseFloat(fullQuote.discount).toFixed(2) + ' 元'
+    ])
+    excelData.push([
+      '',
+      '',
+      '',
+      '',
+      '总计金额',
+      parseFloat(fullQuote.total_amount).toFixed(2) + ' 元'
+    ])
 
     excelData.push([])
 
-    // 备注
+    // 8. 备注
     if (fullQuote.remark) {
-      excelData.push(['备注：', fullQuote.remark])
+      excelData.push(['备注', fullQuote.remark])
+      excelData.push([])
     }
 
+    // 9. 底部说明
+    excelData.push(['此报价单仅供参考，具体以实际合同为准'])
     excelData.push([])
 
-    // 底部信息
-    excelData.push(['报价方：', fullQuote.company_name || ''])
-    excelData.push(['联系人：', fullQuote.contact_person || ''])
-    excelData.push(['联系电话：', fullQuote.contact_phone || ''])
-    excelData.push(['联系地址：', fullQuote.contact_address || ''])
+    // 10. 底部信息
+    excelData.push(['报价方', fullQuote.company_name || ''])
+    excelData.push(['联系人', fullQuote.contact_person || ''])
+    excelData.push(['联系电话', fullQuote.contact_phone || ''])
+    excelData.push(['联系地址', fullQuote.contact_address || ''])
 
     // 添加 sheet
     const sheet = XLSX.utils.aoa_to_sheet(excelData)
 
     // 设置列宽
     sheet['!cols'] = [
-      { wch: 8 },   // 序号
-      { wch: 25 },  // 商品名称
+      { wch: 10 },  // 序号
+      { wch: 30 },  // 商品名称
       { wch: 15 },  // 型号规格
       { wch: 8 },   // 单位
       { wch: 10 },  // 数量
@@ -188,6 +222,32 @@ export class CanvasService {
       { wch: 12 },  // 折扣
       { wch: 12 },  // 小计
       { wch: 20 },  // 备注
+    ]
+
+    // 设置合并单元格
+    sheet['!merges'] = [
+      // 标题居中
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 8 } },
+      // 报价单基本信息（两列布局）
+      { s: { r: 4, c: 0 }, e: { r: 4, c: 1 } },
+      { s: { r: 4, c: 2 }, e: { r: 4, c: 3 } },
+      { s: { r: 4, c: 4 }, e: { r: 4, c: 5 } },
+      { s: { r: 4, c: 6 }, e: { r: 4, c: 8 } },
+      { s: { r: 5, c: 0 }, e: { r: 5, c: 1 } },
+      // 报价方信息
+      { s: { r: 7, c: 0 }, e: { r: 7, c: 8 } },
+      // 客户信息（如果有）
+      ...fullQuote.customers ? [
+        { s: { r: 12, c: 0 }, e: { r: 12, c: 8 } },
+      ] : [],
+      // 商品明细标题
+      ...fullQuote.customers ? [
+        { s: { r: 17, c: 0 }, e: { r: 17, c: 8 } },
+      ] : [
+        { s: { r: 12, c: 0 }, e: { r: 12, c: 8 } },
+      ],
+      // 底部说明
+      { s: { r: 18 + fullQuote.items.length, c: 0 }, e: { r: 18 + fullQuote.items.length, c: 8 } },
     ]
 
     XLSX.utils.book_append_sheet(workbook, sheet, '报价单')
