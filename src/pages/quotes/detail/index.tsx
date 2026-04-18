@@ -2,7 +2,7 @@ import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow, useShareAppMessage, useShareTimeline } from '@tarojs/taro'
 import { useState } from 'react'
 import type { FC } from 'react'
-import { Phone, Share2, Copy, FileDown } from 'lucide-react-taro'
+import { Copy, FileDown } from 'lucide-react-taro'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Network } from '@/network'
@@ -154,24 +154,40 @@ const QuoteDetailPage: FC = () => {
         throw new Error('生成PDF失败')
       }
 
-      const { tempFilePath } = res.data.data as { tempFilePath: string; size: number }
-      console.log('PDF生成成功:', tempFilePath)
+      const { base64 } = res.data.data as { base64: string; size: number }
+      console.log('PDF生成成功，Base64长度:', base64.length)
 
-      // 下载 PDF 文件
-      const domain = typeof PROJECT_DOMAIN !== 'undefined' ? PROJECT_DOMAIN : 'https://yibao-pro-backend.onrender.com'
-      const downloadRes = await Taro.downloadFile({
-        url: `${domain}/api/canvas/download?path=${encodeURIComponent(tempFilePath)}`,
+      // 转换 Base64 为 ArrayBuffer
+      const arrayBuffer = Taro.base64ToArrayBuffer(base64)
+
+      // 写入临时文件
+      const tempFilePath = await new Promise<string>((resolve, reject) => {
+        const fs = Taro.getFileSystemManager()
+        const tempPath = `${Taro.env.USER_DATA_PATH}/quote_${quote.id}_${Date.now()}.pdf`
+
+        try {
+          fs.writeFile({
+            filePath: tempPath,
+            data: arrayBuffer,
+            encoding: 'binary',
+            success: () => {
+              console.log('PDF写入成功:', tempPath)
+              resolve(tempPath)
+            },
+            fail: (err) => {
+              console.error('PDF写入失败:', err)
+              reject(err)
+            },
+          })
+        } catch (err) {
+          console.error('PDF写入异常:', err)
+          reject(err)
+        }
       })
-
-      console.log('PDF下载响应:', downloadRes.statusCode, downloadRes.tempFilePath)
-
-      if (downloadRes.statusCode !== 200 || !downloadRes.tempFilePath) {
-        throw new Error('下载PDF失败')
-      }
 
       // 打开文档
       await Taro.openDocument({
-        filePath: downloadRes.tempFilePath,
+        filePath: tempFilePath,
         fileType: 'pdf',
         showMenu: true,
       })

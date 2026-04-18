@@ -49,9 +49,9 @@ interface Quote {
 @Injectable()
 export class CanvasService {
   /**
-   * 生成报价单 PDF
+   * 生成报价单 PDF（Base64 格式）
    */
-  async generateQuoteImage(quoteId: string, userId?: string): Promise<{ tempFilePath: string; size: number }> {
+  async generateQuoteImage(quoteId: string, userId?: string): Promise<{ base64: string; size: number }> {
     const client = getSupabaseClient()
 
     // 获取报价单详情（简化查询，避免关联查询失败）
@@ -121,23 +121,15 @@ export class CanvasService {
         const buffer = Buffer.concat(chunks)
         const size = buffer.length
 
-        // 保存临时文件
-        const tempDir = process.env.TEMP || '/tmp'
-        const tempFilePath = path.join(tempDir, `quote_${Date.now()}.pdf`)
+        // 转换为 Base64
+        const base64 = buffer.toString('base64')
 
-        try {
-          fs.writeFileSync(tempFilePath, buffer)
+        console.log('PDF 生成成功，大小:', size, 'bytes')
 
-          console.log('PDF 生成成功，大小:', size, 'bytes')
-
-          resolve({
-            tempFilePath,
-            size,
-          })
-        } catch (error) {
-          console.error('保存 PDF 失败:', error)
-          reject(new BadRequestException('保存 PDF 失败'))
-        }
+        resolve({
+          base64,
+          size,
+        })
       })
 
       doc.on('error', (error) => {

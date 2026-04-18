@@ -1,4 +1,5 @@
 import Taro from '@tarojs/taro'
+import { Network } from '@/network'
 
 /**
  * 用户登录模块
@@ -95,14 +96,10 @@ export async function login(): Promise<LoginResult> {
     console.log('登录 code:', code)
 
     // 2. 调用后端接口，用 code 换取 openid
-    const domain = typeof PROJECT_DOMAIN !== 'undefined' ? PROJECT_DOMAIN : 'https://yibao-pro-backend.onrender.com'
-    const response = await Taro.request({
-      url: `${domain}/api/auth/login`,
+    const response = await Network.request({
+      url: '/api/auth/login',
       method: 'POST',
       data: { code },
-      header: {
-        'content-type': 'application/json',
-      },
     })
 
     console.log('登录响应:', response)
