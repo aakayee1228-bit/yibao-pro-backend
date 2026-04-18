@@ -26,6 +26,17 @@ async function bootstrap() {
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+  // 设置请求超时时间（120秒）- 适应文件生成场景
+  app.use((req, res, next) => {
+    res.setTimeout(120000, () => {
+      console.log(`Request timeout: ${req.method} ${req.url}`);
+      if (!res.headersSent) {
+        res.status(408).json({ code: 408, msg: '请求超时，请稍后重试' });
+      }
+    });
+    next();
+  });
+
   // 全局拦截器：统一将 POST 请求的 201 状态码改为 200
   app.useGlobalInterceptors(new HttpStatusInterceptor());
   // 1. 开启优雅关闭 Hooks (关键!)
