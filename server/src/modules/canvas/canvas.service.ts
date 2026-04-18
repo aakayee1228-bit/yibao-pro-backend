@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common'
 import { getSupabaseClient } from '@/storage/database/supabase-client'
-import ExcelJS from 'exceljs'
+import * as ExcelJS from 'exceljs'
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, HeadingLevel } from 'docx'
 
 interface QuoteItem {
