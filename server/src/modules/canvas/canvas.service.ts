@@ -129,7 +129,7 @@ export class CanvasService {
     XLSX.utils.book_append_sheet(workbook, quoteInfoSheet, '报价单信息')
 
     // 商品列表
-    const itemsData = [
+    const excelItemsData = [
       ['商品名称', '数量', '单位', '单价', '折扣', '小计', '备注'],
       ...fullQuote.items.map(item => [
         item.product_name,
@@ -147,7 +147,7 @@ export class CanvasService {
     ]
 
     // 添加商品列表 sheet
-    const itemsSheet = XLSX.utils.aoa_to_sheet(itemsData)
+    const itemsSheet = XLSX.utils.aoa_to_sheet(excelItemsData)
     itemsSheet['!cols'] = [
       { wch: 30 },
       { wch: 10 },
@@ -505,7 +505,7 @@ export class CanvasService {
       new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },
         rows: tableRows,
-      })
+      }) as any
     )
 
     // 备注
