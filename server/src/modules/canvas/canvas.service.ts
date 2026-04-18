@@ -298,35 +298,6 @@ export class CanvasService {
       row += 1
     }
 
-    // 10. 底部说明
-    const footerRow = worksheet.getRow(row)
-    footerRow.getCell(1).value = '此报价单仅供参考，具体以实际合同为准'
-    worksheet.mergeCells(row, 1, row, 9)
-    footerRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' }
-    footerRow.getCell(1).font = { size: 10, color: { argb: 'FF666666' }, name: '微软雅黑' }
-    row += 2
-
-    // 11. 底部信息
-    const footerData = [
-      ['报价方', fullQuote.company_name || ''],
-      ['联系人', fullQuote.contact_person || ''],
-      ['联系电话', fullQuote.contact_phone || ''],
-      ['联系地址', fullQuote.contact_address || ''],
-    ]
-
-    footerData.forEach(rowData => {
-      const footerRow = worksheet.getRow(row)
-      footerRow.values = rowData
-
-      footerRow.eachCell({ includeEmpty: true }, (cell) => {
-        cell.font = { size: 11, name: '微软雅黑' }
-        cell.border = borderStyle
-      })
-
-      worksheet.mergeCells(row, 2, row, 9)
-      row++
-    })
-
     // 生成 Excel buffer
     const excelBuffer = await workbook.xlsx.writeBuffer() as Buffer
     const size = excelBuffer.byteLength
@@ -469,7 +440,45 @@ export class CanvasService {
       })
     )
 
-    // 4. 商品明细表格
+    // 4. 报价方信息
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: '报价方',
+            bold: true,
+            size: 24,
+            underline: {},
+          }),
+        ],
+        spacing: { before: 200, after: 120 },
+      })
+    )
+
+    const quoteInfo = [
+      `公司名称：${fullQuote.company_name || ''}`,
+      `联系人：${fullQuote.contact_person || ''}`,
+      `联系电话：${fullQuote.contact_phone || ''}`,
+      `联系地址：${fullQuote.contact_address || ''}`,
+    ]
+
+    quoteInfo.forEach(info => {
+      children.push(
+        new Paragraph({
+          children: [new TextRun({ text: info, size: 24 })],
+          spacing: { after: 120 },
+        })
+      )
+    })
+
+    children.push(
+      new Paragraph({
+        text: '',
+        spacing: { after: 200 },
+      })
+    )
+
+    // 5. 商品明细表格
     children.push(
       new Paragraph({
         children: [
@@ -758,84 +767,7 @@ export class CanvasService {
       )
     }
 
-    // 6. 底部信息
-    children.push(
-      new Paragraph({
-        text: '',
-        spacing: { after: 200 },
-      })
-    )
-
-    children.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: '报价方：',
-            bold: true,
-            size: 24,
-          }),
-          new TextRun({
-            text: fullQuote.company_name || '',
-            size: 24,
-          }),
-          new TextRun({
-            text: '    联系人：',
-            bold: true,
-            size: 24,
-          }),
-          new TextRun({
-            text: fullQuote.contact_person || '',
-            size: 24,
-          }),
-        ],
-        spacing: { after: 120 },
-      })
-    )
-
-    children.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: '联系电话：',
-            bold: true,
-            size: 24,
-          }),
-          new TextRun({
-            text: fullQuote.contact_phone || '',
-            size: 24,
-          }),
-          new TextRun({
-            text: '    报价日期：',
-            bold: true,
-            size: 24,
-          }),
-          new TextRun({
-            text: new Date(fullQuote.created_at).toLocaleDateString('zh-CN'),
-            size: 24,
-          }),
-        ],
-        spacing: { after: 120 },
-      })
-    )
-
-    children.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: '联系地址：',
-            bold: true,
-            size: 24,
-          }),
-          new TextRun({
-            text: fullQuote.contact_address || '',
-            size: 24,
-          }),
-        ],
-        spacing: { after: 300 },
-      })
-    )
-
-    // 7. 底部说明
+    // 6. 底部说明
     children.push(
       new Paragraph({
         children: [
