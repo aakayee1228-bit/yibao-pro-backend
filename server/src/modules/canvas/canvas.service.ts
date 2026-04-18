@@ -99,17 +99,17 @@ export class CanvasService {
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet('报价单')
 
-    // 设置列宽 - 左右对称布局
+    // 设置列宽
     worksheet.columns = [
-      { width: 12 },  // A - 报价方标签
-      { width: 25 },  // B - 报价方内容
-      { width: 12 },  // C - 分隔
-      { width: 1 },   // D - 分隔线
-      { width: 12 },  // E - 客户标签
-      { width: 25 },  // F - 客户内容
-      { width: 8 },   // G - 空
-      { width: 8 },   // H - 空
-      { width: 8 },   // I - 空
+      { width: 15 },  // A - 标签
+      { width: 40 },  // B - 内容
+      { width: 15 },  // C
+      { width: 8 },   // D
+      { width: 8 },   // E
+      { width: 12 },  // F
+      { width: 12 },  // G
+      { width: 12 },  // H
+      { width: 20 },  // I
     ]
 
     // 边框样式
@@ -153,18 +153,14 @@ export class CanvasService {
 
     row += 1
 
-    // 3. 报价方和客户信息 - 左右并排布局
-    const partyInfoStartRow = row
-
-    // 左边：报价方信息（列 A-B）
+    // 3. 报价方信息
     worksheet.getCell(row, 1).value = '报价方'
-    worksheet.getCell(row, 1).font = { bold: true, size: 12, name: '微软雅黑' }
+    worksheet.getCell(row, 1).font = { bold: true, size: 14, name: '微软雅黑' }
     worksheet.getCell(row, 1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } }
-    worksheet.mergeCells(row, 1, row, 2)
+    worksheet.mergeCells(row, 1, row, 9)
     worksheet.getCell(row, 1).border = borderStyle
-    worksheet.getCell(row, 2).border = borderStyle
-
     row++
+
     const quoteData = [
       ['公司名称', fullQuote.company_name || ''],
       ['联系人', fullQuote.contact_person || ''],
@@ -178,24 +174,25 @@ export class CanvasService {
       quoteRow.getCell(2).value = rowData[1]
 
       quoteRow.eachCell({ includeEmpty: true }, (cell) => {
-        cell.alignment = { vertical: 'middle', horizontal: 'left' }
+        cell.alignment = { vertical: 'middle' }
         cell.font = { size: 11, name: '微软雅黑' }
         cell.border = borderStyle
       })
 
+      worksheet.mergeCells(row, 2, row, 9)
       row++
     })
 
-    // 右边：客户信息（列 E-F）
-    const customerStartRow = partyInfoStartRow
-    worksheet.getCell(customerStartRow, 5).value = '客户信息'
-    worksheet.getCell(customerStartRow, 5).font = { bold: true, size: 12, name: '微软雅黑' }
-    worksheet.getCell(customerStartRow, 5).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } }
-    worksheet.mergeCells(customerStartRow, 5, customerStartRow, 6)
-    worksheet.getCell(customerStartRow, 5).border = borderStyle
-    worksheet.getCell(customerStartRow, 6).border = borderStyle
+    row += 1
 
-    let customerRow = customerStartRow + 1
+    // 4. 客户信息
+    worksheet.getCell(row, 1).value = '客户信息'
+    worksheet.getCell(row, 1).font = { bold: true, size: 14, name: '微软雅黑' }
+    worksheet.getCell(row, 1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } }
+    worksheet.mergeCells(row, 1, row, 9)
+    worksheet.getCell(row, 1).border = borderStyle
+    row++
+
     const customerData = fullQuote.customers ? [
       ['客户名称', fullQuote.customers.company || fullQuote.customers.name || ''],
       ['联系人', fullQuote.customers.name || ''],
@@ -209,17 +206,18 @@ export class CanvasService {
     ]
 
     customerData.forEach(rowData => {
-      const cRow = worksheet.getRow(customerRow)
-      cRow.getCell(5).value = rowData[0]
-      cRow.getCell(6).value = rowData[1]
+      const customerRow = worksheet.getRow(row)
+      customerRow.getCell(1).value = rowData[0]
+      customerRow.getCell(2).value = rowData[1]
 
-      cRow.eachCell({ includeEmpty: true }, (cell) => {
-        cell.alignment = { vertical: 'middle', horizontal: 'left' }
+      customerRow.eachCell({ includeEmpty: true }, (cell) => {
+        cell.alignment = { vertical: 'middle' }
         cell.font = { size: 11, name: '微软雅黑' }
         cell.border = borderStyle
       })
 
-      customerRow++
+      worksheet.mergeCells(row, 2, row, 9)
+      row++
     })
 
     row += 1
@@ -280,7 +278,41 @@ export class CanvasService {
 
     row += 1
 
-    // 8. 备注
+    // 8. 汇总信息
+    const summaryData = [
+      ['', '', '', '', '', '小计（元）', parseFloat(fullQuote.subtotal), '', ''],
+      ['', '', '', '', '', '折扣（元）', -parseFloat(fullQuote.discount), '', ''],
+      ['', '', '', '', '', '总计（元）', parseFloat(fullQuote.total_amount), '', ''],
+    ]
+
+    summaryData.forEach((rowData, index) => {
+      const summaryRow = worksheet.getRow(row)
+      summaryRow.values = rowData
+
+      summaryRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        cell.font = { size: 11, name: '微软雅黑' }
+        cell.border = borderStyle
+
+        // 数字格式化
+        if (colNumber === 7) {
+          cell.numFmt = '0.00'
+          cell.alignment = { vertical: 'middle', horizontal: 'center' }
+          // 总计行突出显示
+          if (index === 2) {
+            cell.font = { bold: true, size: 12, color: { argb: 'FFFF0000' }, name: '微软雅黑' }
+          }
+        } else if (colNumber === 6) {
+          cell.alignment = { vertical: 'middle', horizontal: 'right' }
+          cell.font = { bold: true, name: '微软雅黑' }
+        }
+      })
+
+      row++
+    })
+
+    row += 1
+
+    // 9. 备注
     if (fullQuote.remark) {
       const remarkRow = worksheet.getRow(row)
       remarkRow.getCell(1).value = '备注'
@@ -297,6 +329,14 @@ export class CanvasService {
 
       row += 1
     }
+
+    // 10. 底部说明
+    const footerRow = worksheet.getRow(row)
+    footerRow.getCell(1).value = '此报价单仅供参考，具体以实际合同为准'
+    worksheet.mergeCells(row, 1, row, 9)
+    footerRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' }
+    footerRow.getCell(1).font = { size: 10, color: { argb: 'FF666666' }, name: '微软雅黑' }
+    row += 2
 
     // 生成 Excel buffer
     const excelBuffer = await workbook.xlsx.writeBuffer() as Buffer
@@ -400,7 +440,45 @@ export class CanvasService {
       })
     )
 
-    // 3. 客户信息
+    // 3. 报价方信息
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: '报价方',
+            bold: true,
+            size: 24,
+            underline: {},
+          }),
+        ],
+        spacing: { before: 200, after: 120 },
+      })
+    )
+
+    const quoteInfo = [
+      `公司名称：${fullQuote.company_name || ''}`,
+      `联系人：${fullQuote.contact_person || ''}`,
+      `联系电话：${fullQuote.contact_phone || ''}`,
+      `联系地址：${fullQuote.contact_address || ''}`,
+    ]
+
+    quoteInfo.forEach(info => {
+      children.push(
+        new Paragraph({
+          children: [new TextRun({ text: info, size: 24 })],
+          spacing: { after: 120 },
+        })
+      )
+    })
+
+    children.push(
+      new Paragraph({
+        text: '',
+        spacing: { after: 200 },
+      })
+    )
+
+    // 4. 客户信息
     if (fullQuote.customers) {
       children.push(
         new Paragraph({
@@ -432,44 +510,6 @@ export class CanvasService {
         )
       })
     }
-
-    children.push(
-      new Paragraph({
-        text: '',
-        spacing: { after: 200 },
-      })
-    )
-
-    // 4. 报价方信息
-    children.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: '报价方',
-            bold: true,
-            size: 24,
-            underline: {},
-          }),
-        ],
-        spacing: { before: 200, after: 120 },
-      })
-    )
-
-    const quoteInfo = [
-      `公司名称：${fullQuote.company_name || ''}`,
-      `联系人：${fullQuote.contact_person || ''}`,
-      `联系电话：${fullQuote.contact_phone || ''}`,
-      `联系地址：${fullQuote.contact_address || ''}`,
-    ]
-
-    quoteInfo.forEach(info => {
-      children.push(
-        new Paragraph({
-          children: [new TextRun({ text: info, size: 24 })],
-          spacing: { after: 120 },
-        })
-      )
-    })
 
     children.push(
       new Paragraph({
@@ -745,7 +785,7 @@ export class CanvasService {
       })
     )
 
-    // 5. 备注
+    // 6. 备注
     if (fullQuote.remark) {
       children.push(
         new Paragraph({
@@ -767,7 +807,7 @@ export class CanvasService {
       )
     }
 
-    // 6. 底部说明
+    // 7. 底部说明
     children.push(
       new Paragraph({
         children: [
