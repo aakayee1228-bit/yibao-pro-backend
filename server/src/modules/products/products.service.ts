@@ -48,7 +48,6 @@ export class ProductsService {
       .from('products')
       .insert({
         ...dto,
-        user_id: userId,
       })
       .select()
       .single()
