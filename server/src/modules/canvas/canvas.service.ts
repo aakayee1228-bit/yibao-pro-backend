@@ -1,13 +1,14 @@
 import { Injectable, BadRequestException } from '@nestjs/common'
 import { getSupabaseClient } from '@/storage/database/supabase-client'
 import * as XLSX from 'xlsx'
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle } from 'docx'
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, HeadingLevel } from 'docx'
 
 interface QuoteItem {
   id: string
   quote_id: string
   product_id: string | null
   product_name: string
+  model: string | null
   unit: string
   quantity: string
   unit_price: string
@@ -48,6 +49,7 @@ interface Quote {
 export class CanvasService {
   /**
    * 生成报价单 Excel（Base64 格式）
+   * 采用通用报价单模板格式
    */
   async generateExcel(quoteId: string, userId?: string): Promise<{ base64: string; size: number }> {
     const client = getSupabaseClient()
@@ -96,86 +98,106 @@ export class CanvasService {
     // 创建工作簿
     const workbook = XLSX.utils.book_new()
 
-    // 报价单信息
-    const quoteInfoData = [
-      ['报价单信息'],
-      ['报价单号', fullQuote.quote_no],
-      ['创建日期', new Date(fullQuote.created_at).toLocaleDateString('zh-CN')],
-      ['有效期', fullQuote.valid_days + '天'],
-      [],
-      ['报价方信息'],
-      ['公司名称', fullQuote.company_name || ''],
-      ['联系人', fullQuote.contact_person || ''],
-      ['联系电话', fullQuote.contact_phone || ''],
-      ['联系地址', fullQuote.contact_address || ''],
-      [],
-    ]
+    // 报价单主表（单一表格格式）
+    const excelData = []
 
+    // 标题行（跨列）
+    excelData.push(['报价单'])
+    excelData.push([])
+
+    // 编号信息区（两列布局）
+    excelData.push(['报价单号：', fullQuote.quote_no])
+    excelData.push(['报价日期：', new Date(fullQuote.created_at).toLocaleDateString('zh-CN')])
+    excelData.push(['有效期：', fullQuote.valid_days + '天'])
+
+    // 客户信息
     if (fullQuote.customers) {
-      quoteInfoData.push(['客户信息'])
-      quoteInfoData.push(['客户姓名', fullQuote.customers.name || ''])
-      quoteInfoData.push(['联系电话', fullQuote.customers.phone || ''])
-      quoteInfoData.push(['地址', fullQuote.customers.address || ''])
-      quoteInfoData.push(['公司', fullQuote.customers.company || ''])
-      quoteInfoData.push([])
+      excelData.push(['客户名称：', fullQuote.customers.company || fullQuote.customers.name || ''])
+      excelData.push(['联系人：', fullQuote.customers.name || ''])
+      excelData.push(['联系电话：', fullQuote.customers.phone || ''])
+      excelData.push(['客户地址：', fullQuote.customers.address || ''])
     }
+    excelData.push([])
 
-    // 添加报价单信息 sheet
-    const quoteInfoSheet = XLSX.utils.aoa_to_sheet(quoteInfoData)
-    quoteInfoSheet['!cols'] = [
-      { wch: 15 },
-      { wch: 30 },
-    ]
-    XLSX.utils.book_append_sheet(workbook, quoteInfoSheet, '报价单信息')
+    // 商品表格标题
+    excelData.push(['商品明细'])
+    excelData.push([])
 
-    // 商品列表
-    const excelItemsData = [
-      ['商品名称', '数量', '单位', '单价', '折扣', '小计', '备注'],
-      ...fullQuote.items.map(item => [
+    // 商品表格表头
+    excelData.push([
+      '序号',
+      '商品名称',
+      '型号规格',
+      '单位',
+      '数量',
+      '单价（元）',
+      '折扣（元）',
+      '小计（元）',
+      '备注'
+    ])
+
+    // 商品数据
+    fullQuote.items.forEach((item, index) => {
+      excelData.push([
+        index + 1,
         item.product_name,
-        item.quantity,
+        item.model || '',
         item.unit,
-        item.unit_price,
-        item.discount,
-        item.amount,
+        item.quantity,
+        parseFloat(item.unit_price).toFixed(2),
+        parseFloat(item.discount).toFixed(2),
+        parseFloat(item.amount).toFixed(2),
         item.remark || ''
-      ]),
-      [],
-      ['小计', '', '', '', '', fullQuote.subtotal, ''],
-      ['折扣', '', '', '', '-', fullQuote.discount, ''],
-      ['总计', '', '', '', '', fullQuote.total_amount, ''],
-    ]
+      ])
+    })
 
-    // 添加商品列表 sheet
-    const itemsSheet = XLSX.utils.aoa_to_sheet(excelItemsData)
-    itemsSheet['!cols'] = [
-      { wch: 30 },
-      { wch: 10 },
-      { wch: 8 },
-      { wch: 12 },
-      { wch: 10 },
-      { wch: 12 },
-      { wch: 20 },
-    ]
-    XLSX.utils.book_append_sheet(workbook, itemsSheet, '商品列表')
+    excelData.push([])
 
-    // 备注信息
+    // 汇总信息
+    excelData.push(['商品数量：', fullQuote.items.length + ' 种'])
+    excelData.push(['小计金额：', parseFloat(fullQuote.subtotal).toFixed(2) + ' 元'])
+    excelData.push(['折扣金额：', '-' + parseFloat(fullQuote.discount).toFixed(2) + ' 元'])
+    excelData.push(['总计金额：', parseFloat(fullQuote.total_amount).toFixed(2) + ' 元'])
+
+    excelData.push([])
+
+    // 备注
     if (fullQuote.remark) {
-      const remarkData = [
-        ['备注'],
-        [fullQuote.remark],
-      ]
-      const remarkSheet = XLSX.utils.aoa_to_sheet(remarkData)
-      remarkSheet['!cols'] = [{ wch: 80 }]
-      XLSX.utils.book_append_sheet(workbook, remarkSheet, '备注')
+      excelData.push(['备注：', fullQuote.remark])
     }
+
+    excelData.push([])
+
+    // 底部信息
+    excelData.push(['报价方：', fullQuote.company_name || ''])
+    excelData.push(['联系人：', fullQuote.contact_person || ''])
+    excelData.push(['联系电话：', fullQuote.contact_phone || ''])
+    excelData.push(['联系地址：', fullQuote.contact_address || ''])
+
+    // 添加 sheet
+    const sheet = XLSX.utils.aoa_to_sheet(excelData)
+
+    // 设置列宽
+    sheet['!cols'] = [
+      { wch: 8 },   // 序号
+      { wch: 25 },  // 商品名称
+      { wch: 15 },  // 型号规格
+      { wch: 8 },   // 单位
+      { wch: 10 },  // 数量
+      { wch: 12 },  // 单价
+      { wch: 12 },  // 折扣
+      { wch: 12 },  // 小计
+      { wch: 20 },  // 备注
+    ]
+
+    XLSX.utils.book_append_sheet(workbook, sheet, '报价单')
 
     // 生成 Excel buffer
     const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
     const size = excelBuffer.length
     const base64 = excelBuffer.toString('base64')
 
-    console.log('Excel 生成成功，大小:', size, 'bytes')
+    console.log('Excel 生成成功，大小:', size, 'bytes，商品数量:', fullQuote.items.length)
 
     return {
       base64,
@@ -185,6 +207,7 @@ export class CanvasService {
 
   /**
    * 生成报价单 Word（Base64 格式）
+   * 采用通用报价单模板格式
    */
   async generateWord(quoteId: string, userId?: string): Promise<{ base64: string; size: number }> {
     const client = getSupabaseClient()
@@ -233,273 +256,336 @@ export class CanvasService {
     // 创建 Word 文档
     const children: Paragraph[] = []
 
-    // 标题
+    // 1. 标题 - 居中大标题
     children.push(
       new Paragraph({
-        text: '报价单',
-        heading: 'Heading1',
+        text: '报 价 单',
+        heading: HeadingLevel.HEADING_1,
         alignment: AlignmentType.CENTER,
-        spacing: { before: 200, after: 200 },
+        spacing: { before: 200, after: 300 },
       })
     )
 
-    // 报价单信息
+    // 2. 编号信息区 - 两列布局（使用空格对齐）
     children.push(
       new Paragraph({
         children: [
           new TextRun({
-            text: '报价单号：',
-            bold: true,
+            text: `报价单号：${fullQuote.quote_no}`,
+            size: 24,
           }),
-          new TextRun(fullQuote.quote_no),
+          new TextRun({
+            text: `    报价日期：${new Date(fullQuote.created_at).toLocaleDateString('zh-CN')}`,
+            size: 24,
+          }),
         ],
-        spacing: { after: 100 },
-      }),
+        spacing: { after: 120 },
+      })
+    )
+    children.push(
       new Paragraph({
         children: [
           new TextRun({
-            text: '创建日期：',
-            bold: true,
+            text: `有效期：${fullQuote.valid_days}天`,
+            size: 24,
           }),
-          new TextRun(new Date(fullQuote.created_at).toLocaleDateString('zh-CN')),
         ],
-        spacing: { after: 100 },
-      }),
+        spacing: { after: 240 },
+      })
+    )
+
+    // 3. 客户信息
+    if (fullQuote.customers) {
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: '客户信息',
+              bold: true,
+              size: 24,
+              underline: {},
+            }),
+          ],
+          spacing: { before: 200, after: 120 },
+        })
+      )
+
+      const customerInfo = [
+        `客户名称：${fullQuote.customers.company || fullQuote.customers.name || ''}`,
+        `联系人：${fullQuote.customers.name || ''}`,
+        `联系电话：${fullQuote.customers.phone || ''}`,
+        `客户地址：${fullQuote.customers.address || ''}`,
+      ]
+
+      customerInfo.forEach(info => {
+        children.push(
+          new Paragraph({
+            children: [new TextRun({ text: info, size: 24 })],
+            spacing: { after: 120 },
+          })
+        )
+      })
+    }
+
+    children.push(
       new Paragraph({
-        children: [
-          new TextRun({
-            text: '有效期：',
-            bold: true,
-          }),
-          new TextRun(fullQuote.valid_days + '天'),
-        ],
+        text: '',
         spacing: { after: 200 },
       })
     )
 
-    // 报价方信息
-    if (fullQuote.company_name || fullQuote.contact_person || fullQuote.contact_phone) {
-      children.push(
-        new Paragraph({
-          text: '报价方信息',
-          heading: 'Heading2',
-          spacing: { before: 200, after: 100 },
-        })
-      )
-
-      if (fullQuote.company_name) {
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({ text: '公司名称：', bold: true }),
-              new TextRun(fullQuote.company_name),
-            ],
-            spacing: { after: 100 },
-          })
-        )
-      }
-      if (fullQuote.contact_person) {
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({ text: '联系人：', bold: true }),
-              new TextRun(fullQuote.contact_person),
-            ],
-            spacing: { after: 100 },
-          })
-        )
-      }
-      if (fullQuote.contact_phone) {
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({ text: '联系电话：', bold: true }),
-              new TextRun(fullQuote.contact_phone),
-            ],
-            spacing: { after: 100 },
-          })
-        )
-      }
-      if (fullQuote.contact_address) {
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({ text: '联系地址：', bold: true }),
-              new TextRun(fullQuote.contact_address),
-            ],
-            spacing: { after: 200 },
-          })
-        )
-      }
-    }
-
-    // 客户信息
-    if (fullQuote.customers) {
-      children.push(
-        new Paragraph({
-          text: '客户信息',
-          heading: 'Heading2',
-          spacing: { before: 200, after: 100 },
-        })
-      )
-
-      if (fullQuote.customers.name) {
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({ text: '客户姓名：', bold: true }),
-              new TextRun(fullQuote.customers.name),
-            ],
-            spacing: { after: 100 },
-          })
-        )
-      }
-      if (fullQuote.customers.phone) {
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({ text: '联系电话：', bold: true }),
-              new TextRun(fullQuote.customers.phone),
-            ],
-            spacing: { after: 100 },
-          })
-        )
-      }
-      if (fullQuote.customers.address) {
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({ text: '地址：', bold: true }),
-              new TextRun(fullQuote.customers.address),
-            ],
-            spacing: { after: 100 },
-          })
-        )
-      }
-      if (fullQuote.customers.company) {
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({ text: '公司：', bold: true }),
-              new TextRun(fullQuote.customers.company),
-            ],
-            spacing: { after: 200 },
-          })
-        )
-      }
-    }
-
-    // 商品列表
+    // 4. 商品明细表格
     children.push(
       new Paragraph({
-        text: '商品列表',
-        heading: 'Heading2',
-        spacing: { before: 200, after: 100 },
+        children: [
+          new TextRun({
+            text: '商品明细',
+            bold: true,
+            size: 24,
+            underline: {},
+          }),
+        ],
+        spacing: { before: 200, after: 120 },
       })
     )
 
     // 商品表格
-    const tableRows = [
-      // 表头
+    const tableRows: TableRow[] = []
+
+    // 表头行
+    tableRows.push(
       new TableRow({
         children: [
           new TableCell({
-            width: { size: 40, type: WidthType.PERCENTAGE },
-            shading: { fill: '3B82F6' },
-            children: [new Paragraph({ children: [new TextRun({ text: '商品名称', bold: true, color: 'FFFFFF' })], alignment: AlignmentType.CENTER })],
+            width: { size: 6, type: WidthType.PERCENTAGE },
+            shading: { fill: 'E0E0E0' },
+            children: [new Paragraph({ children: [new TextRun({ text: '序号', bold: true })], alignment: AlignmentType.CENTER })],
+          }),
+          new TableCell({
+            width: { size: 25, type: WidthType.PERCENTAGE },
+            shading: { fill: 'E0E0E0' },
+            children: [new Paragraph({ children: [new TextRun({ text: '商品名称', bold: true })], alignment: AlignmentType.CENTER })],
           }),
           new TableCell({
             width: { size: 15, type: WidthType.PERCENTAGE },
-            shading: { fill: '3B82F6' },
-            children: [new Paragraph({ children: [new TextRun({ text: '数量', bold: true, color: 'FFFFFF' })], alignment: AlignmentType.CENTER })],
+            shading: { fill: 'E0E0E0' },
+            children: [new Paragraph({ children: [new TextRun({ text: '型号规格', bold: true })], alignment: AlignmentType.CENTER })],
           }),
           new TableCell({
-            width: { size: 15, type: WidthType.PERCENTAGE },
-            shading: { fill: '3B82F6' },
-            children: [new Paragraph({ children: [new TextRun({ text: '单价', bold: true, color: 'FFFFFF' })], alignment: AlignmentType.CENTER })],
+            width: { size: 7, type: WidthType.PERCENTAGE },
+            shading: { fill: 'E0E0E0' },
+            children: [new Paragraph({ children: [new TextRun({ text: '单位', bold: true })], alignment: AlignmentType.CENTER })],
           }),
           new TableCell({
-            width: { size: 15, type: WidthType.PERCENTAGE },
-            shading: { fill: '3B82F6' },
-            children: [new Paragraph({ children: [new TextRun({ text: '折扣', bold: true, color: 'FFFFFF' })], alignment: AlignmentType.CENTER })],
+            width: { size: 8, type: WidthType.PERCENTAGE },
+            shading: { fill: 'E0E0E0' },
+            children: [new Paragraph({ children: [new TextRun({ text: '数量', bold: true })], alignment: AlignmentType.CENTER })],
           }),
           new TableCell({
-            width: { size: 15, type: WidthType.PERCENTAGE },
-            shading: { fill: '3B82F6' },
-            children: [new Paragraph({ children: [new TextRun({ text: '小计', bold: true, color: 'FFFFFF' })], alignment: AlignmentType.CENTER })],
+            width: { size: 10, type: WidthType.PERCENTAGE },
+            shading: { fill: 'E0E0E0' },
+            children: [new Paragraph({ children: [new TextRun({ text: '单价（元）', bold: true })], alignment: AlignmentType.CENTER })],
+          }),
+          new TableCell({
+            width: { size: 10, type: WidthType.PERCENTAGE },
+            shading: { fill: 'E0E0E0' },
+            children: [new Paragraph({ children: [new TextRun({ text: '折扣（元）', bold: true })], alignment: AlignmentType.CENTER })],
+          }),
+          new TableCell({
+            width: { size: 10, type: WidthType.PERCENTAGE },
+            shading: { fill: 'E0E0E0' },
+            children: [new Paragraph({ children: [new TextRun({ text: '小计（元）', bold: true })], alignment: AlignmentType.CENTER })],
+          }),
+          new TableCell({
+            width: { size: 9, type: WidthType.PERCENTAGE },
+            shading: { fill: 'E0E0E0' },
+            children: [new Paragraph({ children: [new TextRun({ text: '备注', bold: true })], alignment: AlignmentType.CENTER })],
           }),
         ],
-      }),
-      // 商品数据
-      ...fullQuote.items.map(item =>
+      })
+    )
+
+    // 商品数据行
+    fullQuote.items.forEach((item, index) => {
+      const itemParas: Paragraph[] = [
+        new Paragraph({ children: [new TextRun({ text: item.remark || '', size: 20 })] })
+      ]
+
+      tableRows.push(
         new TableRow({
           children: [
             new TableCell({
-              width: { size: 40, type: WidthType.PERCENTAGE },
-              children: [new Paragraph(item.product_name)],
+              width: { size: 6, type: WidthType.PERCENTAGE },
+              children: [new Paragraph({ children: [new TextRun({ text: (index + 1).toString() })], alignment: AlignmentType.CENTER })],
+            }),
+            new TableCell({
+              width: { size: 25, type: WidthType.PERCENTAGE },
+              children: [new Paragraph({ children: [new TextRun({ text: item.product_name })] })],
             }),
             new TableCell({
               width: { size: 15, type: WidthType.PERCENTAGE },
-              children: [new Paragraph(`${item.quantity}${item.unit}`), item.remark ? new Paragraph({ children: [new TextRun({ text: `备注：${item.remark}`, size: 20, color: '666666' })] }) : undefined].filter(Boolean) as Paragraph[],
+              children: [new Paragraph({ children: [new TextRun({ text: item.model || '' })], alignment: AlignmentType.CENTER })],
             }),
             new TableCell({
-              width: { size: 15, type: WidthType.PERCENTAGE },
-              children: [new Paragraph(`¥${item.unit_price}`)],
+              width: { size: 7, type: WidthType.PERCENTAGE },
+              children: [new Paragraph({ children: [new TextRun({ text: item.unit })], alignment: AlignmentType.CENTER })],
             }),
             new TableCell({
-              width: { size: 15, type: WidthType.PERCENTAGE },
-              children: [new Paragraph(`¥${item.discount}`)],
+              width: { size: 8, type: WidthType.PERCENTAGE },
+              children: [new Paragraph({ children: [new TextRun({ text: item.quantity })], alignment: AlignmentType.CENTER })],
             }),
             new TableCell({
-              width: { size: 15, type: WidthType.PERCENTAGE },
-              children: [new Paragraph(`¥${item.amount}`)],
+              width: { size: 10, type: WidthType.PERCENTAGE },
+              children: [new Paragraph({ children: [new TextRun({ text: parseFloat(item.unit_price).toFixed(2) })], alignment: AlignmentType.CENTER })],
+            }),
+            new TableCell({
+              width: { size: 10, type: WidthType.PERCENTAGE },
+              children: [new Paragraph({ children: [new TextRun({ text: parseFloat(item.discount).toFixed(2) })], alignment: AlignmentType.CENTER })],
+            }),
+            new TableCell({
+              width: { size: 10, type: WidthType.PERCENTAGE },
+              children: [new Paragraph({ children: [new TextRun({ text: parseFloat(item.amount).toFixed(2) })], alignment: AlignmentType.CENTER })],
+            }),
+            new TableCell({
+              width: { size: 9, type: WidthType.PERCENTAGE },
+              children: [new Paragraph({ children: [new TextRun({ text: item.remark || '', size: 20 })] })],
             }),
           ],
         })
-      ),
-      // 合计行
+      )
+    })
+
+    // 汇总行
+    tableRows.push(
       new TableRow({
         children: [
           new TableCell({
-            width: { size: 40, type: WidthType.PERCENTAGE },
-            columnSpan: 4,
-            children: [new Paragraph({ children: [new TextRun({ text: '小计：¥' + fullQuote.subtotal, bold: true })], alignment: AlignmentType.RIGHT })],
+            width: { size: 6, type: WidthType.PERCENTAGE },
+            children: [new Paragraph('')],
+          }),
+          new TableCell({
+            width: { size: 25, type: WidthType.PERCENTAGE },
+            children: [new Paragraph({ children: [new TextRun({ text: '汇总信息', bold: true })], alignment: AlignmentType.CENTER })],
           }),
           new TableCell({
             width: { size: 15, type: WidthType.PERCENTAGE },
-            children: [new Paragraph(`¥${fullQuote.subtotal}`)],
+            children: [new Paragraph({ children: [new TextRun({ text: '商品数量' })], alignment: AlignmentType.RIGHT })],
+          }),
+          new TableCell({
+            width: { size: 7, type: WidthType.PERCENTAGE },
+            children: [new Paragraph({ children: [new TextRun({ text: fullQuote.items.length.toString() })], alignment: AlignmentType.CENTER })],
+          }),
+          new TableCell({
+            width: { size: 8, type: WidthType.PERCENTAGE },
+            children: [new Paragraph('')],
+          }),
+          new TableCell({
+            width: { size: 10, type: WidthType.PERCENTAGE },
+            children: [new Paragraph({ children: [new TextRun({ text: '小计（元）' })], alignment: AlignmentType.RIGHT })],
+          }),
+          new TableCell({
+            width: { size: 10, type: WidthType.PERCENTAGE },
+            children: [new Paragraph({ children: [new TextRun({ text: parseFloat(fullQuote.subtotal).toFixed(2) })], alignment: AlignmentType.CENTER })],
+          }),
+          new TableCell({
+            width: { size: 10, type: WidthType.PERCENTAGE },
+            children: [new Paragraph('')],
+          }),
+          new TableCell({
+            width: { size: 9, type: WidthType.PERCENTAGE },
+            children: [new Paragraph('')],
           }),
         ],
-      }),
+      })
+    )
+
+    tableRows.push(
       new TableRow({
         children: [
           new TableCell({
-            width: { size: 40, type: WidthType.PERCENTAGE },
-            columnSpan: 4,
-            children: [new Paragraph({ children: [new TextRun({ text: '折扣：-¥' + fullQuote.discount, bold: true })], alignment: AlignmentType.RIGHT })],
+            width: { size: 6, type: WidthType.PERCENTAGE },
+            children: [new Paragraph('')],
+          }),
+          new TableCell({
+            width: { size: 25, type: WidthType.PERCENTAGE },
+            children: [new Paragraph('')],
           }),
           new TableCell({
             width: { size: 15, type: WidthType.PERCENTAGE },
-            children: [new Paragraph(`-¥${fullQuote.discount}`)],
+            children: [new Paragraph('')],
+          }),
+          new TableCell({
+            width: { size: 7, type: WidthType.PERCENTAGE },
+            children: [new Paragraph('')],
+          }),
+          new TableCell({
+            width: { size: 8, type: WidthType.PERCENTAGE },
+            children: [new Paragraph('')],
+          }),
+          new TableCell({
+            width: { size: 10, type: WidthType.PERCENTAGE },
+            children: [new Paragraph({ children: [new TextRun({ text: '折扣（元）' })], alignment: AlignmentType.RIGHT })],
+          }),
+          new TableCell({
+            width: { size: 10, type: WidthType.PERCENTAGE },
+            children: [new Paragraph({ children: [new TextRun({ text: '-' + parseFloat(fullQuote.discount).toFixed(2) })], alignment: AlignmentType.CENTER })],
+          }),
+          new TableCell({
+            width: { size: 10, type: WidthType.PERCENTAGE },
+            children: [new Paragraph('')],
+          }),
+          new TableCell({
+            width: { size: 9, type: WidthType.PERCENTAGE },
+            children: [new Paragraph('')],
           }),
         ],
-      }),
+      })
+    )
+
+    tableRows.push(
       new TableRow({
         children: [
           new TableCell({
-            width: { size: 40, type: WidthType.PERCENTAGE },
-            columnSpan: 4,
-            shading: { fill: '1E40AF' },
-            children: [new Paragraph({ children: [new TextRun({ text: '总计：¥' + fullQuote.total_amount, bold: true, size: 28, color: 'FFFFFF' })], alignment: AlignmentType.RIGHT })],
+            width: { size: 6, type: WidthType.PERCENTAGE },
+            children: [new Paragraph('')],
+          }),
+          new TableCell({
+            width: { size: 25, type: WidthType.PERCENTAGE },
+            children: [new Paragraph('')],
           }),
           new TableCell({
             width: { size: 15, type: WidthType.PERCENTAGE },
-            shading: { fill: '1E40AF' },
-            children: [new Paragraph({ children: [new TextRun({ text: '¥' + fullQuote.total_amount, bold: true, size: 28, color: 'FFFFFF' })] })],
+            children: [new Paragraph('')],
+          }),
+          new TableCell({
+            width: { size: 7, type: WidthType.PERCENTAGE },
+            children: [new Paragraph('')],
+          }),
+          new TableCell({
+            width: { size: 8, type: WidthType.PERCENTAGE },
+            children: [new Paragraph('')],
+          }),
+          new TableCell({
+            width: { size: 10, type: WidthType.PERCENTAGE },
+            shading: { fill: 'FFE0E0' },
+            children: [new Paragraph({ children: [new TextRun({ text: '总计（元）', bold: true, size: 28 })], alignment: AlignmentType.RIGHT })],
+          }),
+          new TableCell({
+            width: { size: 10, type: WidthType.PERCENTAGE },
+            shading: { fill: 'FFE0E0' },
+            children: [new Paragraph({ children: [new TextRun({ text: parseFloat(fullQuote.total_amount).toFixed(2), bold: true, size: 28 })], alignment: AlignmentType.CENTER })],
+          }),
+          new TableCell({
+            width: { size: 10, type: WidthType.PERCENTAGE },
+            children: [new Paragraph('')],
+          }),
+          new TableCell({
+            width: { size: 9, type: WidthType.PERCENTAGE },
+            children: [new Paragraph('')],
           }),
         ],
-      }),
-    ]
+      })
+    )
 
     children.push(
       new Table({
@@ -508,27 +594,124 @@ export class CanvasService {
       }) as any
     )
 
-    // 备注
+    children.push(
+      new Paragraph({
+        text: '',
+        spacing: { after: 300 },
+      })
+    )
+
+    // 5. 备注
     if (fullQuote.remark) {
       children.push(
         new Paragraph({
-          text: '备注',
-          heading: 'Heading2',
-          spacing: { before: 300, after: 100 },
-        }),
+          children: [
+            new TextRun({
+              text: '备注：',
+              bold: true,
+              size: 24,
+            }),
+          ],
+          spacing: { after: 120 },
+        })
+      )
+      children.push(
         new Paragraph({
-          children: [new TextRun(fullQuote.remark)],
+          children: [new TextRun({ text: fullQuote.remark, size: 24 })],
           spacing: { after: 300 },
         })
       )
     }
 
-    // 底部信息
+    // 6. 底部信息
     children.push(
       new Paragraph({
-        children: [new TextRun({ text: '此报价单仅供参考，具体以实际合同为准', size: 20, color: '666666' })],
+        text: '',
+        spacing: { after: 200 },
+      })
+    )
+
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: '报价方：',
+            bold: true,
+            size: 24,
+          }),
+          new TextRun({
+            text: fullQuote.company_name || '',
+            size: 24,
+          }),
+          new TextRun({
+            text: '    联系人：',
+            bold: true,
+            size: 24,
+          }),
+          new TextRun({
+            text: fullQuote.contact_person || '',
+            size: 24,
+          }),
+        ],
+        spacing: { after: 120 },
+      })
+    )
+
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: '联系电话：',
+            bold: true,
+            size: 24,
+          }),
+          new TextRun({
+            text: fullQuote.contact_phone || '',
+            size: 24,
+          }),
+          new TextRun({
+            text: '    报价日期：',
+            bold: true,
+            size: 24,
+          }),
+          new TextRun({
+            text: new Date(fullQuote.created_at).toLocaleDateString('zh-CN'),
+            size: 24,
+          }),
+        ],
+        spacing: { after: 120 },
+      })
+    )
+
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: '联系地址：',
+            bold: true,
+            size: 24,
+          }),
+          new TextRun({
+            text: fullQuote.contact_address || '',
+            size: 24,
+          }),
+        ],
+        spacing: { after: 300 },
+      })
+    )
+
+    // 7. 底部说明
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: '此报价单仅供参考，具体以实际合同为准',
+            size: 20,
+            color: '666666',
+          }),
+        ],
         alignment: AlignmentType.CENTER,
-        spacing: { before: 400, after: 200 },
+        spacing: { before: 300, after: 200 },
       })
     )
 
@@ -556,7 +739,7 @@ export class CanvasService {
     const size = wordBuffer.length
     const base64 = wordBuffer.toString('base64')
 
-    console.log('Word 生成成功，大小:', size, 'bytes')
+    console.log('Word 生成成功，大小:', size, 'bytes，商品数量:', fullQuote.items.length)
 
     return {
       base64,
