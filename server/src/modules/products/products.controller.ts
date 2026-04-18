@@ -21,7 +21,16 @@ export class ProductsController {
   @Post()
   async create(
     @Headers('x-openid') userId: string,
-    @Body() body: { name: string; unit: string; price: number; category?: string },
+    @Body() body: {
+      industry_id?: string
+      name: string
+      code?: string
+      unit: string
+      specification?: string
+      cost_price?: string
+      retail_price: string
+      wholesale_price?: string
+    },
   ) {
     if (!userId) {
       return {
@@ -40,7 +49,16 @@ export class ProductsController {
   @Put(':id')
   async update(
     @Param('id') id: string,
-    @Body() body: Partial<{ name: string; unit: string; price: number; category?: string }>,
+    @Body() body: Partial<{
+      industry_id?: string
+      name: string
+      code?: string
+      unit: string
+      specification?: string
+      cost_price?: string
+      retail_price: string
+      wholesale_price?: string
+    }>,
   ) {
     const data = await this.productsService.update(id, body)
     return {
