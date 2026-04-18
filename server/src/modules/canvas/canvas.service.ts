@@ -280,46 +280,7 @@ export class CanvasService {
 
     row += 1
 
-    // 8. 汇总信息
-    const summaryData = [
-      ['商品数量', fullQuote.items.length + ' 种', '', '', '小计金额', parseFloat(fullQuote.subtotal)],
-      ['', '', '', '', '折扣金额', -parseFloat(fullQuote.discount)],
-      ['', '', '', '', '总计金额', parseFloat(fullQuote.total_amount)],
-    ]
-
-    summaryData.forEach(rowData => {
-      const summaryRow = worksheet.getRow(row)
-      summaryRow.values = rowData
-
-      summaryRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-        cell.font = { size: 11, name: '微软雅黑' }
-        cell.border = borderStyle
-
-        // 数字格式化
-        if (colNumber === 6) {
-          cell.numFmt = '0.00'
-          cell.alignment = { vertical: 'middle', horizontal: 'center' }
-          // 总计行突出显示
-          if (rowData[4] === '总计金额') {
-            cell.font = { bold: true, size: 12, color: { argb: 'FFFF0000' }, name: '微软雅黑' }
-          }
-        } else if (colNumber > 0 && colNumber <= 2) {
-          cell.alignment = { vertical: 'middle', horizontal: 'center' }
-        } else if (colNumber === 1) {
-          cell.font = { bold: true, name: '微软雅黑' }
-        }
-      })
-
-      // 合并前几列的空白单元格
-      worksheet.mergeCells(row, 1, row, 3)
-      worksheet.mergeCells(row, 4, row, 5)
-
-      row++
-    })
-
-    row += 1
-
-    // 9. 备注
+    // 8. 备注
     if (fullQuote.remark) {
       const remarkRow = worksheet.getRow(row)
       remarkRow.getCell(1).value = '备注'
