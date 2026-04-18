@@ -66,16 +66,17 @@ const MerchantSettingsPage: FC = () => {
         url: '/api/merchants/update',
         method: 'POST',
         data: {
-          shopName: shopName.trim(),
-          contactName: contactName.trim(),
-          phone: phone.trim(),
-          address: address.trim(),
+          company_name: shopName.trim(),
+          contact_person: contactName.trim(),
+          contact_phone: phone.trim(),
+          contact_address: address.trim() || '',
         },
       })
 
       console.log('[保存商家信息] 响应:', res.data)
 
-      if (res.data?.code === 200) {
+      // 后端返回 code: 0 表示成功
+      if (res.data?.code === 0) {
         Taro.showToast({ title: '保存成功', icon: 'success' })
         setTimeout(() => {
           Taro.navigateBack()
