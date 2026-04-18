@@ -278,11 +278,12 @@ export class CanvasService {
 
     row += 1
 
-    // 8. 汇总信息
+    // 8. 汇总信息 - 与商品表格列对齐
     const summaryData = [
-      ['', '', '', '', '', '小计（元）', parseFloat(fullQuote.subtotal), '', ''],
-      ['', '', '', '', '', '折扣（元）', -parseFloat(fullQuote.discount), '', ''],
-      ['', '', '', '', '', '总计（元）', parseFloat(fullQuote.total_amount), '', ''],
+      ['汇总信息', '', '', '', '', '商品数量', fullQuote.items.length, '', '', ''],
+      ['', '', '', '', '', '小计（元）', '', parseFloat(fullQuote.subtotal), '', ''],
+      ['', '', '', '', '', '折扣（元）', '', -parseFloat(fullQuote.discount), '', ''],
+      ['', '', '', '', '', '总计（元）', '', parseFloat(fullQuote.total_amount), '', ''],
     ]
 
     summaryData.forEach((rowData, index) => {
@@ -293,17 +294,29 @@ export class CanvasService {
         cell.font = { size: 11, name: '微软雅黑' }
         cell.border = borderStyle
 
-        // 数字格式化
-        if (colNumber === 7) {
+        // 第一列：汇总信息标题（只第一行）
+        if (colNumber === 1 && index === 0) {
+          cell.alignment = { vertical: 'middle', horizontal: 'center' }
+          cell.font = { bold: true, name: '微软雅黑' }
+          worksheet.mergeCells(row, 1, row, 5)
+        }
+        // 第6列：标签（商品数量、小计、折扣、总计）
+        else if (colNumber === 6) {
+          cell.alignment = { vertical: 'middle', horizontal: 'right' }
+          cell.font = { bold: true, name: '微软雅黑' }
+        }
+        // 第7列：商品数量
+        else if (colNumber === 7 && index === 0) {
+          cell.alignment = { vertical: 'middle', horizontal: 'center' }
+        }
+        // 第8列：数值（小计、折扣、总计）- 与商品表格的小计列对齐
+        else if (colNumber === 8 && index > 0) {
           cell.numFmt = '0.00'
           cell.alignment = { vertical: 'middle', horizontal: 'center' }
           // 总计行突出显示
-          if (index === 2) {
+          if (index === 3) {
             cell.font = { bold: true, size: 12, color: { argb: 'FFFF0000' }, name: '微软雅黑' }
           }
-        } else if (colNumber === 6) {
-          cell.alignment = { vertical: 'middle', horizontal: 'right' }
-          cell.font = { bold: true, name: '微软雅黑' }
         }
       })
 
