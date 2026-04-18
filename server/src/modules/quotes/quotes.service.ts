@@ -38,10 +38,8 @@ export class QuotesService {
       .select('*')
       .order('created_at', { ascending: false })
 
-    // 添加用户过滤
-    if (userId) {
-      query = query.eq('user_id', userId)
-    }
+    // 注意：quotes 表没有 user_id 字段，暂时不过滤用户数据
+    // TODO: 数据库添加 user_id 字段后，重新启用用户过滤
 
     if (filters?.status) {
       query = query.eq('status', filters.status)
@@ -92,10 +90,8 @@ export class QuotesService {
       .select('*')
       .eq('id', id)
 
-    // 添加用户过滤
-    if (userId) {
-      query = query.eq('user_id', userId)
-    }
+    // 注意：quotes 表没有 user_id 字段，暂时不过滤用户数据
+    // TODO: 数据库添加 user_id 字段后，重新启用用户过滤
 
     const { data: quote, error: quoteError } = await query.single()
 
@@ -174,7 +170,8 @@ export class QuotesService {
         contact_phone: dto.contact_phone,
         contact_address: dto.contact_address,
         contact_email: dto.contact_email,
-        user_id: userId, // 添加 user_id
+        // 注意：quotes 表没有 user_id 字段，暂时不插入
+        // TODO: 数据库添加 user_id 字段后，重新启用用户过滤
       })
       .select()
       .single()
