@@ -153,14 +153,17 @@ export class CanvasService {
 
     row += 1
 
-    // 3. 报价方信息
-    const quoteTitleRow = worksheet.getRow(row)
-    quoteTitleRow.getCell(1).value = '报价方'
-    quoteTitleRow.getCell(1).font = { bold: true, size: 14, name: '微软雅黑' }
-    quoteTitleRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } }
-    worksheet.mergeCells(row, 1, row, 9)
-    row++
+    // 3. 报价方和客户信息 - 左右并排布局
+    const partyInfoStartRow = row
 
+    // 左边：报价方信息
+    worksheet.getCell(row, 1).value = '报价方'
+    worksheet.getCell(row, 1).font = { bold: true, size: 12, name: '微软雅黑' }
+    worksheet.getCell(row, 1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } }
+    worksheet.mergeCells(row, 1, row, 4)
+    worksheet.getCell(row, 1).border = borderStyle
+
+    row++
     const quoteData = [
       ['公司名称', fullQuote.company_name || ''],
       ['联系人', fullQuote.contact_person || ''],
@@ -173,51 +176,53 @@ export class CanvasService {
       quoteRow.values = rowData
 
       quoteRow.eachCell({ includeEmpty: true }, (cell) => {
-        cell.alignment = { vertical: 'middle' }
+        cell.alignment = { vertical: 'middle', horizontal: 'left' }
         cell.font = { size: 11, name: '微软雅黑' }
         cell.border = borderStyle
       })
 
       // 合并单元格
-      worksheet.mergeCells(row, 2, row, 9)
+      worksheet.mergeCells(row, 2, row, 4)
       row++
     })
 
-    row += 1
+    // 右边：客户信息
+    const customerStartRow = partyInfoStartRow
+    worksheet.getCell(customerStartRow, 5).value = '客户信息'
+    worksheet.getCell(customerStartRow, 5).font = { bold: true, size: 12, name: '微软雅黑' }
+    worksheet.getCell(customerStartRow, 5).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } }
+    worksheet.mergeCells(customerStartRow, 5, customerStartRow, 9)
+    worksheet.getCell(customerStartRow, 5).border = borderStyle
 
-    // 4. 客户信息（如果有）
-    if (fullQuote.customers) {
-      const customerTitleRow = worksheet.getRow(row)
-      customerTitleRow.getCell(1).value = '客户信息'
-      customerTitleRow.getCell(1).font = { bold: true, size: 14, name: '微软雅黑' }
-      customerTitleRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } }
-      worksheet.mergeCells(row, 1, row, 9)
-      row++
+    let customerRow = customerStartRow + 1
+    const customerData = fullQuote.customers ? [
+      ['客户名称', fullQuote.customers.company || fullQuote.customers.name || ''],
+      ['联系人', fullQuote.customers.name || ''],
+      ['联系电话', fullQuote.customers.phone || ''],
+      ['客户地址', fullQuote.customers.address || ''],
+    ] : [
+      ['客户名称', ''],
+      ['联系人', ''],
+      ['联系电话', ''],
+      ['客户地址', ''],
+    ]
 
-      const customerData = [
-        ['客户名称', fullQuote.customers.company || fullQuote.customers.name || ''],
-        ['联系人', fullQuote.customers.name || ''],
-        ['联系电话', fullQuote.customers.phone || ''],
-        ['客户地址', fullQuote.customers.address || ''],
-      ]
+    customerData.forEach(rowData => {
+      const cRow = worksheet.getRow(customerRow)
+      cRow.values = ['', '', '', '', ...rowData]
 
-      customerData.forEach(rowData => {
-        const customerRow = worksheet.getRow(row)
-        customerRow.values = rowData
-
-        customerRow.eachCell({ includeEmpty: true }, (cell) => {
-          cell.alignment = { vertical: 'middle' }
-          cell.font = { size: 11, name: '微软雅黑' }
-          cell.border = borderStyle
-        })
-
-        // 合并单元格
-        worksheet.mergeCells(row, 2, row, 9)
-        row++
+      cRow.eachCell({ includeEmpty: true }, (cell) => {
+        cell.alignment = { vertical: 'middle', horizontal: 'left' }
+        cell.font = { size: 11, name: '微软雅黑' }
+        cell.border = borderStyle
       })
 
-      row += 1
-    }
+      // 合并单元格
+      worksheet.mergeCells(customerRow, 6, customerRow, 9)
+      customerRow++
+    })
+
+    row += 1
 
     row += 2
 
