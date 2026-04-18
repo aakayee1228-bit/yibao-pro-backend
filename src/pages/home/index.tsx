@@ -41,9 +41,8 @@ const HomePage: FC = () => {
   const fetchRecentQuotes = async () => {
     try {
       const res = await Network.request({
-        url: '/api/quotes',
+        url: '/api/quotes?limit=5',
         method: 'GET',
-        data: { limit: 5 },
       })
 
       console.log('获取最近报价:', res.data)
