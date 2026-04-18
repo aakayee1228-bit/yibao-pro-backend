@@ -1,4 +1,4 @@
-import { Controller, Get, Headers } from '@nestjs/common';
+import { Controller, Get, Headers, Param } from '@nestjs/common';
 import { CanvasService } from './canvas.service';
 
 @Controller('canvas')
@@ -11,6 +11,7 @@ export class CanvasController {
    */
   @Get('excel/:id')
   async generateExcel(
+    @Param('id') quoteId: string,
     @Headers('x-openid') userId: string,
     @Headers('x-open-id') userIdAlt: string,
     @Headers('x-open-id') userIdAlt2: string,
@@ -18,7 +19,7 @@ export class CanvasController {
   ) {
     try {
       const userIdToUse = userId || userIdAlt || userIdAlt2 || userIdAlt3;
-      const result = await this.canvasService.generateExcel(userIdToUse);
+      const result = await this.canvasService.generateExcel(quoteId, userIdToUse);
       return {
         code: 0,
         msg: 'success',
@@ -39,6 +40,7 @@ export class CanvasController {
    */
   @Get('word/:id')
   async generateWord(
+    @Param('id') quoteId: string,
     @Headers('x-openid') userId: string,
     @Headers('x-open-id') userIdAlt: string,
     @Headers('x-open-id') userIdAlt2: string,
@@ -46,7 +48,7 @@ export class CanvasController {
   ) {
     try {
       const userIdToUse = userId || userIdAlt || userIdAlt2 || userIdAlt3;
-      const result = await this.canvasService.generateWord(userIdToUse);
+      const result = await this.canvasService.generateWord(quoteId, userIdToUse);
       return {
         code: 0,
         msg: 'success',
