@@ -99,17 +99,17 @@ export class CanvasService {
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet('报价单')
 
-    // 设置列宽
+    // 设置列宽 - 左右对称布局
     worksheet.columns = [
-      { width: 8 },   // A
-      { width: 30 },  // B
-      { width: 15 },  // C
-      { width: 8 },   // D
-      { width: 10 },  // E
-      { width: 12 },  // F
-      { width: 12 },  // G
-      { width: 12 },  // H
-      { width: 20 },  // I
+      { width: 12 },  // A - 报价方标签
+      { width: 25 },  // B - 报价方内容
+      { width: 12 },  // C - 分隔
+      { width: 1 },   // D - 分隔线
+      { width: 12 },  // E - 客户标签
+      { width: 25 },  // F - 客户内容
+      { width: 8 },   // G - 空
+      { width: 8 },   // H - 空
+      { width: 8 },   // I - 空
     ]
 
     // 边框样式
@@ -156,12 +156,13 @@ export class CanvasService {
     // 3. 报价方和客户信息 - 左右并排布局
     const partyInfoStartRow = row
 
-    // 左边：报价方信息
+    // 左边：报价方信息（列 A-B）
     worksheet.getCell(row, 1).value = '报价方'
     worksheet.getCell(row, 1).font = { bold: true, size: 12, name: '微软雅黑' }
     worksheet.getCell(row, 1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } }
-    worksheet.mergeCells(row, 1, row, 4)
+    worksheet.mergeCells(row, 1, row, 2)
     worksheet.getCell(row, 1).border = borderStyle
+    worksheet.getCell(row, 2).border = borderStyle
 
     row++
     const quoteData = [
@@ -173,7 +174,8 @@ export class CanvasService {
 
     quoteData.forEach(rowData => {
       const quoteRow = worksheet.getRow(row)
-      quoteRow.values = rowData
+      quoteRow.getCell(1).value = rowData[0]
+      quoteRow.getCell(2).value = rowData[1]
 
       quoteRow.eachCell({ includeEmpty: true }, (cell) => {
         cell.alignment = { vertical: 'middle', horizontal: 'left' }
@@ -181,18 +183,17 @@ export class CanvasService {
         cell.border = borderStyle
       })
 
-      // 合并单元格
-      worksheet.mergeCells(row, 2, row, 4)
       row++
     })
 
-    // 右边：客户信息
+    // 右边：客户信息（列 E-F）
     const customerStartRow = partyInfoStartRow
     worksheet.getCell(customerStartRow, 5).value = '客户信息'
     worksheet.getCell(customerStartRow, 5).font = { bold: true, size: 12, name: '微软雅黑' }
     worksheet.getCell(customerStartRow, 5).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } }
-    worksheet.mergeCells(customerStartRow, 5, customerStartRow, 9)
+    worksheet.mergeCells(customerStartRow, 5, customerStartRow, 6)
     worksheet.getCell(customerStartRow, 5).border = borderStyle
+    worksheet.getCell(customerStartRow, 6).border = borderStyle
 
     let customerRow = customerStartRow + 1
     const customerData = fullQuote.customers ? [
@@ -209,7 +210,8 @@ export class CanvasService {
 
     customerData.forEach(rowData => {
       const cRow = worksheet.getRow(customerRow)
-      cRow.values = ['', '', '', '', ...rowData]
+      cRow.getCell(5).value = rowData[0]
+      cRow.getCell(6).value = rowData[1]
 
       cRow.eachCell({ includeEmpty: true }, (cell) => {
         cell.alignment = { vertical: 'middle', horizontal: 'left' }
@@ -217,8 +219,6 @@ export class CanvasService {
         cell.border = borderStyle
       })
 
-      // 合并单元格
-      worksheet.mergeCells(customerRow, 6, customerRow, 9)
       customerRow++
     })
 
