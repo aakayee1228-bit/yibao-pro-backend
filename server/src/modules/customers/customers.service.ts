@@ -21,10 +21,8 @@ export class CustomersService {
       .select('*')
       .order('created_at', { ascending: false })
 
-    // 添加用户过滤
-    if (userId) {
-      query = query.eq('user_id', userId)
-    }
+    // 注意：customers 表没有 user_id 字段，暂时不过滤用户数据
+    // TODO: 数据库添加 user_id 字段后，重新启用用户过滤
 
     const { data: customers, error } = await query
 
@@ -46,7 +44,8 @@ export class CustomersService {
       .from('customers')
       .insert({
         ...dto,
-        user_id: userId,
+        // 注意：customers 表没有 user_id 字段，暂时不插入
+        // TODO: 数据库添加 user_id 字段后，重新启用用户过滤
       })
       .select()
       .single()

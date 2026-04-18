@@ -18,13 +18,11 @@ export class MerchantsService {
     const client = getSupabaseClient()
 
     let query = client
-      .from('merchants')
+      .from('merchant_info')
       .select('*')
 
-    // 添加用户过滤
-    if (userId) {
-      query = query.eq('user_id', userId)
-    }
+    // 注意：merchant_info 表没有 user_id 字段，暂时不过滤用户数据
+    // TODO: 数据库添加 user_id 字段后，重新启用用户过滤
 
     query = query.limit(1)
 
@@ -43,27 +41,19 @@ export class MerchantsService {
    * 更新或创建商家信息
    */
   async upsert(userId: string | undefined, dto: MerchantInfo) {
-    // 暂时允许不传 userId，使用固定的测试 userId
-    const finalUserId = userId || 'test-user-id'
-
-    if (!finalUserId) {
-      throw new BadRequestException('缺少用户身份信息')
-    }
-
     const client = getSupabaseClient()
 
     // 先查询是否已有商家信息
     const { data: existing } = await client
-      .from('merchants')
+      .from('merchant_info')
       .select('id')
-      .eq('user_id', finalUserId)
       .limit(1)
-      .single()
+      .maybeSingle()
 
     if (existing) {
       // 更新
       const { data, error } = await client
-        .from('merchants')
+        .from('merchant_info')
         .update(dto)
         .eq('id', existing.id)
         .select()
@@ -78,11 +68,8 @@ export class MerchantsService {
     } else {
       // 创建
       const { data, error } = await client
-        .from('merchants')
-        .insert({
-          ...dto,
-          user_id: finalUserId,
-        })
+        .from('merchant_info')
+        .insert(dto)
         .select()
         .single()
 
