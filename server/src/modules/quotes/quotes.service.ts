@@ -364,10 +364,12 @@ export class QuotesService {
 
   /**
    * 生成报价单号
+   * 使用 UTC 时间确保日期一致性
    */
   private async generateQuoteNo(): Promise<string> {
     const date = new Date()
-    const prefix = `BJ${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`
+    // 使用 UTC 时间避免时区问题
+    const prefix = `BJ${date.getUTCFullYear()}${String(date.getUTCMonth() + 1).padStart(2, '0')}${String(date.getUTCDate()).padStart(2, '0')}`
 
     const client = getSupabaseClient()
     const { count, error } = await client
