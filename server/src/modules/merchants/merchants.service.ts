@@ -20,11 +20,8 @@ export class MerchantsService {
     let query = client
       .from('merchant_info')
       .select('*')
-
-    // 注意：merchant_info 表没有 user_id 字段，暂时不过滤用户数据
-    // TODO: 数据库添加 user_id 字段后，重新启用用户过滤
-
-    query = query.limit(1)
+      .order('created_at', { ascending: true })
+      .limit(1)
 
     const { data, error } = await query.single()
 
@@ -56,10 +53,11 @@ export class MerchantsService {
 
     console.log('[商家信息] 转换后的数据:', dbData)
 
-    // 先查询是否已有商家信息
+    // 先查询是否已有商家信息（按创建时间排序）
     const { data: existing } = await client
       .from('merchant_info')
       .select('id')
+      .order('created_at', { ascending: true })
       .limit(1)
       .maybeSingle()
 
