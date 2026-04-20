@@ -27,45 +27,23 @@ const MerchantSettingsPage: FC = () => {
   const [address, setAddress] = useState('')
 
   useDidShow(() => {
-    console.log('[商家设置] useDidShow 触发，加载商家信息')
     loadMerchantInfo()
   })
 
   const loadMerchantInfo = async () => {
-    console.log('[商家设置] loadMerchantInfo 开始执行 - 强制刷新')
     setLoading(true)
     try {
-      // 添加随机数避免缓存
-      const random = Math.random().toString(36).substring(7)
       const res = await Network.request({
         url: '/api/merchants/info',
         method: 'GET',
-        data: { _t: random },
       })
-
-      console.log('[商家信息] 完整响应对象:', res)
-      console.log('[商家信息] 响应.statusCode:', res.statusCode)
-      console.log('[商家信息] 响应.data:', res.data)
-      console.log('[商家信息] 响应.data.data:', res.data?.data)
 
       if (res.statusCode === 200 && res.data?.code === 0 && res.data?.data) {
         const data = res.data.data as MerchantInfo
-        console.log('[商家设置] 解析到的商家数据:', data)
-        console.log('[商家设置] 准备设置表单数据 - shopName:', data.shop_name)
-
         setShopName(data.shop_name || '')
         setContactName(data.contact_name || '')
         setPhone(data.phone || '')
         setAddress(data.address || '')
-
-        console.log('[商家设置] 表单数据已更新:', {
-          shopName: data.shop_name,
-          contactName: data.contact_name,
-          phone: data.phone,
-          address: data.address,
-        })
-      } else {
-        console.error('[商家信息] 响应数据格式异常:', res.data)
       }
     } catch (error) {
       console.error('[商家信息] 加载失败:', error)
@@ -75,14 +53,6 @@ const MerchantSettingsPage: FC = () => {
   }
 
   const handleSave = async () => {
-    console.log('[商家设置] 开始保存，当前表单数据:', { shopName, contactName, phone, address })
-    console.log('[商家设置] 表单数据类型:', {
-      shopName: typeof shopName,
-      contactName: typeof contactName,
-      phone: typeof phone,
-      address: typeof address,
-    })
-
     if (!shopName.trim()) {
       Taro.showToast({ title: '请输入商家名称', icon: 'none' })
       return
@@ -90,46 +60,27 @@ const MerchantSettingsPage: FC = () => {
 
     setSaving(true)
     try {
-      const requestData = {
-        shop_name: shopName.trim(),
-        contact_name: contactName.trim(),
-        phone: phone.trim(),
-        address: address.trim() || '',
-      }
-
-      console.log('[商家设置] 准备发送的数据:', requestData)
-      console.log('[商家设置] 请求URL:', '/api/merchants/update')
-
       const res = await Network.request({
         url: '/api/merchants/update',
         method: 'POST',
-        data: requestData,
-      })
-
-      console.log('[保存商家信息] 完整响应:', res)
-      console.log('[保存商家信息] 响应对象结构:', {
-        statusCode: res.statusCode,
-        data: res.data,
-        hasData: !!res.data,
-        dataCode: res.data?.code,
-        dataMsg: res.data?.msg,
+        data: {
+          shop_name: shopName.trim(),
+          contact_name: contactName.trim(),
+          phone: phone.trim(),
+          address: address.trim() || '',
+        },
       })
 
       if (res.statusCode === 200 && res.data?.code === 0) {
-        console.log('[保存商家信息] 保存成功，重新加载最新数据')
-
         Taro.showToast({ title: '保存成功', icon: 'success' })
 
         // 保存成功后，立即重新加载商家信息
         await loadMerchantInfo()
-
-        console.log('[保存商家信息] 数据已重新加载')
       } else {
-        console.error('[保存商家信息] 保存失败，响应:', res.data)
         Taro.showToast({ title: res.data?.msg || '保存失败', icon: 'none' })
       }
     } catch (error) {
-      console.error('[保存商家信息] 异常:', error)
+      console.error('[商家信息] 保存失败:', error)
       Taro.showToast({ title: '保存失败', icon: 'none' })
     } finally {
       setSaving(false)
@@ -146,22 +97,6 @@ const MerchantSettingsPage: FC = () => {
 
   return (
     <View className="flex flex-col min-h-screen bg-gray-50">
-      {/* 版本标记 - 代码更新后应该能看到这个 */}
-      <View className="bg-red-500 p-2 text-center">
-        <Text className="block text-white text-sm font-bold">
-          ✅ 代码已更新 - 20240420版本
-        </Text>
-      </View>
-
-      {/* 调试信息 */}
-      <View className="bg-yellow-50 p-3 border-b border-yellow-200">
-        <Text className="block text-xs text-yellow-700 mb-1">调试信息：</Text>
-        <Text className="block text-xs text-yellow-600">公司: {shopName || '(空)'}</Text>
-        <Text className="block text-xs text-yellow-600">联系人: {contactName || '(空)'}</Text>
-        <Text className="block text-xs text-yellow-600">电话: {phone || '(空)'}</Text>
-        <Text className="block text-xs text-yellow-600">地址: {address || '(空)'}</Text>
-      </View>
-
       <View className="p-4">
         {/* 基本信息卡片 */}
         <Card className="mb-4">
