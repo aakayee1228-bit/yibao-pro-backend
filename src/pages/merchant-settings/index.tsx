@@ -79,10 +79,10 @@ const MerchantSettingsPage: FC = () => {
         url: '/api/merchants/update',
         method: 'POST',
         data: {
-          company_name: shopName.trim(),
-          contact_person: contactName.trim(),
-          contact_phone: phone.trim(),
-          contact_address: address.trim() || '',
+          shop_name: shopName.trim(),
+          contact_name: contactName.trim(),
+          phone: phone.trim(),
+          address: address.trim() || '',
         },
       })
 
