@@ -339,12 +339,9 @@ const CreateQuotePage: FC = () => {
           <CardHeader className="pb-2">
             <View className="flex items-center justify-between">
               <CardTitle className="text-base">商品明细</CardTitle>
-              <Text
-                className="text-sm text-blue-500"
-                onClick={() => setShowProductPicker(true)}
-              >
-                添加商品
-              </Text>
+              <View onClick={() => setShowProductPicker(true)} style={{ cursor: 'pointer' }}>
+                <Text className="text-sm text-blue-500 block">添加商品</Text>
+              </View>
             </View>
           </CardHeader>
           <CardContent className="pt-0">
@@ -475,28 +472,27 @@ const CreateQuotePage: FC = () => {
         <View style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <View className="w-full bg-white rounded-t-xl" style={{ maxHeight: '400px' }}>
             <View className="p-4 border-b border-gray-100 relative">
-              <Text className="text-base font-medium">选择客户</Text>
-              <Text
-                className="text-sm text-gray-400"
-                style={{ position: 'absolute', right: '16px', top: '16px' }}
+              <Text className="text-base font-medium block">选择客户</Text>
+              <View
                 onClick={() => setShowCustomerPicker(false)}
+                style={{ position: 'absolute', right: '16px', top: '16px', cursor: 'pointer' }}
               >
-                关闭
-              </Text>
+                <Text className="text-sm text-gray-400 block">关闭</Text>
+              </View>
             </View>
             <ScrollView className="p-4" style={{ maxHeight: '300px' }}>
               {customers.length === 0 ? (
                 <View className="py-8 text-center">
                   <Text className="text-sm text-gray-400 block">暂无客户</Text>
-                  <Text
-                    className="text-sm text-blue-500 block mt-2"
+                  <View
                     onClick={() => {
                       setShowCustomerPicker(false)
                       Taro.navigateTo({ url: '/pages/customers/index' })
                     }}
+                    style={{ cursor: 'pointer', marginTop: '8px' }}
                   >
-                    去添加客户
-                  </Text>
+                    <Text className="text-sm text-blue-500 block">去添加客户</Text>
+                  </View>
                 </View>
               ) : (
                 customers.map((customer) => (
@@ -525,28 +521,27 @@ const CreateQuotePage: FC = () => {
         <View style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <View className="w-full bg-white rounded-t-xl" style={{ maxHeight: '400px' }}>
             <View className="p-4 border-b border-gray-100 relative">
-              <Text className="text-base font-medium">选择商品</Text>
-              <Text
-                className="text-sm text-gray-400"
-                style={{ position: 'absolute', right: '16px', top: '16px' }}
+              <Text className="text-base font-medium block">选择商品</Text>
+              <View
                 onClick={() => setShowProductPicker(false)}
+                style={{ position: 'absolute', right: '16px', top: '16px', cursor: 'pointer' }}
               >
-                关闭
-              </Text>
+                <Text className="text-sm text-gray-400 block">关闭</Text>
+              </View>
             </View>
             <ScrollView className="p-4" style={{ maxHeight: '300px' }}>
               {products.length === 0 ? (
                 <View className="py-8 text-center">
                   <Text className="text-sm text-gray-400 block">暂无商品</Text>
-                  <Text
-                    className="text-sm text-blue-500 block mt-2"
+                  <View
                     onClick={() => {
                       setShowProductPicker(false)
                       Taro.switchTab({ url: '/pages/products/index' })
                     }}
+                    style={{ cursor: 'pointer', marginTop: '8px' }}
                   >
-                    去添加商品
-                  </Text>
+                    <Text className="text-sm text-blue-500 block">去添加商品</Text>
+                  </View>
                 </View>
               ) : (
                 products.map((product) => (
