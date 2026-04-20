@@ -131,9 +131,19 @@ export class CanvasService {
     worksheet.mergeCells(row, 1, row, 9)
     row += 2
 
+    // 统一格式化日期函数（避免时区问题）
+    const formatDate = (dateStr: string) => {
+      const date = new Date(dateStr)
+      // 获取年月日，避免时区影响
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}年${month}月${day}日`
+    }
+
     // 2. 报价单基本信息 - 两列布局
     const infoData = [
-      ['报价单号', fullQuote.quote_no, '', '', '报价日期', new Date(fullQuote.created_at).toLocaleDateString('zh-CN')],
+      ['报价单号', fullQuote.quote_no, '', '', '报价日期', formatDate(fullQuote.created_at)],
       ['有效期', fullQuote.valid_days + '天', '', '', '', ''],
     ]
 
@@ -436,6 +446,16 @@ export class CanvasService {
       items = itemsData as QuoteItem[]
     }
 
+    // 统一格式化日期函数（避免时区问题）
+    const formatDate = (dateStr: string) => {
+      const date = new Date(dateStr)
+      // 获取年月日，避免时区影响
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}年${month}月${day}日`
+    }
+
     // 组装完整数据
     const fullQuote = {
       ...quote,
@@ -465,7 +485,7 @@ export class CanvasService {
             size: 24,
           }),
           new TextRun({
-            text: `    报价日期：${new Date(fullQuote.created_at).toLocaleDateString('zh-CN')}`,
+            text: `    报价日期：${formatDate(fullQuote.created_at)}`,
             size: 24,
           }),
         ],

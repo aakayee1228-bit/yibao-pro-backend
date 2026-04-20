@@ -79,6 +79,15 @@ const QuoteDetailPage: FC = () => {
     }
   })
 
+  // 统一格式化日期函数
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}年${month}月${day}日`
+  }
+
   const fetchQuoteDetail = async () => {
     if (!id) return
 
@@ -298,7 +307,7 @@ const QuoteDetailPage: FC = () => {
               <Text className="text-sm text-gray-500">报价单号：{quote.quote_no}</Text>
             </View>
             <View className="flex justify-between items-center">
-              <Text className="text-sm text-gray-500">创建日期：{new Date(quote.created_at).toLocaleDateString('zh-CN')}</Text>
+              <Text className="text-sm text-gray-500">创建日期：{formatDate(quote.created_at)}</Text>
               <Text className="text-sm text-gray-500">有效期：{quote.valid_days}天</Text>
             </View>
           </View>

@@ -1,6 +1,6 @@
 import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { FC } from 'react'
 import { Plus, Phone, MapPin, Pencil, Trash2, Search, X } from 'lucide-react-taro'
 import { Card, CardContent } from '@/components/ui/card'
@@ -38,12 +38,21 @@ const CustomersPage: FC = () => {
     fetchCustomers()
   })
 
+  // 防抖搜索
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchCustomers()
+    }, 500) // 500ms 防抖延迟
+
+    return () => clearTimeout(timer)
+  }, [search])
+
   const fetchCustomers = async () => {
     try {
       const res = await Network.request({
         url: '/api/customers',
         method: 'GET',
-        data: search ? { search } : {},
+        data: search.trim() ? { search: search.trim() } : {},
       })
 
       if (res.statusCode === 200 && res.data) {
@@ -133,12 +142,11 @@ const CustomersPage: FC = () => {
           <Input
             value={search}
             onInput={(e) => setSearch(e.detail.value)}
-            onConfirm={fetchCustomers}
             placeholder="搜索客户名称/电话/公司"
             className="flex-1 bg-transparent"
           />
           {search && (
-            <View onClick={() => { setSearch(''); fetchCustomers() }}>
+            <View onClick={() => setSearch('')}>
               <X size={18} color="#9ca3af" />
             </View>
           )}

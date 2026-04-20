@@ -1,5 +1,5 @@
 import { View, Text } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import type { FC } from 'react'
 import {
@@ -25,11 +25,6 @@ interface MerchantInfo {
 const ProfilePage: FC = () => {
   const [merchantInfo, setMerchantInfo] = useState<MerchantInfo | null>(null)
 
-  useEffect(() => {
-    console.log('[Profile] useEffect 触发')
-    loadMerchantInfo()
-  }, [])
-
   const loadMerchantInfo = async () => {
     console.log('[Profile] loadMerchantInfo 开始执行')
     try {
@@ -51,12 +46,17 @@ const ProfilePage: FC = () => {
     }
   }
 
-  // 将 loadMerchantInfo 挂载到页面实例，以便从其他页面调用
-  const instance = Taro.getCurrentInstance()
-  if (instance.page) {
-    (instance.page as any).loadMerchantInfo = loadMerchantInfo
-    console.log('[Profile] loadMerchantInfo 已挂载到页面实例')
-  }
+  // 组件挂载时加载
+  useEffect(() => {
+    console.log('[Profile] useEffect 触发')
+    loadMerchantInfo()
+  }, [])
+
+  // 每次页面显示时重新加载
+  useDidShow(() => {
+    console.log('[Profile] useDidShow 触发')
+    loadMerchantInfo()
+  })
 
   const handleLogout = () => {
     Taro.showModal({
