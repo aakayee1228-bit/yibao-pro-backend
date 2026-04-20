@@ -44,6 +44,9 @@ const ProfilePage: FC = () => {
     }
   }
 
+  // 将 loadMerchantInfo 挂载到页面实例，以便从其他页面调用
+  ;(Taro.getCurrentInstance().page as any).loadMerchantInfo = loadMerchantInfo
+
   const handleLogout = () => {
     Taro.showModal({
       title: '确认退出',

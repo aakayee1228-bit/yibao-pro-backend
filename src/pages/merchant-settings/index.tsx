@@ -82,7 +82,17 @@ const MerchantSettingsPage: FC = () => {
       if (res.statusCode === 200 && res.data?.code === 0) {
         console.log('[保存商家信息] 保存成功')
         Taro.showToast({ title: '保存成功', icon: 'success' })
+
+        // 使用页面栈，返回上一页并刷新
         setTimeout(() => {
+          const pages = Taro.getCurrentPages()
+          if (pages.length >= 2) {
+            const prevPage = pages[pages.length - 2] as any
+            // 如果上一页是 profile 页面，刷新商家信息
+            if (prevPage.route?.includes('profile')) {
+              prevPage.loadMerchantInfo?.()
+            }
+          }
           Taro.navigateBack()
         }, 1500)
       } else {
