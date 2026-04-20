@@ -484,100 +484,106 @@ const CreateQuotePage: FC = () => {
 
       {/* 客户选择弹窗 */}
       {showCustomerPicker && (
-        <View style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <View className="w-full bg-white rounded-t-xl" style={{ maxHeight: '400px' }}>
-            <View className="p-4 border-b border-gray-100 relative">
-              <Text className="text-base font-medium block">选择客户</Text>
-              <View
-                onClick={() => setShowCustomerPicker(false)}
-                style={{ position: 'absolute', right: '16px', top: '16px', cursor: 'pointer' }}
-              >
-                <Text className="text-sm text-gray-400 block">关闭</Text>
-              </View>
-            </View>
-            <ScrollView className="p-4" style={{ maxHeight: '300px' }}>
-              {customers.length === 0 ? (
-                <View className="py-8 text-center">
-                  <Text className="text-sm text-gray-400 block">暂无客户</Text>
-                  <View
-                    onClick={() => {
-                      setShowCustomerPicker(false)
-                      Taro.navigateTo({ url: '/pages/customers/index' })
-                    }}
-                    style={{ cursor: 'pointer', marginTop: '8px' }}
-                  >
-                    <Text className="text-sm text-blue-500 block">去添加客户</Text>
-                  </View>
+        <View className="fixed inset-0 bg-black bg-opacity-50" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+          <View className="absolute inset-0 flex items-end" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+            <View className="w-full bg-white rounded-t-2xl" style={{ maxHeight: '70vh', overflow: 'hidden' }}>
+              <View className="p-4 border-b border-gray-100 relative flex items-center justify-between">
+                <Text className="text-base font-medium block">选择客户</Text>
+                <View
+                  onClick={() => setShowCustomerPicker(false)}
+                  style={{ padding: '4px', cursor: 'pointer' }}
+                >
+                  <Text className="text-sm text-gray-400 block">关闭</Text>
                 </View>
-              ) : (
-                customers.map((customer) => (
-                  <View
-                    key={customer.id}
-                    className="p-3 border-b border-gray-50"
-                    onClick={() => {
-                      setSelectedCustomer(customer)
-                      setShowCustomerPicker(false)
-                    }}
-                  >
-                    <Text className="text-sm font-medium text-gray-900 block">{customer.name}</Text>
-                    <Text className="text-xs text-gray-500 block mt-1">
-                      {customer.phone} {customer.company && `· ${customer.company}`}
-                    </Text>
+              </View>
+              <ScrollView className="p-4" style={{ maxHeight: 'calc(70vh - 50px)' }}>
+                {customers.length === 0 ? (
+                  <View className="py-8 text-center">
+                    <Text className="text-sm text-gray-400 block">暂无客户</Text>
+                    <View
+                      onClick={() => {
+                        setShowCustomerPicker(false)
+                        Taro.navigateTo({ url: '/pages/customers/index' })
+                      }}
+                      style={{ marginTop: '8px', padding: '8px', cursor: 'pointer' }}
+                    >
+                      <Text className="text-sm text-blue-500 block">去添加客户</Text>
+                    </View>
                   </View>
-                ))
-              )}
-            </ScrollView>
+                ) : (
+                  customers.map((customer) => (
+                    <View
+                      key={customer.id}
+                      className="p-3 border-b border-gray-50"
+                      onClick={() => {
+                        setSelectedCustomer(customer)
+                        setShowCustomerPicker(false)
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <Text className="text-sm font-medium text-gray-900 block">{customer.name}</Text>
+                      <Text className="text-xs text-gray-500 block mt-1">
+                        {customer.phone} {customer.company && `· ${customer.company}`}
+                      </Text>
+                    </View>
+                  ))
+                )}
+              </ScrollView>
+            </View>
           </View>
         </View>
       )}
 
       {/* 商品选择弹窗 */}
       {showProductPicker && (
-        <View style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <View className="w-full bg-white rounded-t-xl" style={{ maxHeight: '400px' }}>
-            <View className="p-4 border-b border-gray-100 relative">
-              <Text className="text-base font-medium block">选择商品</Text>
-              <View
-                onClick={() => setShowProductPicker(false)}
-                style={{ position: 'absolute', right: '16px', top: '16px', cursor: 'pointer' }}
-              >
-                <Text className="text-sm text-gray-400 block">关闭</Text>
-              </View>
-            </View>
-            <ScrollView className="p-4" style={{ maxHeight: '300px' }}>
-              {products.length === 0 ? (
-                <View className="py-8 text-center">
-                  <Text className="text-sm text-gray-400 block">暂无商品</Text>
-                  <View
-                    onClick={() => {
-                      setShowProductPicker(false)
-                      Taro.switchTab({ url: '/pages/products/index' })
-                    }}
-                    style={{ cursor: 'pointer', marginTop: '8px' }}
-                  >
-                    <Text className="text-sm text-blue-500 block">去添加商品</Text>
-                  </View>
+        <View className="fixed inset-0 bg-black bg-opacity-50" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+          <View className="absolute inset-0 flex items-end" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+            <View className="w-full bg-white rounded-t-2xl" style={{ maxHeight: '70vh', overflow: 'hidden' }}>
+              <View className="p-4 border-b border-gray-100 relative flex items-center justify-between">
+                <Text className="text-base font-medium block">选择商品</Text>
+                <View
+                  onClick={() => setShowProductPicker(false)}
+                  style={{ padding: '4px', cursor: 'pointer' }}
+                >
+                  <Text className="text-sm text-gray-400 block">关闭</Text>
                 </View>
-              ) : (
-                products.map((product) => (
-                  <View
-                    key={product.id}
-                    className="p-3 border-b border-gray-50"
-                    onClick={() => addItem(product)}
-                  >
-                    <View className="flex items-center justify-between">
-                      <View>
-                        <Text className="text-sm font-medium text-gray-900 block">{product.name}</Text>
-                        <Text className="text-xs text-gray-500 block mt-1">
-                          {product.specification} · {product.unit}
-                        </Text>
-                      </View>
-                      <Text className="text-sm font-bold text-blue-600 block">¥{product.retail_price}</Text>
+              </View>
+              <ScrollView className="p-4" style={{ maxHeight: 'calc(70vh - 50px)' }}>
+                {products.length === 0 ? (
+                  <View className="py-8 text-center">
+                    <Text className="text-sm text-gray-400 block">暂无商品</Text>
+                    <View
+                      onClick={() => {
+                        setShowProductPicker(false)
+                        Taro.switchTab({ url: '/pages/products/index' })
+                      }}
+                      style={{ marginTop: '8px', padding: '8px', cursor: 'pointer' }}
+                    >
+                      <Text className="text-sm text-blue-500 block">去添加商品</Text>
                     </View>
                   </View>
-                ))
-              )}
-            </ScrollView>
+                ) : (
+                  products.map((product) => (
+                    <View
+                      key={product.id}
+                      className="p-3 border-b border-gray-50"
+                      onClick={() => addItem(product)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <View className="flex items-center justify-between">
+                        <View>
+                          <Text className="text-sm font-medium text-gray-900 block">{product.name}</Text>
+                          <Text className="text-xs text-gray-500 block mt-1">
+                            {product.specification} · {product.unit}
+                          </Text>
+                        </View>
+                        <Text className="text-sm font-bold text-blue-600 block">¥{product.retail_price}</Text>
+                      </View>
+                    </View>
+                  ))
+                )}
+              </ScrollView>
+            </View>
           </View>
         </View>
       )}
