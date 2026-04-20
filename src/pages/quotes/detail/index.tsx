@@ -79,13 +79,16 @@ const QuoteDetailPage: FC = () => {
     }
   })
 
-  // 统一格式化日期函数（避免时区问题）
+  // 统一格式化日期函数（使用本地时间，因为数据库存储的是UTC时间）
+  // 数据库存储的 created_at 是 UTC 时间（例如：2026-04-20T16:00:00Z）
+  // 在东八区（UTC+8）显示时，应该转换为本地时间（2026-04-21 00:00:00）
+  // 所以使用本地时间方法（getFullYear/getMonth/getDate）而不是 UTC 方法
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
-    // 使用 UTC 时间避免时区偏移
-    const year = date.getUTCFullYear()
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
-    const day = String(date.getUTCDate()).padStart(2, '0')
+    // 使用本地时间，这样 UTC 时间会自动转换为用户本地时间
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
     return `${year}年${month}月${day}日`
   }
 
