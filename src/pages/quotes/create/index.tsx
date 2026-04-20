@@ -472,12 +472,13 @@ const CreateQuotePage: FC = () => {
 
       {/* 客户选择弹窗 */}
       {showCustomerPicker && (
-        <View className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
-          <View className="w-full bg-white rounded-t-xl max-h-96">
-            <View className="p-4 border-b border-gray-100">
+        <View style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+          <View className="w-full bg-white rounded-t-xl" style={{ maxHeight: '400px' }}>
+            <View className="p-4 border-b border-gray-100 relative">
               <Text className="text-base font-medium">选择客户</Text>
               <Text
-                className="absolute right-4 top-4 text-sm text-gray-400"
+                className="text-sm text-gray-400"
+                style={{ position: 'absolute', right: '16px', top: '16px' }}
                 onClick={() => setShowCustomerPicker(false)}
               >
                 关闭
@@ -486,9 +487,9 @@ const CreateQuotePage: FC = () => {
             <ScrollView className="p-4" style={{ maxHeight: '300px' }}>
               {customers.length === 0 ? (
                 <View className="py-8 text-center">
-                  <Text className="text-sm text-gray-400">暂无客户</Text>
+                  <Text className="text-sm text-gray-400 block">暂无客户</Text>
                   <Text
-                    className="text-sm text-blue-500 mt-2"
+                    className="text-sm text-blue-500 block mt-2"
                     onClick={() => {
                       setShowCustomerPicker(false)
                       Taro.navigateTo({ url: '/pages/customers/index' })
@@ -507,8 +508,8 @@ const CreateQuotePage: FC = () => {
                       setShowCustomerPicker(false)
                     }}
                   >
-                    <Text className="text-sm font-medium text-gray-900">{customer.name}</Text>
-                    <Text className="text-xs text-gray-500 mt-1">
+                    <Text className="text-sm font-medium text-gray-900 block">{customer.name}</Text>
+                    <Text className="text-xs text-gray-500 block mt-1">
                       {customer.phone} {customer.company && `· ${customer.company}`}
                     </Text>
                   </View>
@@ -521,12 +522,13 @@ const CreateQuotePage: FC = () => {
 
       {/* 商品选择弹窗 */}
       {showProductPicker && (
-        <View className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
-          <View className="w-full bg-white rounded-t-xl max-h-96">
-            <View className="p-4 border-b border-gray-100">
+        <View style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+          <View className="w-full bg-white rounded-t-xl" style={{ maxHeight: '400px' }}>
+            <View className="p-4 border-b border-gray-100 relative">
               <Text className="text-base font-medium">选择商品</Text>
               <Text
-                className="absolute right-4 top-4 text-sm text-gray-400"
+                className="text-sm text-gray-400"
+                style={{ position: 'absolute', right: '16px', top: '16px' }}
                 onClick={() => setShowProductPicker(false)}
               >
                 关闭
@@ -535,9 +537,9 @@ const CreateQuotePage: FC = () => {
             <ScrollView className="p-4" style={{ maxHeight: '300px' }}>
               {products.length === 0 ? (
                 <View className="py-8 text-center">
-                  <Text className="text-sm text-gray-400">暂无商品</Text>
+                  <Text className="text-sm text-gray-400 block">暂无商品</Text>
                   <Text
-                    className="text-sm text-blue-500 mt-2"
+                    className="text-sm text-blue-500 block mt-2"
                     onClick={() => {
                       setShowProductPicker(false)
                       Taro.switchTab({ url: '/pages/products/index' })
@@ -555,12 +557,12 @@ const CreateQuotePage: FC = () => {
                   >
                     <View className="flex items-center justify-between">
                       <View>
-                        <Text className="text-sm font-medium text-gray-900">{product.name}</Text>
-                        <Text className="text-xs text-gray-500 mt-1">
+                        <Text className="text-sm font-medium text-gray-900 block">{product.name}</Text>
+                        <Text className="text-xs text-gray-500 block mt-1">
                           {product.specification} · {product.unit}
                         </Text>
                       </View>
-                      <Text className="text-sm font-bold text-blue-600">¥{product.retail_price}</Text>
+                      <Text className="text-sm font-bold text-blue-600 block">¥{product.retail_price}</Text>
                     </View>
                   </View>
                 ))
