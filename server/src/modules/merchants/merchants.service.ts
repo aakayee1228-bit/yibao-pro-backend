@@ -67,6 +67,7 @@ export class MerchantsService {
 
     if (existing) {
       // 更新
+      console.log('[商家信息] 执行更新操作，更新数据:', dbData)
       const { data, error } = await client
         .from('merchant_info')
         .update(dbData)
@@ -79,10 +80,11 @@ export class MerchantsService {
         throw new BadRequestException('更新商家信息失败')
       }
 
-      console.log('[商家信息] 更新成功:', data)
+      console.log('[商家信息] 更新成功，返回的数据:', data)
       return data
     } else {
       // 创建
+      console.log('[商家信息] 执行创建操作，插入数据:', dbData)
       const { data, error } = await client
         .from('merchant_info')
         .insert(dbData)
@@ -94,7 +96,7 @@ export class MerchantsService {
         throw new BadRequestException('创建商家信息失败')
       }
 
-      console.log('[商家信息] 创建成功:', data)
+      console.log('[商家信息] 创建成功，返回的数据:', data)
       return data
     }
   }

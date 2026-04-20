@@ -26,18 +26,25 @@ const ProfilePage: FC = () => {
   const [merchantInfo, setMerchantInfo] = useState<MerchantInfo | null>(null)
 
   useEffect(() => {
+    console.log('[Profile] useEffect 触发')
     loadMerchantInfo()
   }, [])
 
   const loadMerchantInfo = async () => {
+    console.log('[Profile] loadMerchantInfo 开始执行')
     try {
       const res = await Network.request({
         url: '/api/merchants/info',
         method: 'GET',
       })
       console.log('[商家信息] 响应:', res.data)
+      console.log('[商家信息] 响应数据详情:', res.data?.data)
+
       if (res.data?.code === 0 && res.data?.data) {
+        console.log('[商家信息] 设置商家信息:', res.data.data)
         setMerchantInfo(res.data.data)
+      } else {
+        console.error('[商家信息] 响应异常:', res.data)
       }
     } catch (error) {
       console.error('[商家信息] 加载失败:', error)
@@ -45,7 +52,11 @@ const ProfilePage: FC = () => {
   }
 
   // 将 loadMerchantInfo 挂载到页面实例，以便从其他页面调用
-  ;(Taro.getCurrentInstance().page as any).loadMerchantInfo = loadMerchantInfo
+  const instance = Taro.getCurrentInstance()
+  if (instance.page) {
+    (instance.page as any).loadMerchantInfo = loadMerchantInfo
+    console.log('[Profile] loadMerchantInfo 已挂载到页面实例')
+  }
 
   const handleLogout = () => {
     Taro.showModal({

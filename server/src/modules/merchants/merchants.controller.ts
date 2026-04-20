@@ -51,6 +51,9 @@ export class MerchantsController {
       contact_email?: string
     },
   ) {
+    console.log('[商家信息] POST /update 接口收到请求，userId:', userId)
+    console.log('[商家信息] POST /update 接口收到的数据:', body)
+
     // 暂时允许不传 userId（用于测试）
     // if (!userId) {
     //   return {
@@ -59,6 +62,9 @@ export class MerchantsController {
     //   }
     // }
     const data = await this.merchantsService.upsert(userId, body)
+
+    console.log('[商家信息] POST /update 接口返回的数据:', data)
+
     return {
       code: 0,
       msg: 'success',
