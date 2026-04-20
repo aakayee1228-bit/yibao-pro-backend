@@ -330,7 +330,9 @@ const CreateQuotePage: FC = () => {
                 className="flex items-center justify-center p-4 border-2 border-dashed border-gray-200 rounded-lg"
                 onClick={() => {
                   console.log('[创建表单] 点击了选择客户')
+                  console.log('[创建表单] 当前 showCustomerPicker:', showCustomerPicker)
                   setShowCustomerPicker(true)
+                  console.log('[创建表单] 设置后的 showCustomerPicker:', true)
                 }}
               >
                 <Plus size={18} color="#9ca3af" />
@@ -484,106 +486,104 @@ const CreateQuotePage: FC = () => {
 
       {/* 客户选择弹窗 */}
       {showCustomerPicker && (
-        <View className="fixed inset-0 bg-black bg-opacity-50" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
-          <View className="absolute inset-0 flex items-end" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-            <View className="w-full bg-white rounded-t-2xl" style={{ maxHeight: '70vh', overflow: 'hidden' }}>
-              <View className="p-4 border-b border-gray-100 relative flex items-center justify-between">
-                <Text className="text-base font-medium block">选择客户</Text>
-                <View
-                  onClick={() => setShowCustomerPicker(false)}
-                  style={{ padding: '4px', cursor: 'pointer' }}
-                >
-                  <Text className="text-sm text-gray-400 block">关闭</Text>
-                </View>
-              </View>
-              <ScrollView className="p-4" style={{ maxHeight: 'calc(70vh - 50px)' }}>
+        <View style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 99999 }}>
+          <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#ffffff', borderRadius: '16px 16px 0 0', maxHeight: '70vh', overflow: 'hidden' }}>
+            <View style={{ padding: '16px', borderBottom: '1px solid #e5e5e5', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={{ fontSize: '16px', fontWeight: '500', color: '#000000' }}>选择客户</Text>
+              <Text
+                style={{ fontSize: '14px', color: '#999999' }}
+                onClick={() => setShowCustomerPicker(false)}
+              >
+                关闭
+              </Text>
+            </View>
+            <ScrollView scrollY style={{ height: 'calc(70vh - 50px)' }}>
+              <View style={{ padding: '16px' }}>
                 {customers.length === 0 ? (
-                  <View className="py-8 text-center">
-                    <Text className="text-sm text-gray-400 block">暂无客户</Text>
-                    <View
+                  <View style={{ paddingVertical: '32px', alignItems: 'center' }}>
+                    <Text style={{ fontSize: '14px', color: '#999999' }}>暂无客户</Text>
+                    <Text
+                      style={{ fontSize: '14px', color: '#1890ff', marginTop: '8px' }}
                       onClick={() => {
                         setShowCustomerPicker(false)
                         Taro.navigateTo({ url: '/pages/customers/index' })
                       }}
-                      style={{ marginTop: '8px', padding: '8px', cursor: 'pointer' }}
                     >
-                      <Text className="text-sm text-blue-500 block">去添加客户</Text>
-                    </View>
+                      去添加客户
+                    </Text>
                   </View>
                 ) : (
                   customers.map((customer) => (
                     <View
                       key={customer.id}
-                      className="p-3 border-b border-gray-50"
+                      style={{ padding: '12px', borderBottom: '1px solid #f5f5f5' }}
                       onClick={() => {
                         setSelectedCustomer(customer)
                         setShowCustomerPicker(false)
                       }}
-                      style={{ cursor: 'pointer' }}
                     >
-                      <Text className="text-sm font-medium text-gray-900 block">{customer.name}</Text>
-                      <Text className="text-xs text-gray-500 block mt-1">
+                      <Text style={{ fontSize: '14px', fontWeight: '500', color: '#000000' }}>{customer.name}</Text>
+                      <Text style={{ fontSize: '12px', color: '#999999', marginTop: '4px' }}>
                         {customer.phone} {customer.company && `· ${customer.company}`}
                       </Text>
                     </View>
                   ))
                 )}
-              </ScrollView>
-            </View>
+              </View>
+            </ScrollView>
           </View>
         </View>
       )}
 
       {/* 商品选择弹窗 */}
       {showProductPicker && (
-        <View className="fixed inset-0 bg-black bg-opacity-50" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
-          <View className="absolute inset-0 flex items-end" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-            <View className="w-full bg-white rounded-t-2xl" style={{ maxHeight: '70vh', overflow: 'hidden' }}>
-              <View className="p-4 border-b border-gray-100 relative flex items-center justify-between">
-                <Text className="text-base font-medium block">选择商品</Text>
-                <View
-                  onClick={() => setShowProductPicker(false)}
-                  style={{ padding: '4px', cursor: 'pointer' }}
-                >
-                  <Text className="text-sm text-gray-400 block">关闭</Text>
-                </View>
-              </View>
-              <ScrollView className="p-4" style={{ maxHeight: 'calc(70vh - 50px)' }}>
+        <View style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 99999 }}>
+          <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#ffffff', borderRadius: '16px 16px 0 0', maxHeight: '70vh', overflow: 'hidden' }}>
+            <View style={{ padding: '16px', borderBottom: '1px solid #e5e5e5', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={{ fontSize: '16px', fontWeight: '500', color: '#000000' }}>选择商品</Text>
+              <Text
+                style={{ fontSize: '14px', color: '#999999' }}
+                onClick={() => setShowProductPicker(false)}
+              >
+                关闭
+              </Text>
+            </View>
+            <ScrollView scrollY style={{ height: 'calc(70vh - 50px)' }}>
+              <View style={{ padding: '16px' }}>
                 {products.length === 0 ? (
-                  <View className="py-8 text-center">
-                    <Text className="text-sm text-gray-400 block">暂无商品</Text>
-                    <View
+                  <View style={{ paddingVertical: '32px', alignItems: 'center' }}>
+                    <Text style={{ fontSize: '14px', color: '#999999' }}>暂无商品</Text>
+                    <Text
+                      style={{ fontSize: '14px', color: '#1890ff', marginTop: '8px' }}
                       onClick={() => {
                         setShowProductPicker(false)
                         Taro.switchTab({ url: '/pages/products/index' })
                       }}
-                      style={{ marginTop: '8px', padding: '8px', cursor: 'pointer' }}
                     >
-                      <Text className="text-sm text-blue-500 block">去添加商品</Text>
-                    </View>
+                      去添加商品
+                    </Text>
                   </View>
                 ) : (
                   products.map((product) => (
                     <View
                       key={product.id}
-                      className="p-3 border-b border-gray-50"
+                      style={{ padding: '12px', borderBottom: '1px solid #f5f5f5' }}
                       onClick={() => addItem(product)}
-                      style={{ cursor: 'pointer' }}
                     >
-                      <View className="flex items-center justify-between">
+                      <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <View>
-                          <Text className="text-sm font-medium text-gray-900 block">{product.name}</Text>
-                          <Text className="text-xs text-gray-500 block mt-1">
+                          <Text style={{ fontSize: '14px', fontWeight: '500', color: '#000000' }}>{product.name}</Text>
+                          <Text style={{ fontSize: '12px', color: '#999999', marginTop: '4px' }}>
                             {product.specification} · {product.unit}
                           </Text>
                         </View>
-                        <Text className="text-sm font-bold text-blue-600 block">¥{product.retail_price}</Text>
+                        <Text style={{ fontSize: '14px', fontWeight: 'bold', color: '#1890ff' }}>¥{product.retail_price}</Text>
                       </View>
                     </View>
                   ))
                 )}
-              </ScrollView>
-            </View>
+              </View>
+            </ScrollView>
           </View>
         </View>
       )}
