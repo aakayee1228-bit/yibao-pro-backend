@@ -307,7 +307,10 @@ const CreateQuotePage: FC = () => {
             {selectedCustomer ? (
               <View
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                onClick={() => setShowCustomerPicker(true)}
+                onClick={() => {
+                  console.log('[创建表单] 点击了已选客户区域')
+                  setShowCustomerPicker(true)
+                }}
               >
                 <View>
                   <Text className="block text-sm font-medium text-gray-900">{selectedCustomer.name}</Text>
@@ -325,7 +328,10 @@ const CreateQuotePage: FC = () => {
             ) : (
               <View
                 className="flex items-center justify-center p-4 border-2 border-dashed border-gray-200 rounded-lg"
-                onClick={() => setShowCustomerPicker(true)}
+                onClick={() => {
+                  console.log('[创建表单] 点击了选择客户')
+                  setShowCustomerPicker(true)
+                }}
               >
                 <Plus size={18} color="#9ca3af" />
                 <Text className="text-sm text-gray-400 ml-2">选择客户</Text>
@@ -339,7 +345,13 @@ const CreateQuotePage: FC = () => {
           <CardHeader className="pb-2">
             <View className="flex items-center justify-between">
               <CardTitle className="text-base">商品明细</CardTitle>
-              <View onClick={() => setShowProductPicker(true)} style={{ cursor: 'pointer' }}>
+              <View
+                onClick={() => {
+                  console.log('[创建表单] 点击了添加商品（右上角按钮）')
+                  setShowProductPicker(true)
+                }}
+                style={{ cursor: 'pointer' }}
+              >
                 <Text className="text-sm text-blue-500 block">添加商品</Text>
               </View>
             </View>
@@ -348,7 +360,10 @@ const CreateQuotePage: FC = () => {
             {items.length === 0 ? (
               <View
                 className="flex flex-col items-center justify-center py-8"
-                onClick={() => setShowProductPicker(true)}
+                onClick={() => {
+                  console.log('[创建表单] 点击了添加商品（空列表）')
+                  setShowProductPicker(true)
+                }}
               >
                 <Package size={40} color="#d1d5db" />
                 <Text className="text-sm text-gray-400 mt-2">点击添加商品</Text>
