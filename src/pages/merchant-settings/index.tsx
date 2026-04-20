@@ -146,6 +146,13 @@ const MerchantSettingsPage: FC = () => {
 
   return (
     <View className="flex flex-col min-h-screen bg-gray-50">
+      {/* 版本标记 - 代码更新后应该能看到这个 */}
+      <View className="bg-red-500 p-2 text-center">
+        <Text className="block text-white text-sm font-bold">
+          ✅ 代码已更新 - 20240420版本
+        </Text>
+      </View>
+
       {/* 调试信息 */}
       <View className="bg-yellow-50 p-3 border-b border-yellow-200">
         <Text className="block text-xs text-yellow-700 mb-1">调试信息：</Text>
