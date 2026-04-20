@@ -40,7 +40,7 @@ const MerchantSettingsPage: FC = () => {
 
       console.log('[商家信息] 响应:', res.data)
 
-      if (res.data?.code === 200 && res.data?.data) {
+      if (res.data?.code === 0 && res.data?.data) {
         const data = res.data.data as MerchantInfo
         setShopName(data.shop_name || '')
         setContactName(data.contact_name || '')

@@ -36,7 +36,7 @@ const ProfilePage: FC = () => {
         method: 'GET',
       })
       console.log('[商家信息] 响应:', res.data)
-      if (res.data?.code === 200 && res.data?.data) {
+      if (res.data?.code === 0 && res.data?.data) {
         setMerchantInfo(res.data.data)
       }
     } catch (error) {

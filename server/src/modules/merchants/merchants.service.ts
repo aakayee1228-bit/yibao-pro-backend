@@ -43,6 +43,8 @@ export class MerchantsService {
   async upsert(userId: string | undefined, dto: any) {
     const client = getSupabaseClient()
 
+    console.log('[商家信息] 收到更新请求，原始数据:', dto)
+
     // 转换前端字段名到数据库字段名
     const dbData = {
       shop_name: dto.company_name || dto.shop_name,
@@ -52,12 +54,16 @@ export class MerchantsService {
       email: dto.contact_email || dto.email,
     }
 
+    console.log('[商家信息] 转换后的数据:', dbData)
+
     // 先查询是否已有商家信息
     const { data: existing } = await client
       .from('merchant_info')
       .select('id')
       .limit(1)
       .maybeSingle()
+
+    console.log('[商家信息] 现有商家信息ID:', existing?.id)
 
     if (existing) {
       // 更新
@@ -69,10 +75,11 @@ export class MerchantsService {
         .single()
 
       if (error) {
-        console.error('更新商家信息失败:', error)
+        console.error('[商家信息] 更新失败:', error)
         throw new BadRequestException('更新商家信息失败')
       }
 
+      console.log('[商家信息] 更新成功:', data)
       return data
     } else {
       // 创建
@@ -83,10 +90,11 @@ export class MerchantsService {
         .single()
 
       if (error) {
-        console.error('创建商家信息失败:', error)
+        console.error('[商家信息] 创建失败:', error)
         throw new BadRequestException('创建商家信息失败')
       }
 
+      console.log('[商家信息] 创建成功:', data)
       return data
     }
   }
