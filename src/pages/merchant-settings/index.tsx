@@ -55,6 +55,8 @@ const MerchantSettingsPage: FC = () => {
   }
 
   const handleSave = async () => {
+    console.log('[商家设置] 开始保存，当前表单数据:', { shopName, contactName, phone, address })
+
     if (!shopName.trim()) {
       Taro.showToast({ title: '请输入商家名称', icon: 'none' })
       return
@@ -73,19 +75,22 @@ const MerchantSettingsPage: FC = () => {
         },
       })
 
-      console.log('[保存商家信息] 响应:', res.data)
+      console.log('[保存商家信息] 完整响应:', res)
+      console.log('[保存商家信息] 状态码:', res.statusCode)
+      console.log('[保存商家信息] 响应数据:', res.data)
 
-      // 后端返回 code: 0 表示成功
-      if (res.data?.code === 0) {
+      if (res.statusCode === 200 && res.data?.code === 0) {
+        console.log('[保存商家信息] 保存成功')
         Taro.showToast({ title: '保存成功', icon: 'success' })
         setTimeout(() => {
           Taro.navigateBack()
         }, 1500)
       } else {
+        console.error('[保存商家信息] 保存失败，响应:', res.data)
         Taro.showToast({ title: res.data?.msg || '保存失败', icon: 'none' })
       }
     } catch (error) {
-      console.error('[保存商家信息] 失败:', error)
+      console.error('[保存商家信息] 异常:', error)
       Taro.showToast({ title: '保存失败', icon: 'none' })
     } finally {
       setSaving(false)
