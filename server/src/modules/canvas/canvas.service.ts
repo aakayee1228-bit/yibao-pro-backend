@@ -383,9 +383,9 @@ export class CanvasService {
     row += 2
 
     // 生成 Excel buffer
-    const excelBuffer = await workbook.xlsx.writeBuffer() as Buffer
+    const excelBuffer = await workbook.xlsx.writeBuffer()
     const size = excelBuffer.byteLength
-    const base64 = excelBuffer.toString('base64')
+    const base64 = Buffer.from(excelBuffer).toString('base64')
 
     console.log('Excel 生成成功，大小:', size, 'bytes，商品数量:', fullQuote.items.length)
 
@@ -886,9 +886,9 @@ export class CanvasService {
     })
 
     // 生成 Word buffer
-    const wordBuffer = await Packer.toBuffer(doc) as Buffer
+    const wordBuffer = await Packer.toBuffer(doc)
     const size = wordBuffer.byteLength
-    const base64 = wordBuffer.toString('base64')
+    const base64 = Buffer.from(wordBuffer).toString('base64')
 
     console.log('Word 生成成功，大小:', size, 'bytes，商品数量:', fullQuote.items.length)
 
