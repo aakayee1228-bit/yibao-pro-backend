@@ -27,18 +27,23 @@ const MerchantSettingsPage: FC = () => {
   const [address, setAddress] = useState('')
 
   useDidShow(() => {
+    console.log('[商家设置] useDidShow 触发，加载商家信息')
     loadMerchantInfo()
   })
 
   const loadMerchantInfo = async () => {
+    console.log('[商家设置] loadMerchantInfo 开始执行')
     setLoading(true)
     try {
+      // 添加时间戳避免缓存
       const res = await Network.request({
         url: '/api/merchants/info',
         method: 'GET',
+        data: { _t: Date.now() },
       })
 
       console.log('[商家信息] 响应:', res.data)
+      console.log('[商家信息] 响应数据详情:', res.data?.data)
 
       if (res.data?.code === 0 && res.data?.data) {
         const data = res.data.data as MerchantInfo
@@ -46,6 +51,7 @@ const MerchantSettingsPage: FC = () => {
         setContactName(data.contact_name || '')
         setPhone(data.phone || '')
         setAddress(data.address || '')
+        console.log('[商家设置] 表单数据已更新:', { shopName: data.shop_name, contactName: data.contact_name, phone: data.phone, address: data.address })
       }
     } catch (error) {
       console.error('[商家信息] 加载失败:', error)
