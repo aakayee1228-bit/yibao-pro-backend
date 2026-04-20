@@ -134,10 +134,10 @@ export class CanvasService {
     // 统一格式化日期函数（避免时区问题）
     const formatDate = (dateStr: string) => {
       const date = new Date(dateStr)
-      // 获取年月日，避免时区影响
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
+      // 使用 UTC 时间避免时区偏移
+      const year = date.getUTCFullYear()
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+      const day = String(date.getUTCDate()).padStart(2, '0')
       return `${year}年${month}月${day}日`
     }
 
@@ -449,10 +449,10 @@ export class CanvasService {
     // 统一格式化日期函数（避免时区问题）
     const formatDate = (dateStr: string) => {
       const date = new Date(dateStr)
-      // 获取年月日，避免时区影响
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
+      // 使用 UTC 时间避免时区偏移
+      const year = date.getUTCFullYear()
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+      const day = String(date.getUTCDate()).padStart(2, '0')
       return `${year}年${month}月${day}日`
     }
 

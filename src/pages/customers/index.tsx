@@ -1,6 +1,6 @@
 import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import type { FC } from 'react'
 import { Plus, Phone, MapPin, Pencil, Trash2, Search, X } from 'lucide-react-taro'
 import { Card, CardContent } from '@/components/ui/card'
@@ -38,21 +38,22 @@ const CustomersPage: FC = () => {
     fetchCustomers()
   })
 
-  // 防抖搜索
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchCustomers()
-    }, 500) // 500ms 防抖延迟
-
-    return () => clearTimeout(timer)
-  }, [search])
+  // 客户端实时过滤
+  const filteredCustomers = customers.filter(customer => {
+    if (!search.trim()) return true
+    const keyword = search.trim().toLowerCase()
+    return (
+      customer.name.toLowerCase().includes(keyword) ||
+      customer.phone.includes(keyword) ||
+      (customer.company && customer.company.toLowerCase().includes(keyword))
+    )
+  })
 
   const fetchCustomers = async () => {
     try {
       const res = await Network.request({
         url: '/api/customers',
         method: 'GET',
-        data: search.trim() ? { search: search.trim() } : {},
       })
 
       if (res.statusCode === 200 && res.data) {
@@ -161,9 +162,19 @@ const CustomersPage: FC = () => {
             <Text className="text-sm text-gray-400">暂无客户</Text>
             <Text className="text-xs text-gray-400 mt-1">点击右下角添加客户</Text>
           </View>
+        ) : filteredCustomers.length === 0 ? (
+          <View className="flex flex-col items-center justify-center py-16">
+            <Text className="text-4xl mb-4">🔍</Text>
+            <Text className="text-sm text-gray-400">
+              {search ? '未找到匹配的客户' : '暂无客户'}
+            </Text>
+            {!search && (
+              <Text className="text-xs text-gray-400 mt-1">点击右下角添加客户</Text>
+            )}
+          </View>
         ) : (
           <View className="flex flex-col gap-3">
-            {customers.map((customer) => (
+            {filteredCustomers.map((customer) => (
               <Card key={customer.id}>
                 <CardContent className="p-4">
                   <View className="flex items-start justify-between mb-2">
