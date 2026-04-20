@@ -1,6 +1,6 @@
 {
-  "miniprogramRoot": "dist",
-  "projectname": "易表单Pro-v3-PDF",
+  "miniprogramRoot": "dist-weapp",
+  "projectname": "易表单Pro-v4-最新版本20240420",
   "description": "test",
   "appid": "wxce8df0af7fd86188",
   "setting": {
