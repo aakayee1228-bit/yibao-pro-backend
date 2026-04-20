@@ -32,7 +32,7 @@ const MerchantSettingsPage: FC = () => {
   })
 
   const loadMerchantInfo = async () => {
-    console.log('[商家设置] loadMerchantInfo 开始执行')
+    console.log('[商家设置] loadMerchantInfo 开始执行 - 强制刷新')
     setLoading(true)
     try {
       // 添加时间戳避免缓存
@@ -40,6 +40,10 @@ const MerchantSettingsPage: FC = () => {
         url: '/api/merchants/info',
         method: 'GET',
         data: { _t: Date.now() },
+        header: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
       })
 
       console.log('[商家信息] 响应:', res.data)
@@ -47,6 +51,7 @@ const MerchantSettingsPage: FC = () => {
 
       if (res.data?.code === 0 && res.data?.data) {
         const data = res.data.data as MerchantInfo
+        console.log('[商家设置] 设置表单数据 - shopName:', data.shop_name)
         setShopName(data.shop_name || '')
         setContactName(data.contact_name || '')
         setPhone(data.phone || '')
